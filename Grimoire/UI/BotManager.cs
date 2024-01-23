@@ -911,6 +911,7 @@ namespace Grimoire.UI
 			string text = txtJoin.Text;
 			string cell = string.IsNullOrEmpty(txtJoinCell.Text) ? "Enter" : txtJoinCell.Text;
 			string pad = string.IsNullOrEmpty(txtJoinPad.Text) ? "Spawn" : txtJoinPad.Text;
+			string swf = cbJoinMapSwf.Checked && !tbJoinMapSwf.Text.Contains("(.swf)") ? tbJoinMapSwf.Text : "";
 			if (text.Length > 0)
 			{
 				AddCommand(new CmdJoin
@@ -918,9 +919,15 @@ namespace Grimoire.UI
 					Map = txtJoin.Text,
 					Cell = cell,
 					Pad = pad,
-					Try = (int)numJoinTry.Value
+					Try = (int)numJoinTry.Value,
+					MapSwf = swf
 				}, (ModifierKeys & Keys.Control) == Keys.Control);
 			}
+		}
+
+		private void cbJoinMapSwf_CheckedChanged(object sender, EventArgs e)
+		{
+			tbJoinMapSwf.Enabled = cbJoinMapSwf.Checked;
 		}
 
 		private void btnCellSwap_Click(object sender, EventArgs e)
@@ -3299,6 +3306,15 @@ namespace Grimoire.UI
 			{
 				LeaveCombat = true
 			}, (ModifierKeys & Keys.Control) == Keys.Control);
+		}
+
+		private async void btnLoadMap_Click(object sender, EventArgs e)
+		{
+			if (!tbLoadMap.Text.Contains(".swf") || tbLoadMap.Text.Contains("(.swf)")) return;
+			btnLoadMap.Enabled = false;
+			World.LoadMap(tbLoadMap.Text);
+			await Task.Delay(1000);
+			btnLoadMap.Enabled = true;
 		}
 	}
 }

@@ -39,4 +39,6 @@
   "tbBSLabel":"Packet Name",
   "tbBSPacket":"%xt%zm%.........",
   "txtMonsterSkillCmd": "Monster (* = random)",
+  "tbLoadMap": "Map file (.swf)",
+  "tbJoinMapSwf": "Map file (.swf)",
 }
