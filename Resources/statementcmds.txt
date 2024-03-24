@@ -308,6 +308,18 @@
       "Description1": "Player count"
     },
     {
+      "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdPlayerInMyCellGreaterThan, Grimoire",
+      "Tag": "Player",
+      "Text": "Player count is greater than [in my cell]",
+      "Description1": "Player count"
+    },
+    {
+      "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdPlayerInMyCellLessThan, Grimoire",
+      "Tag": "Player",
+      "Text": "Player count is Less than [in my cell]",
+      "Description1": "Player count"
+    },
+    {
       "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdQuestCompleted, Grimoire",
       "Tag": "Quest",
       "Text": "Quest can be turned in",
