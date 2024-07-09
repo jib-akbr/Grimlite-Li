@@ -70,6 +70,18 @@ namespace Grimoire.UI.Maid
 			if (Player.IsLoggedIn) cmbGotoUsername.Text = Player.Username;
 			cmbUltraBoss.SelectedIndex = 0;
 			this.Text = $"Maid Remake";
+
+			ToolTip toolTip = new ToolTip();
+			toolTip.SetToolTip(this.cbPartyCmd,
+				"[Auto accept any party invitation when checked]" +
+				"\n\nEnter /p party chat's to use the commands below" +
+				"\n.join {mapname-room}" +
+				"\n.acc {questIds}" +
+				"\n.turnin {questIds}" +
+				"\n.target {playername} => change Maid's master target" +
+				"\n.start => turn on Maid" +
+				"\n.stop => turn off Maid"
+				);
 		}
 
 		private void Main_FormClosing(object sender, FormClosingEventArgs e)

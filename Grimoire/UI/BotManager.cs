@@ -1089,6 +1089,11 @@ namespace Grimoire.UI
 			}, (ModifierKeys & Keys.Control) == Keys.Control);
 		}
 
+		private void btnMapItemExe_Click(object sender, EventArgs e)
+		{
+			Player.GetMapItem((int)numMapItem.Value);
+		}
+
 		private void btnBoth_Click(object sender, EventArgs e)
 		{
 			string text = txtWhitelist.Text;
@@ -3210,6 +3215,9 @@ namespace Grimoire.UI
 						break;
 					case "Auto Zone - Dark Carnax":
 						SpecialJsonHandler = new HandlerAutoZoneDarkCarnax();
+						break;
+					case "Auto Zone - Astral Empyrean":
+						SpecialJsonHandler = new HandlerAutoZoneAtralEmpyrean();
 						break;
 				}
 			} 

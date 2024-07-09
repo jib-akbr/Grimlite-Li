@@ -2,6 +2,7 @@
 using Grimoire.Game.Data;
 using Grimoire.Networking;
 using Grimoire.Tools;
+using System.Threading.Tasks;
 
 namespace Grimoire.Networking.Handlers.Maid
 {
@@ -11,7 +12,7 @@ namespace Grimoire.Networking.Handlers.Maid
 
 		public string targetUsername => UI.Maid.MaidRemake.Instance.cmbGotoUsername.Text.ToLower();
 
-		public void Handle(XtMessage message)
+		public async void Handle(XtMessage message)
 		{
 			/*  % xt % chatm % 32123 % party~asdasdasdsa % player % 2049 % 32123 % 0 %
 				0 =
@@ -41,17 +42,22 @@ namespace Grimoire.Networking.Handlers.Maid
 							break;
 						case ".join":
 							string join = msg.Remove(0, 5);
-							Player.JoinMap(join);
+							Player.JoinMap(join.Trim());
 							break;
 						case ".acc":
 							string qid = msg.Remove(0, 5);
+
+							Flash.Call("GetQuests", qid);
+							await Task.Delay(1000);
+
 							if (qid.Contains(","))
 							{
 								foreach (string q in qid.Split(','))
 								{
 									Flash.Call("Accept", q);
+									await Task.Delay(1000);
 								}
-							} 
+							}
 							else
 							{
 								Flash.Call("Accept", qid);
@@ -64,6 +70,7 @@ namespace Grimoire.Networking.Handlers.Maid
 								foreach (string q in qidt.Split(','))
 								{
 									Flash.Call("Complete", q);
+									await Task.Delay(1000);
 								}
 							}
 							else

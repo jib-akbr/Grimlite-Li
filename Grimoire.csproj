@@ -103,7 +103,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AxInterop.ShockwaveFlashObjects, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -179,6 +179,8 @@
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraEquals.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraGreaterThan.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraLessThan.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerInMyCellGreaterThan.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerInMyCellLessThan.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdTargetAuraEquals.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdTargetAuraGreaterThan.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdTargetAuraLessThan.cs" />
@@ -187,6 +189,7 @@
     <Compile Include="Grimoire\Botting\Commands\Quest\CmdAddQuestList.cs" />
     <Compile Include="Grimoire\Botting\Commands\Quest\CmdRemoveQuestList.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAntiMod.cs" />
+    <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneAstralEmpyrean.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneDarkCarnax.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerFollow.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\CellJumperHandler.cs" />
@@ -694,7 +697,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="Grimoire_TemporaryKey.pfx" />
     <None Include="packages.config" />
     <None Include="Properties\App.config">
       <SubType>Designer</SubType>

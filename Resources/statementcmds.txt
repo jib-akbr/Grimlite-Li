@@ -310,13 +310,13 @@
     {
       "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdPlayerInMyCellGreaterThan, Grimoire",
       "Tag": "Player",
-      "Text": "Player count is greater than [in my cell]",
+      "Text": "Player count is greater than [cell]",
       "Description1": "Player count"
     },
     {
       "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdPlayerInMyCellLessThan, Grimoire",
       "Tag": "Player",
-      "Text": "Player count is Less than [in my cell]",
+      "Text": "Player count is Less than [cell]",
       "Description1": "Player count"
     },
     {

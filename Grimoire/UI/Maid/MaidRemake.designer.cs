@@ -493,7 +493,6 @@
 			this.cbPartyCmd.Size = new System.Drawing.Size(71, 17);
 			this.cbPartyCmd.TabIndex = 29;
 			this.cbPartyCmd.Text = "PartyCmd";
-			this.cbPartyCmd.Visible = false;
 			this.cbPartyCmd.CheckedChanged += new System.EventHandler(this.cbPartyCmd_CheckedChanged);
 			// 
 			// timerStopAttack

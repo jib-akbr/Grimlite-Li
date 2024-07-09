@@ -11,7 +11,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
         public CmdPlayerInMyCellGreaterThan()
         {
             Tag = "Player";
-            Text = "Player count is greater than [in my cell]";
+            Text = "Player count is greater than [cell]";
         }
 
         public Task Execute(IBotEngine instance)
@@ -39,7 +39,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 
         public override string ToString()
         {
-            return "Player count greater than [in my cell]: " + Value1;
+            return "Player count greater than [cell]: " + Value1;
         }
     }
 }

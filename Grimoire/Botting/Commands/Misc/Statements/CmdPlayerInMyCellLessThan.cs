@@ -12,7 +12,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
         public CmdPlayerInMyCellLessThan()
         {
             Tag = "Player";
-            Text = "Player count is less than [in my cell]";
+            Text = "Player count is less than [cell]";
         }
 
         public Task Execute(IBotEngine instance)
@@ -40,7 +40,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 
         public override string ToString()
         {
-            return "Player count is less than [in my cell]: " + Value1;
+            return "Player count is less than [cell]: " + Value1;
         }
     }
 }

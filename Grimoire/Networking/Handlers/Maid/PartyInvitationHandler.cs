@@ -13,18 +13,19 @@ namespace Grimoire.Networking.Handlers.Maid
 	{
 		public string[] HandledCommands { get; } = { "pi" };
 
-		public void Handle(JsonMessage message)
+		public async void Handle(JsonMessage message)
 		{
 			try
 			{
-				string owner = ((JObject)message.DataObject["owner"]).ToString();
-				string pid = ((JObject)message.DataObject["pid"]).ToString();
+				string owner = message.DataObject["pid"].ToString();
+				string pid = message.DataObject["pid"].ToString();
 
 				string packet = $"%xt%zm%gp%1%pa%{pid}%";
-				Proxy.Instance.SendToServer(packet);
+				await Proxy.Instance.SendToServer(packet);
 			}
-			catch(Exception e) { 
-				Console.WriteLine("err: "+e.ToString());
+			catch (Exception e)
+			{
+				Console.WriteLine("err: " + e.ToString());
 			}
 		}
 	}
