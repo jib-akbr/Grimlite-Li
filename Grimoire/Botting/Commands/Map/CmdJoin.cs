@@ -15,6 +15,8 @@ namespace Grimoire.Botting.Commands.Map
 
 		public int Try { get; set; } = 1;
 
+		public string MapSwf { get; set; } = "";
+
 		private string _Cell;
 
 		private string _Pad;
@@ -67,6 +69,12 @@ namespace Grimoire.Botting.Commands.Map
 				BotData.BotCell = _Cell;
 				BotData.BotPad = _Pad;
 			}
+
+			if (MapSwf.Contains(".swf") && !MapSwf.Contains("(.swf)"))
+			{
+				World.LoadMap(MapSwf);
+				await instance.WaitUntil(() => !World.IsMapLoading, null, 15);
+			}
 		}
 
 		public async Task TryJoin(IBotEngine instance, string MapName, string RoomNumber)
@@ -87,9 +95,10 @@ namespace Grimoire.Botting.Commands.Map
 
 		public override string ToString()
 		{
+			string withSwf = MapSwf != "" ? "[SWF] " : "";
 			return string.Concat(new string[]
 			{
-				$"Join: [{Try}x] ",
+				$"Join: [{Try}x] {withSwf}",
 				this.Map,
 				", ",
 				this.Cell,

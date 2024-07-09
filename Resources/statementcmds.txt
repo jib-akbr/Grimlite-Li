@@ -308,6 +308,18 @@
       "Description1": "Player count"
     },
     {
+      "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdPlayerInMyCellGreaterThan, Grimoire",
+      "Tag": "Player",
+      "Text": "Player count is greater than [cell]",
+      "Description1": "Player count"
+    },
+    {
+      "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdPlayerInMyCellLessThan, Grimoire",
+      "Tag": "Player",
+      "Text": "Player count is Less than [cell]",
+      "Description1": "Player count"
+    },
+    {
       "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdQuestCompleted, Grimoire",
       "Tag": "Quest",
       "Text": "Quest can be turned in",
@@ -384,6 +396,20 @@
       "Text": "Int is not equal to Int",
       "Description1": "Int1",
       "Description2": "Int2"
+    },
+    {
+      "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdVarEqualVar, Grimoire",
+      "Tag": "Misc",
+      "Text": "Var is equal to Var",
+      "Description1": "Var1",
+      "Description2": "Var2"
+    },
+    {
+      "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdVarNotEqualVar, Grimoire",
+      "Tag": "Misc",
+      "Text": "Var is not equal to Var",
+      "Description1": "Var1",
+      "Description2": "Var2"
     },
     {
       "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdIsMaxStack, Grimoire",
