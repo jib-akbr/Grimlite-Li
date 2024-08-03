@@ -23,7 +23,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 
         public override string ToString()
         {
-            return "Name Equals " + Value1;
+            return "Player Name Equals: " + Value1;
         }
     }
 }
