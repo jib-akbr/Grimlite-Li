@@ -219,6 +219,12 @@
       "Description1": "Monster count"
     },
     {
+      "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdNameEquals, Grimoire",
+      "Tag": "This Player",
+      "Text": "Name Equals",
+      "Description1": "Player name"
+    }
+    {
       "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdNotInBank, Grimoire",
       "Tag": "Item",
       "Text": "Is not in bank",
