@@ -9,7 +9,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
         public CmdNameEquals()
         {
             Tag = "This player";
-            Text = "Name Equals";
+            Text = "Name equals";
         }
 
         public Task Execute(IBotEngine instance)
@@ -23,7 +23,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 
         public override string ToString()
         {
-            return "Player Name Equals: " + Value1;
+            return "Player name equals: " + Value1;
         }
     }
 }

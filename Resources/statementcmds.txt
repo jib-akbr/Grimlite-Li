@@ -220,10 +220,10 @@
     },
     {
       "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdNameEquals, Grimoire",
-      "Tag": "This Player",
-      "Text": "Name Equals",
+      "Tag": "This player",
+      "Text": "Name equals",
       "Description1": "Player name"
-    }
+    },
     {
       "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdNotInBank, Grimoire",
       "Tag": "Item",
