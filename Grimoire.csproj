@@ -330,6 +330,7 @@
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdMonsterNotInRoom.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdMonstersGreaterThan.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdMonstersLessThan.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdNameEquals.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdNotEquipped.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdNotHasTarget.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdNotInBank.cs" />
