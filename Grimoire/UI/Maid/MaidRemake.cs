@@ -525,6 +525,10 @@ namespace Grimoire.UI.Maid
 				sunConvergenceCount = 0;
 				moonConvergenceCount = 0;
 			}
+			if (Player.Map == "astralshrine" && Player.Cell != "r2")
+			{
+				beholdOurStarfireCount = 0;
+			}
 		}
 
 		/* Hotkey */
@@ -721,8 +725,8 @@ namespace Grimoire.UI.Maid
 					act = moonConvergenceCount % 2 == 0 || !msg.Contains("moon converge");
 					break;
 				case "Ast.Empyrean P1":
-                    act = beholdOurStarfireCount % 2 != 0 || !msg.Contains("behold our starfire");
-                    break;
+					act = beholdOurStarfireCount % 2 != 0 || !msg.Contains("behold our starfire");
+					break;
 				case "Ast.Empyrean P2":
 					act = beholdOurStarfireCount % 2 == 0 || !msg.Contains("behold our starfire");
 					break;
@@ -755,11 +759,11 @@ namespace Grimoire.UI.Maid
 					break;
 				case "Ast.Empyrean P1":
 				case "Ast.Empyrean P2":
-                    cbAttackPriority.Checked = true;
-                    tbAttPriority.Text = "Astral Empyrean";
-                    tbSpecialMsg.Text = "behold our starfire";
-                    numSkillAct.Value = 5;
-                    break;
+					cbAttackPriority.Checked = true;
+					tbAttPriority.Text = "Astral Empyrean";
+					tbSpecialMsg.Text = "behold our starfire";
+					numSkillAct.Value = 5;
+					break;
 			}
 		}
 
