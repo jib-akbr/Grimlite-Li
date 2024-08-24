@@ -1887,12 +1887,18 @@ namespace Grimoire.UI
 			chkReloginCompleteQuest.Enabled = !chkEnable.Checked;
 			numQuestDelay.Enabled = !chkEnable.Checked;
 			numBotDelay.Enabled = !chkEnable.Checked;
+			chkSpecial.Enabled = !chkEnable.Checked;
 
 			chkEnable.Enabled = false;
 			Root.Instance.chkStartBot.Enabled = false;
 
 			if (chkEnable.Checked)
 			{
+				if (!chkSpecial.Checked && cmbSpecials.SelectedIndex != -1)
+				{
+					chkSpecial.Checked = true;
+				}
+
 				setPresetsSkills();
 
 				if (lstItems.Items.Count > 0 && chkInventOnStart.Checked)
@@ -1941,6 +1947,11 @@ namespace Grimoire.UI
 					Proxy.Instance.UnregisterHandler(SpecialJsonHandler);
 				if (SpecialXtHandler != null)
 					Proxy.Instance.UnregisterHandler(SpecialXtHandler);
+
+				if (chkSpecial.Checked && cmbSpecials.SelectedIndex != -1)
+				{
+					chkSpecial.Checked = false;
+				}
 			}
 			toggleAntiMod(chkAntiMod.Checked && chkEnable.Checked);
 
@@ -3205,7 +3216,6 @@ namespace Grimoire.UI
 				return;
 			}
 			cmbSpecials.Enabled = !chkSpecial.Checked;
-
 			if (chkSpecial.Checked)
 			{
 				switch (cmbSpecials.SelectedItem.ToString())
