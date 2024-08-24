@@ -1,5 +1,6 @@
 ﻿using Grimoire.Game;
 using Newtonsoft.Json.Linq;
+using System;
 
 namespace Grimoire.Networking.Handlers
 {
@@ -15,28 +16,24 @@ namespace Grimoire.Networking.Handlers
                 string zone = args["zoneSet"].ToString();
                 int positiveChargeCount = Player.GetAuras(true, "Positive Charge");
                 int negativeChargeCount = Player.GetAuras(true, "Negative Charge");
+                Console.WriteLine("Zone: " + zone);
+
+                bool isPositive = positiveChargeCount > 0;
+                bool isNegative = negativeChargeCount > 0;
 
                 switch (zone)
                 {
                     case "A":
-                        if (positiveChargeCount > 0)
-                        {
-                            Player.WalkToPoint("678", "310");
-                        }
+                        if (!isPositive || isNegative)
+                            Player.WalkToPoint("609", "337");
                         else
-                        {
-                            Player.WalkToPoint("217", "366");
-                        }
+                            Player.WalkToPoint("411", "342");
                         break;
                     case "B":
-                        if (negativeChargeCount > 0)
-                        {
-                            Player.WalkToPoint("217", "366");
-                        }
+                        if (!isPositive || isNegative)
+                            Player.WalkToPoint("411", "342");
                         else
-                        {
-                            Player.WalkToPoint("678", "310");
-                        }
+                            Player.WalkToPoint("609", "337");
                         break;
                     default:
                         Player.WalkToPoint("485", "351");
