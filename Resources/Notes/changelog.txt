@@ -1,3 +1,11 @@
+v 1.5.4
+- Fixed "Fast Travels 2" duplicated room number
+- Added Maid Ultra boss handler for "Astral Empyrean"
+- Added "Auto Zone - Queen Iona"
+- Made "Special Handlers" auto-toggle on bot start/stop
+- Save "Special Handlers" to gbot
+- Add statement "This player name equals" statement
+
 v 1.5.3
 - added PartyCmd on Maid, to give orders to your Maid party members
 
