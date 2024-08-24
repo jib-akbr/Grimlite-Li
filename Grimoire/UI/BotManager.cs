@@ -300,7 +300,7 @@ namespace Grimoire.UI
 				DisableAnimations = chkDisableAnims.Checked,
 				FollowCheck = chkFollowOnly.Checked,
 				FollowName = tbFollowPlayer2.Text,
-
+				AutoZone = cmbSpecials.SelectedItem.ToString(),
 			};
 		}
 
@@ -355,7 +355,8 @@ namespace Grimoire.UI
 				AntiCounter = chkAntiCounter.Checked,
 				DisableAnimations = chkDisableAnims.Checked,
 				FollowCheck = chkFollowOnly.Checked,
-				FollowName = tbFollowPlayer2.Text
+				FollowName = tbFollowPlayer2.Text,
+				AutoZone = cmbSpecials.SelectedItem.ToString(),
 			};
 		}
 
@@ -469,6 +470,14 @@ namespace Grimoire.UI
 					rtbInfo.Text = config.Description;
 				chkFollowOnly.Checked = config.FollowCheck;
 				tbFollowPlayer2.Text = config.FollowName == null ? "Player" : config.FollowName;
+				if (!string.IsNullOrEmpty(config.AutoZone))
+				{
+					int index = cmbSpecials.FindStringExact(config.AutoZone);
+					if (index != -1)
+					{
+						cmbSpecials.SelectedIndex = index;
+					}
+				}
 			}
 		}
 
