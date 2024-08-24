@@ -193,6 +193,7 @@
     <Compile Include="Grimoire\Botting\Commands\Quest\CmdAddQuestList.cs" />
     <Compile Include="Grimoire\Botting\Commands\Quest\CmdRemoveQuestList.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAntiMod.cs" />
+    <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneQueenIona.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneAstralEmpyrean.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneDarkCarnax.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerFollow.cs" />

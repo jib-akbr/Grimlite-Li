@@ -3219,6 +3219,9 @@ namespace Grimoire.UI
 					case "Auto Zone - Astral Empyrean":
 						SpecialJsonHandler = new HandlerAutoZoneAstralEmpyrean();
 						break;
+					case "Auto Zone - Queen Iona":
+						SpecialJsonHandler = new HandlerAutoZoneQueenIona();
+						break;
 				}
 			} 
 			else
