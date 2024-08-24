@@ -1,46 +1,55 @@
 ﻿using Grimoire.Game;
 using Newtonsoft.Json.Linq;
-using System;
+using System.Threading.Tasks;
 
 namespace Grimoire.Networking.Handlers
 {
-    public class HandlerAutoZoneQueenIona : IJsonMessageHandler
-    {
-        public string[] HandledCommands { get; } = { "event" };
+	public class HandlerAutoZoneQueenIona : IJsonMessageHandler
+	{
+		public string[] HandledCommands { get; } = { "event" };
 
-        public void Handle(JsonMessage message)
-        {
-            try
-            {
-                JObject args = (JObject)message.DataObject["args"];
-                string zone = args["zoneSet"].ToString();
-                int positiveChargeCount = Player.GetAuras(true, "Positive Charge");
-                int negativeChargeCount = Player.GetAuras(true, "Negative Charge");
-                Console.WriteLine("Zone: " + zone);
+		public async void Handle(JsonMessage message)
+		{
+			await Task.Delay(500);
+			try
+			{
+				JObject args = (JObject)message.DataObject["args"];
+				string zone = args["zoneSet"].ToString();
 
-                bool isPositive = positiveChargeCount > 0;
-                bool isNegative = negativeChargeCount > 0;
+				bool positiveCharge = Player.GetAuras(true, "Positive Charge") > 0;
+				bool positiveChargeReversed = Player.GetAuras(true, "Positive Charge?") > 0;
+				bool negativeCharge = Player.GetAuras(true, "Negative Charge") > 0;
+				bool negativeChargeReversed = Player.GetAuras(true, "Negative Charge?") > 0;
 
-                switch (zone)
-                {
-                    case "A":
-                        if (!isPositive || isNegative)
-                            Player.WalkToPoint("609", "337");
-                        else
-                            Player.WalkToPoint("411", "342");
-                        break;
-                    case "B":
-                        if (!isPositive || isNegative)
-                            Player.WalkToPoint("411", "342");
-                        else
-                            Player.WalkToPoint("609", "337");
-                        break;
-                    default:
-                        Player.WalkToPoint("485", "351");
-                        break;
-                }
-            }
-            catch { }
-        }
-    }
+				switch (zone)
+				{
+					case "A":
+						if (positiveCharge || negativeChargeReversed)
+						{
+							Player.WalkToPoint("679", "339");
+						}
+						else if (negativeCharge || positiveChargeReversed)
+						{
+							Player.WalkToPoint("272", "379");
+						}
+						break;
+					case "B":
+						if (positiveCharge || negativeChargeReversed)
+						{
+							Player.WalkToPoint("272", "379");
+						}
+						else if (negativeCharge || positiveChargeReversed)
+						{
+							Player.WalkToPoint("679", "339");
+						}
+						break;
+					default:
+						Player.WalkToPoint("490", "320");
+						break;
+				}
+
+			}
+			catch { }
+		}
+	}
 }
