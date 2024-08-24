@@ -300,7 +300,7 @@ namespace Grimoire.UI
 				DisableAnimations = chkDisableAnims.Checked,
 				FollowCheck = chkFollowOnly.Checked,
 				FollowName = tbFollowPlayer2.Text,
-				AutoZone = cmbSpecials.SelectedItem.ToString(),
+				AutoZone = cmbSpecials.SelectedItem != null ? cmbSpecials.SelectedItem.ToString() : string.Empty,
 			};
 		}
 
@@ -356,7 +356,7 @@ namespace Grimoire.UI
 				DisableAnimations = chkDisableAnims.Checked,
 				FollowCheck = chkFollowOnly.Checked,
 				FollowName = tbFollowPlayer2.Text,
-				AutoZone = cmbSpecials.SelectedItem.ToString(),
+				AutoZone = cmbSpecials.SelectedItem != null ? cmbSpecials.SelectedItem.ToString() : string.Empty,
 			};
 		}
 
@@ -473,10 +473,11 @@ namespace Grimoire.UI
 				if (!string.IsNullOrEmpty(config.AutoZone))
 				{
 					int index = cmbSpecials.FindStringExact(config.AutoZone);
-					if (index != -1)
-					{
-						cmbSpecials.SelectedIndex = index;
-					}
+					cmbSpecials.SelectedIndex = index;
+				}
+				else
+				{
+					cmbSpecials.SelectedIndex = -1;
 				}
 			}
 		}
@@ -1896,14 +1897,17 @@ namespace Grimoire.UI
 			chkReloginCompleteQuest.Enabled = !chkEnable.Checked;
 			numQuestDelay.Enabled = !chkEnable.Checked;
 			numBotDelay.Enabled = !chkEnable.Checked;
-			chkSpecial.Enabled = !chkEnable.Checked;
+			if (cmbSpecials.SelectedIndex != -1)
+			{
+				chkSpecial.Enabled = !chkEnable.Checked;
+			}
 
 			chkEnable.Enabled = false;
 			Root.Instance.chkStartBot.Enabled = false;
 
 			if (chkEnable.Checked)
 			{
-				if (!chkSpecial.Checked && cmbSpecials.SelectedIndex != -1)
+				if (cmbSpecials.SelectedIndex != -1 && !chkSpecial.Checked)
 				{
 					chkSpecial.Checked = true;
 				}
@@ -1957,9 +1961,10 @@ namespace Grimoire.UI
 				if (SpecialXtHandler != null)
 					Proxy.Instance.UnregisterHandler(SpecialXtHandler);
 
-				if (chkSpecial.Checked && cmbSpecials.SelectedIndex != -1)
+				if (cmbSpecials.SelectedIndex != -1 && chkSpecial.Enabled)
 				{
 					chkSpecial.Checked = false;
+					chkSpecial.Enabled = true;
 				}
 			}
 			toggleAntiMod(chkAntiMod.Checked && chkEnable.Checked);
