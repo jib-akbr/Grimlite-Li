@@ -31,6 +31,11 @@ namespace Grimoire.UI
 			Process.Start("https://github.com/Froztt13/Grimlite-Li");
 		}
 
+		private void pbVicinity4519Github_Click(object sender, EventArgs e)
+		{
+			Process.Start("https://github.com/Vicinity4519/Grimlite-Li");
+		}
+
 		private void pbDropbox_Click(object sender, EventArgs e)
 		{
 			Process.Start("https://www.dropbox.com/sh/zdmgaqrrxt4bc1x/AAB_kKx1eV9wWrfox7VGoNXWa?dl=0");
