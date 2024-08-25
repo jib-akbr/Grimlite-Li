@@ -127,6 +127,10 @@
       <HintPath>packages\HtmlAgilityPack.1.11.32\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Office.Interop.Word, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.Office.Interop.Word.15.0.4797.1004\lib\net20\Microsoft.Office.Interop.Word.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.DebuggerVisualizers, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -189,6 +193,7 @@
     <Compile Include="Grimoire\Botting\Commands\Quest\CmdAddQuestList.cs" />
     <Compile Include="Grimoire\Botting\Commands\Quest\CmdRemoveQuestList.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAntiMod.cs" />
+    <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneQueenIona.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneAstralEmpyrean.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneDarkCarnax.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerFollow.cs" />

@@ -300,7 +300,7 @@ namespace Grimoire.UI
 				DisableAnimations = chkDisableAnims.Checked,
 				FollowCheck = chkFollowOnly.Checked,
 				FollowName = tbFollowPlayer2.Text,
-
+				AutoZone = cmbSpecials.SelectedItem != null ? cmbSpecials.SelectedItem.ToString() : string.Empty,
 			};
 		}
 
@@ -355,7 +355,8 @@ namespace Grimoire.UI
 				AntiCounter = chkAntiCounter.Checked,
 				DisableAnimations = chkDisableAnims.Checked,
 				FollowCheck = chkFollowOnly.Checked,
-				FollowName = tbFollowPlayer2.Text
+				FollowName = tbFollowPlayer2.Text,
+				AutoZone = cmbSpecials.SelectedItem != null ? cmbSpecials.SelectedItem.ToString() : string.Empty,
 			};
 		}
 
@@ -469,6 +470,15 @@ namespace Grimoire.UI
 					rtbInfo.Text = config.Description;
 				chkFollowOnly.Checked = config.FollowCheck;
 				tbFollowPlayer2.Text = config.FollowName == null ? "Player" : config.FollowName;
+				if (!string.IsNullOrEmpty(config.AutoZone))
+				{
+					int index = cmbSpecials.FindStringExact(config.AutoZone);
+					cmbSpecials.SelectedIndex = index;
+				}
+				else
+				{
+					cmbSpecials.SelectedIndex = -1;
+				}
 			}
 		}
 
@@ -1887,12 +1897,21 @@ namespace Grimoire.UI
 			chkReloginCompleteQuest.Enabled = !chkEnable.Checked;
 			numQuestDelay.Enabled = !chkEnable.Checked;
 			numBotDelay.Enabled = !chkEnable.Checked;
+			if (cmbSpecials.SelectedIndex != -1)
+			{
+				chkSpecial.Enabled = !chkEnable.Checked;
+			}
 
 			chkEnable.Enabled = false;
 			Root.Instance.chkStartBot.Enabled = false;
 
 			if (chkEnable.Checked)
 			{
+				if (cmbSpecials.SelectedIndex != -1 && !chkSpecial.Checked)
+				{
+					chkSpecial.Checked = true;
+				}
+
 				setPresetsSkills();
 
 				if (lstItems.Items.Count > 0 && chkInventOnStart.Checked)
@@ -1941,6 +1960,12 @@ namespace Grimoire.UI
 					Proxy.Instance.UnregisterHandler(SpecialJsonHandler);
 				if (SpecialXtHandler != null)
 					Proxy.Instance.UnregisterHandler(SpecialXtHandler);
+
+				if (cmbSpecials.SelectedIndex != -1 && chkSpecial.Enabled)
+				{
+					chkSpecial.Checked = false;
+					chkSpecial.Enabled = true;
+				}
 			}
 			toggleAntiMod(chkAntiMod.Checked && chkEnable.Checked);
 
@@ -3205,7 +3230,6 @@ namespace Grimoire.UI
 				return;
 			}
 			cmbSpecials.Enabled = !chkSpecial.Checked;
-
 			if (chkSpecial.Checked)
 			{
 				switch (cmbSpecials.SelectedItem.ToString())
@@ -3217,7 +3241,10 @@ namespace Grimoire.UI
 						SpecialJsonHandler = new HandlerAutoZoneDarkCarnax();
 						break;
 					case "Auto Zone - Astral Empyrean":
-						SpecialJsonHandler = new HandlerAutoZoneAtralEmpyrean();
+						SpecialJsonHandler = new HandlerAutoZoneAstralEmpyrean();
+						break;
+					case "Auto Zone - Queen Iona":
+						SpecialJsonHandler = new HandlerAutoZoneQueenIona();
 						break;
 				}
 			} 

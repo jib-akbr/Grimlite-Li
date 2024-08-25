@@ -525,6 +525,10 @@ namespace Grimoire.UI.Maid
 				sunConvergenceCount = 0;
 				moonConvergenceCount = 0;
 			}
+			if (Player.Map == "astralshrine" && Player.Cell != "r2")
+			{
+				beholdOurStarfireCount = 0;
+			}
 		}
 
 		/* Hotkey */
@@ -686,6 +690,7 @@ namespace Grimoire.UI.Maid
 
 		private int sunConvergenceCount = 0;
 		private int moonConvergenceCount = 0;
+		private int beholdOurStarfireCount = 0;
 
 		private bool ultraBossHandler(string msg)
 		{
@@ -700,6 +705,11 @@ namespace Grimoire.UI.Maid
 				moonConvergenceCount++;
 				debug($"Moon Converges count: {moonConvergenceCount}");
 			}
+			if (msg.Contains("behold our starfire"))
+			{
+				beholdOurStarfireCount++;
+				debug($"Behold our starfire count: {beholdOurStarfireCount}");
+			}
 			switch (cmbUltraBoss.SelectedItem.ToString())
 			{
 				case "Asc.Solstice P1":
@@ -713,6 +723,12 @@ namespace Grimoire.UI.Maid
 					break;
 				case "Asc.Midnight P2":
 					act = moonConvergenceCount % 2 == 0 || !msg.Contains("moon converge");
+					break;
+				case "Ast.Empyrean P1":
+					act = beholdOurStarfireCount % 2 != 0 || !msg.Contains("behold our starfire");
+					break;
+				case "Ast.Empyrean P2":
+					act = beholdOurStarfireCount % 2 == 0 || !msg.Contains("behold our starfire");
 					break;
 			}
 			return act;
@@ -739,6 +755,13 @@ namespace Grimoire.UI.Maid
 					cbAttackPriority.Checked = true;
 					tbAttPriority.Text = "Ascended Midnight";
 					tbSpecialMsg.Text = "moon converges";
+					numSkillAct.Value = 5;
+					break;
+				case "Ast.Empyrean P1":
+				case "Ast.Empyrean P2":
+					cbAttackPriority.Checked = true;
+					tbAttPriority.Text = "Astral Empyrean";
+					tbSpecialMsg.Text = "behold our starfire";
 					numSkillAct.Value = 5;
 					break;
 			}

@@ -865,10 +865,9 @@ namespace Grimoire.UI
 		{
 			await Proxy.Instance.SendToClient(clientPacket);
 			await Task.Delay(1000);
-			string room = chkPriv.Checked ? $"-{numPriv.Value}" : "";
 			ExecuteTravel(new List<IBotCommand>
 			{
-				CreateJoinCommand(map + room, cell, pad)
+				CreateJoinCommand(map, cell, pad)
 			});
 		}
 
