@@ -376,7 +376,6 @@ namespace Grimoire.Tools
 
 			object[] args = el.Elements().Select(x => FromFlashXml(x)).ToArray();
 
-			//Console.WriteLine($"name: {name}");
 			switch (name)
 			{
 				case "debug":

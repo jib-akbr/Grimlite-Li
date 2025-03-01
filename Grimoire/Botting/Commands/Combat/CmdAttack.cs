@@ -12,8 +12,9 @@ namespace Grimoire.Botting.Commands.Combat
         public bool UseSkill { get; set; } = false;
 
         public async Task Execute(IBotEngine instance)
-        {
-            if (instance.Configuration.SkipAttack)
+		{
+			BotData.BotState = BotData.State.Combat;
+			if (instance.Configuration.SkipAttack)
             {
                 if (Player.HasTarget) Player.CancelTarget();
                 return;

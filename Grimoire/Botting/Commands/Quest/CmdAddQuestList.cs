@@ -34,14 +34,14 @@ namespace Grimoire.Botting.Commands.Quest
 				ItemId = ItemId,
 				SafeRelogin = SafeRelogin,
 			};
-			Console.WriteLine($"total: {instance.Configuration.Quests.Count}");
+
 			if (instance.Configuration.Quests.FirstOrDefault(x => x.Id == quest.Id) == null)
 			{
 				BotManager.Instance.Invoke((MethodInvoker) delegate {
 					BotManager.Instance.AddQuest(Id, ItemId, SafeRelogin);
 				});
 				instance.Configuration.Quests.Add(quest);
-				Console.WriteLine($"Adding: {Id}");
+
 				if (instance.IsRunning)
 				{
 					instance.StopQuestList();

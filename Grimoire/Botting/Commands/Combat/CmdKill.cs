@@ -22,6 +22,8 @@ namespace Grimoire.Botting.Commands.Combat
 
 		public async Task Execute(IBotEngine instance)
 		{
+			BotData.BotState = BotData.State.Combat;
+
 			onPause = false;
 
 			if (instance.Configuration.SkipAttack)
@@ -46,11 +48,10 @@ namespace Grimoire.Botting.Commands.Combat
 			if (AntiCounter)
 			{
 				OptionsManager.DisableAnimations = false;
-				//Proxy.Instance.ReceivedFromServer += CapturePlayerData;
 				Flash.FlashCall += AntiCounterHandler;
 			}
 
-			Console.WriteLine("Mon:" + Monster);
+			//Console.WriteLine("Mon:" + Monster);
 			Player.AttackMonster(Monster);
 
 			if (instance.Configuration.Skills.Count > 0)
@@ -62,7 +63,6 @@ namespace Grimoire.Botting.Commands.Combat
 			if (AntiCounter)
 			{
 				OptionsManager.DisableAnimations = disableAnims;
-				//Proxy.Instance.ReceivedFromServer -= CapturePlayerData;
 				Flash.FlashCall -= AntiCounterHandler;
 			}
 

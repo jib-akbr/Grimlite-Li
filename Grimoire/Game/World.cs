@@ -64,11 +64,9 @@ namespace Grimoire.Game
 
         public static void OnItemDropped(InventoryItem drop)
         {
-            //Console.WriteLine($"OnItemDropped : {drop.Name}");
             Action<InventoryItem> itemDropped = ItemDropped;
             if (itemDropped != null)
             {
-                //string text = $"{(Player.Inventory.Items.Find((InventoryItem x) => x.Name == drop.Name) ?? new InventoryItem()).Quantity}";
                 string text = $"{(Player.Inventory.GetItemByName(drop.Name) ?? new InventoryItem()).Quantity}";
                 //LogForm.Instance.AppendDrops($"[Item Drop] {drop.Quantity} {drop.Name} at {DateTime.Now:hh:mm:ss tt} [{text}] \r\n");
                 itemDropped(drop);

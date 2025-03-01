@@ -55,7 +55,6 @@ namespace Grimoire.Networking.Handlers.Maid
                     }
                     if (x != 0f && y != 0f)
                     {
-                        System.Console.WriteLine($"Walk = x:{x} y:{y}");
                         Player.WalkToPoint(x.ToString(), y.ToString());
                     }
                 }

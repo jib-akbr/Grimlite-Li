@@ -3065,7 +3065,6 @@ namespace Grimoire.UI
 					color = "Unknown";
 					break;
 			}
-			Console.WriteLine($"{username}: {accessLevel}");
 
 			if (_accessLevel >= 30)
 			{
@@ -3137,8 +3136,7 @@ namespace Grimoire.UI
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine("MyMsg: " + msg);
-				Console.WriteLine("MyError: " + e.Message);
+				Console.WriteLine("err: " + e.Message);
 			}
 		}
 

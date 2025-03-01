@@ -47,14 +47,11 @@ namespace Grimoire.Botting.Commands.Map
 					int num = random.Next(1000, 99999);
 					roomNumber = num.ToString();
 				}
-				bool provoke = instance.Configuration.ProvokeMonsters;
-				if (provoke) instance.Configuration.ProvokeMonsters = false;
 				while (_try > 0 && Player.Map != Map)
 				{
 					await this.TryJoin(instance, namName, roomNumber);
 					_try--;
 				}
-				if (provoke) instance.Configuration.ProvokeMonsters = true;
 			}
 
 			if (namName.Equals(Player.Map, StringComparison.OrdinalIgnoreCase))
