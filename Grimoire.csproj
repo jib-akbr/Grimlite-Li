@@ -196,6 +196,7 @@
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneQueenIona.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneAstralEmpyrean.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneDarkCarnax.cs" />
+    <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneVordred.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerFollow.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\CellJumperHandler.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\CopyWalkHandler.cs" />

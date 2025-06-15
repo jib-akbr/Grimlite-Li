@@ -3367,7 +3367,8 @@ namespace Grimoire.UI
             "Auto Zone - Ultradage",
             "Auto Zone - Dark Carnax",
             "Auto Zone - Astral Empyrean",
-            "Auto Zone - Queen Iona"});
+            "Auto Zone - Queen Iona",
+            "Auto Zone - Colossal Vordred"});
 			this.cmbSpecials.Location = new System.Drawing.Point(29, 18);
 			this.cmbSpecials.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.cmbSpecials.Name = "cmbSpecials";
@@ -3493,7 +3494,7 @@ namespace Grimoire.UI
 			this.txtAuthor.Location = new System.Drawing.Point(7, 45);
 			this.txtAuthor.Multiline = true;
 			this.txtAuthor.Name = "txtAuthor";
-			this.txtAuthor.Size = new System.Drawing.Size(283, 20);
+			this.txtAuthor.Size = new System.Drawing.Size(276, 20);
 			this.txtAuthor.TabIndex = 119;
 			this.txtAuthor.Text = "Author";
 			// 
@@ -3695,7 +3696,7 @@ namespace Grimoire.UI
 			this.tabOptions.Margin = new System.Windows.Forms.Padding(0);
 			this.tabOptions.Name = "tabOptions";
 			this.tabOptions.Padding = new System.Windows.Forms.Padding(3);
-			this.tabOptions.Size = new System.Drawing.Size(192, 73);
+			this.tabOptions.Size = new System.Drawing.Size(541, 301);
 			this.tabOptions.TabIndex = 5;
 			this.tabOptions.Text = "Options";
 			// 
@@ -4736,7 +4737,7 @@ namespace Grimoire.UI
 			this.tabHunt.Margin = new System.Windows.Forms.Padding(0);
 			this.tabHunt.Name = "tabHunt";
 			this.tabHunt.Padding = new System.Windows.Forms.Padding(3);
-			this.tabHunt.Size = new System.Drawing.Size(541, 301);
+			this.tabHunt.Size = new System.Drawing.Size(192, 73);
 			this.tabHunt.TabIndex = 3;
 			this.tabHunt.Text = "Hunt";
 			// 
@@ -4744,7 +4745,7 @@ namespace Grimoire.UI
 			// 
 			this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.pictureBox1.Image = global::Properties.Resources.astolfo_head;
-			this.pictureBox1.Location = new System.Drawing.Point(409, 182);
+			this.pictureBox1.Location = new System.Drawing.Point(60, -46);
 			this.pictureBox1.Name = "pictureBox1";
 			this.pictureBox1.Size = new System.Drawing.Size(133, 122);
 			this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;

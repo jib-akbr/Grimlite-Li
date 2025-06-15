@@ -11,8 +11,8 @@ namespace Grimoire
 {
 	internal static class Program
 	{
-		public static readonly string Version = "Li 1.5.4";
-		public static readonly string ReleaseDate = "24-08-2024";
+		public static readonly string Version = "Li 1.6.0";
+		public static readonly string ReleaseDate = "15-06-2025";
 		public static string PluginsPath { get; private set; }
 		public static Tools.Plugins.PluginManager PluginsManager { get; private set; }
 
