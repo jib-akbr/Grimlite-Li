@@ -1,3 +1,3 @@
-GrimLite Li 1.5.4
+GrimLite Ligma 1.6.0
 
-24-08-2024
+15-06-2025
