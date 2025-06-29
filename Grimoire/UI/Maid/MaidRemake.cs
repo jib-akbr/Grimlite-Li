@@ -16,6 +16,8 @@ using Grimoire.Tools.Maid;
 using Grimoire.Networking.Handlers.Maid;
 using System.Net.Sockets;
 using System.Drawing;
+using Grimoire.Game.Data;
+using System.Linq;
 
 namespace Grimoire.UI.Maid
 {
@@ -138,6 +140,14 @@ namespace Grimoire.UI.Maid
 					buffIndex = 0;
 				}
 
+				// auto equip Scroll of Enrage
+				if (cmbUltraBoss.SelectedItem.ToString() != "None")
+				{	
+					InventoryItem item = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => i.Name.Equals("Scroll of Enrage") && i.IsEquippable);
+					Player.EquipPotion(item.Id, item.Description, item.File, item.Name);
+					await Task.Delay(1000);
+				}
+
 				while (cbEnablePlugin.Checked)
 				{
 					try
@@ -198,19 +208,26 @@ namespace Grimoire.UI.Maid
 							}
 
 							if (cbAttackPriority.Checked)
-								doPriorityAttack(); 
+								doPriorityAttack();
 
+							// set targetting to availabe monster in current cell
 							if (World.IsMonsterAvailable("*") && !Player.HasTarget)
 								Player.AttackMonster("*");
 
+							// waiting for skill CD if 'Wait' skill checked
 							if (cbWaitSkill.Checked && (Player.SkillAvailable(skillList[skillIndex]) > 0 || !Player.HasTarget))
 							{
 								await Task.Delay(150);
 								continue;
 							}
 
+							// do attack with skills
 							if (Player.HasTarget)
 							{
+								//general loop taunt
+								DoLoopTaunt();
+
+								// force, to ensure a skill is REALLY executed 
 								if (forceSkill)
 								{
 									string skillAct = numSkillAct.Value.ToString();
@@ -220,7 +237,9 @@ namespace Grimoire.UI.Maid
 									await Task.Delay(500);
 									Player.UseSkill(skillAct);
 									forceSkill = false;
-								} else
+								}
+								// normal skill spamming
+								else
 								{
 									Player.UseSkill(skillList[skillIndex]);
 								}
@@ -295,6 +314,22 @@ namespace Grimoire.UI.Maid
 			return null;
 		}
 
+		private void DoLoopTaunt() 
+		{
+			// ultra gramiel
+			if (Player.Map == "ultragramiel") 
+			{
+				if (World.IsMonsterAvailable("Grace Crystal")) return;
+				if (Player.GetAuras(false, "Focus") < 1 && Player.SkillAvailable("5") == 0)
+				{
+					Player.UseSkill("5");
+				}
+			} 
+			else 
+			{
+				return;
+			}
+		}
 
 		private void AnimsMsgHandler(string function, params object[] args)
 		{
@@ -315,26 +350,20 @@ namespace Grimoire.UI.Maid
 							{
 								string msg = anim?["msg"]?.ToString()?.ToLower();
 								if (msg != null)
-								{
-									//debug($"msg: {msg}");
-									string inputMsg = tbSpecialMsg.Text?.ToLower();
-									if (inputMsg.Contains(","))
+								{ 
+									int monId = 0;
+									int.TryParse(anim?["tInf"]?.ToString()?.Split(':')[1], out monId);
+									string[] inputMsg = tbSpecialMsg.Text?.ToLower().Split(',');
+									foreach (string m in inputMsg)
 									{
-										foreach (string m in inputMsg.Split(','))
+										string specialMsg = m.Trim();
+										if (!string.IsNullOrEmpty(specialMsg))
 										{
-											if (msg.Contains(m) && ultraBossHandler(msg))
+											if (msg.Contains(specialMsg) && ultraBossHandler(msg, monId))
 											{
 												forceSkill = true;
 												return;
 											}
-										}
-									} 
-									else
-									{
-										if (msg.Contains(inputMsg) && ultraBossHandler(msg))
-										{
-											forceSkill = true;
-											return;
 										}
 									}
 								}
@@ -425,9 +454,9 @@ namespace Grimoire.UI.Maid
 
 		private void doPriorityAttack()
 		{
-			for(int i = 0; i < monsterList.Length; i++)
+			for (int i = 0; i < monsterList.Length; i++)
 			{
-				if(World.IsMonsterAvailable(monsterList[i]))
+				if (World.IsMonsterAvailable(monsterList[i]))
 				{
 					Player.AttackMonster(monsterList[i]);
 					return;
@@ -440,7 +469,7 @@ namespace Grimoire.UI.Maid
 			return (Player.CurrentState == Player.State.InCombat ? true : false);
 		}
 
-		private bool IsPlayerInMap (string targetUsername)
+		private bool IsPlayerInMap(string targetUsername)
 		{
 			foreach (string player in World.PlayersInMap)
 			{
@@ -529,6 +558,10 @@ namespace Grimoire.UI.Maid
 			{
 				beholdOurStarfireCount = 0;
 			}
+			if (Player.Map == "ultragramiel" && Player.Cell != "r2")
+			{
+				defenseShatteringCount = 0;
+			}
 		}
 
 		/* Hotkey */
@@ -582,7 +615,7 @@ namespace Grimoire.UI.Maid
 			if (cmbGotoUsername.Focused || tbAttPriority.Focused || !cbEnablePlugin.Checked)
 				return;
 
-			switch(e)
+			switch (e)
 			{
 				case Keys.R:
 					// LockCell: R
@@ -600,7 +633,7 @@ namespace Grimoire.UI.Maid
 		public void pauseFollow()
 		{
 			if (onPause) return;
-			if (cbCopyWalk.Checked) 
+			if (cbCopyWalk.Checked)
 				Proxy.Instance.UnregisterHandler(CopyWalkHandler);
 			onPause = true;
 			//debug("onPause: true");
@@ -609,7 +642,7 @@ namespace Grimoire.UI.Maid
 		public void resumeFollow()
 		{
 			if (!onPause) return;
-			if (cbCopyWalk.Checked) 
+			if (cbCopyWalk.Checked)
 				Proxy.Instance.RegisterHandler(CopyWalkHandler);
 			onPause = false;
 			//debug("onPause: false");
@@ -618,7 +651,7 @@ namespace Grimoire.UI.Maid
 		private void cbLockCell_CheckedChanged(object sender, EventArgs e)
 		{
 			if (cbEnableGlobalHotkey.Checked == false) return;
-			if(cbUnfollow.Checked)
+			if (cbUnfollow.Checked)
 			{
 				Proxy.Instance.UnregisterHandler(CJHandler);
 				if (cbCopyWalk.Checked) Proxy.Instance.UnregisterHandler(CopyWalkHandler);
@@ -691,8 +724,9 @@ namespace Grimoire.UI.Maid
 		private int sunConvergenceCount = 0;
 		private int moonConvergenceCount = 0;
 		private int beholdOurStarfireCount = 0;
+		private int defenseShatteringCount = 0;
 
-		private bool ultraBossHandler(string msg)
+		private bool ultraBossHandler(string msg, int monId)
 		{
 			bool act = true;
 			if (msg.Contains("sun converge"))
@@ -709,6 +743,29 @@ namespace Grimoire.UI.Maid
 			{
 				beholdOurStarfireCount++;
 				debug($"Behold our starfire count: {beholdOurStarfireCount}");
+			}
+
+			if (msg.Contains("defense shattering"))
+			{
+				switch (cmbUltraBoss.SelectedItem.ToString())
+				{
+					case "Gramiel L1":
+					case "Gramiel L2":
+						if (monId == 2)
+						{
+							defenseShatteringCount++;
+							debug($"Defense shattering 'Left Crystal' count: {defenseShatteringCount}");
+						}
+						break;
+					case "Gramiel R1":
+					case "Gramiel R2":
+						if (monId == 3)
+						{
+							defenseShatteringCount++;
+							debug($"Defense shattering 'Right Crystal' count: {defenseShatteringCount}");
+						}
+						break;
+				}
 			}
 			switch (cmbUltraBoss.SelectedItem.ToString())
 			{
@@ -729,6 +786,14 @@ namespace Grimoire.UI.Maid
 					break;
 				case "Ast.Empyrean P2":
 					act = beholdOurStarfireCount % 2 == 0 || !msg.Contains("behold our starfire");
+					break;
+				case "Gramiel L1":
+				case "Gramiel R1":
+					act = defenseShatteringCount % 2 != 0 || !msg.Contains("defense shattering");
+					break;
+				case "Gramiel L2":
+				case "Gramiel R2":
+					act = defenseShatteringCount % 2 == 0 || !msg.Contains("defense shattering");
 					break;
 			}
 			return act;
@@ -762,6 +827,20 @@ namespace Grimoire.UI.Maid
 					cbAttackPriority.Checked = true;
 					tbAttPriority.Text = "Astral Empyrean";
 					tbSpecialMsg.Text = "behold our starfire";
+					numSkillAct.Value = 5;
+					break;
+				case "Gramiel L1":
+				case "Gramiel L2":
+					cbAttackPriority.Checked = true;
+					tbAttPriority.Text = "id:2,id:3";
+					tbSpecialMsg.Text = "defense shattering";
+					numSkillAct.Value = 5;
+					break;
+				case "Gramiel R1":
+				case "Gramiel R2":
+					cbAttackPriority.Checked = true;
+					tbAttPriority.Text = "id:3.id:2";
+					tbSpecialMsg.Text = "defense shattering";
 					numSkillAct.Value = 5;
 					break;
 			}
@@ -809,7 +888,7 @@ namespace Grimoire.UI.Maid
 			if (World.IsMapLoading)
 				return;
 			cmbGotoUsername.Items.Clear();
-			foreach(string player in World.PlayersInMap)
+			foreach (string player in World.PlayersInMap)
 				cmbGotoUsername.Items.Add(player);
 		}
 
@@ -867,7 +946,7 @@ namespace Grimoire.UI.Maid
 					{
 						File.WriteAllText(saveFileDialog.FileName, JsonConvert.SerializeObject(maidConfig, Formatting.Indented));
 						string[] path = saveFileDialog.FileName.Split('\\');
-						gbConfig.Text = $"Config : {path[path.Length-1]}";
+						gbConfig.Text = $"Config : {path[path.Length - 1]}";
 					}
 					catch (Exception ex)
 					{
@@ -885,7 +964,7 @@ namespace Grimoire.UI.Maid
 				openFileDialog.InitialDirectory = Path.Combine(Application.StartupPath, "Config");
 				openFileDialog.Filter = "Maid config|*.json";
 				openFileDialog.DefaultExt = ".json";
-				if (openFileDialog.ShowDialog() == DialogResult.OK && 
+				if (openFileDialog.ShowDialog() == DialogResult.OK &&
 					TryDeserialize(File.ReadAllText(openFileDialog.FileName), out MaidConfig config))
 				{
 					gbConfig.Text = $"Config : {openFileDialog.SafeFileName}";
@@ -934,7 +1013,7 @@ namespace Grimoire.UI.Maid
 			{
 				Proxy.Instance.RegisterHandler(PartyInvitationHandler);
 				Proxy.Instance.RegisterHandler(PartyChatHandler);
-			} 
+			}
 			else
 			{
 				Proxy.Instance.UnregisterHandler(PartyInvitationHandler);
@@ -965,7 +1044,8 @@ namespace Grimoire.UI.Maid
 			if (cbAntiCounter.Checked)
 			{
 				Flash.FlashCall2 += AntiCounterHandler;
-			} else
+			}
+			else
 			{
 				Flash.FlashCall2 -= AntiCounterHandler;
 			}
