@@ -320,14 +320,12 @@ namespace Grimoire.UI.Maid
 			if (Player.Map == "ultragramiel") 
 			{
 				if (World.IsMonsterAvailable("Grace Crystal")) return;
-				if (Player.GetAuras(false, "Focus") < 1 && Player.SkillAvailable("5") == 0)
+				if (Player.GetAuras(false, "Focus") < 1 && 
+					Player.GetAuras(true, "Vendetta") < 1 &&
+					Player.SkillAvailable("5") == 0)
 				{
 					Player.UseSkill("5");
 				}
-			} 
-			else 
-			{
-				return;
 			}
 		}
 
@@ -756,6 +754,10 @@ namespace Grimoire.UI.Maid
 							defenseShatteringCount++;
 							debug($"Defense shattering 'Left Crystal' count: {defenseShatteringCount}");
 						}
+						else
+						{
+							return false;
+						}
 						break;
 					case "Gramiel R1":
 					case "Gramiel R2":
@@ -763,6 +765,10 @@ namespace Grimoire.UI.Maid
 						{
 							defenseShatteringCount++;
 							debug($"Defense shattering 'Right Crystal' count: {defenseShatteringCount}");
+						}
+						else
+						{
+							return false;
 						}
 						break;
 				}
@@ -793,7 +799,7 @@ namespace Grimoire.UI.Maid
 					break;
 				case "Gramiel L2":
 				case "Gramiel R2":
-					act = defenseShatteringCount % 2 == 0 || !msg.Contains("defense shattering");
+					act = (defenseShatteringCount % 2 == 0 && defenseShatteringCount > 0) || !msg.Contains("defense shattering");
 					break;
 			}
 			return act;
@@ -839,7 +845,7 @@ namespace Grimoire.UI.Maid
 				case "Gramiel R1":
 				case "Gramiel R2":
 					cbAttackPriority.Checked = true;
-					tbAttPriority.Text = "id:3.id:2";
+					tbAttPriority.Text = "id:3,id:2";
 					tbSpecialMsg.Text = "defense shattering";
 					numSkillAct.Value = 5;
 					break;
