@@ -1,0 +1,6 @@
+Variables in Packet Cmd
+{ROOM_ID} = room id
+{ROOM_NUMBER} = map room number
+{GETMAP} = map name
+PLAYERNAME = player username
+
