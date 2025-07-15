@@ -229,10 +229,12 @@
             "LOO",
             "SC",
             "AP",
+            "AI",
             "CCMD",
             "SSOT",
             "NCM",
-            "TK"});
+            "TK",
+            "CSH"});
             this.cmbPreset.Location = new System.Drawing.Point(84, 102);
             this.cmbPreset.Name = "cmbPreset";
             this.cmbPreset.Size = new System.Drawing.Size(68, 21);

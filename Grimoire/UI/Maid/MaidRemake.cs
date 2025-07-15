@@ -70,7 +70,9 @@ namespace Grimoire.UI.Maid
             InitializeComponent();
 
             KeyPreview = true;
-            //this.KeyDown += new KeyEventHandler(this.hotkey);
+
+            //KeyListener non Global Hook
+            this.KeyDown += new KeyEventHandler(this.hotkey);
             if (Player.IsLoggedIn) cmbGotoUsername.Text = Player.Username;
             cmbUltraBoss.SelectedIndex = 0;
             this.Text = $"Maid Remake";
@@ -240,7 +242,11 @@ namespace Grimoire.UI.Maid
                                 }
                                 else
                                 { // normal skill spamming
-                                    Player.UseSkill(skillList[skillIndex]);
+                                    if (isUsingCSH())
+                                    {
+                                        Player.ForceUseSkill(skillList[skillIndex]);
+                                    }
+                                    else Player.UseSkill(skillList[skillIndex]);
                                 }
                             }
 
@@ -302,10 +308,14 @@ namespace Grimoire.UI.Maid
             Task.Delay(1000);
         }
 
+        private bool isUsingCSH() { 
+            return Player.EquippedClass == "CHRONO SHADOWHUNTER" || Player.EquippedClass == "CHRONO SHADOWSLAYER";
+        }
+
         private string msgTemp;
         private void DoLoopTaunt()
         {
-
+            
             if (Player.Map == "voidxyfrag" && Player.EquippedClass == "LEGION REVENANT")
             {
                 if (!string.IsNullOrWhiteSpace(msgTemp))
@@ -323,14 +333,41 @@ namespace Grimoire.UI.Maid
                 }
             }
 
+            if (isUsingCSH())
+            {
+                if (Player.GetAuras(true, "Rounds Empty") == 1)
+                {
+                    Player.ForceUseSkill("4");
+                    Task.Delay(1000);
+                    Player.ForceUseSkill("1");
+                }
+            }
+
+            if (Player.EquippedClass == "ARCANA INVOKER") 
+            {
+                if (!string.IsNullOrWhiteSpace(msgTemp))
+                {
+                    tbSkillList.Text = msgTemp;
+                    msgTemp = string.Empty; // Reset setelah keluar map
+                }
+                tbSkillList.Text = "2,3,4";
+
+                if (Player.GetAuras(true, "XX - Judgement") == 1 ||
+                    Player.GetAuras(true, "End of the world") >= 20 ||
+                    Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)  
+                {
+                    Player.UseSkill("1");
+                }
+            }
 
             // ultra gramiel
             if (Player.Map == "ultragramiel")
             {
                 if (World.IsMonsterAvailable("Grace Crystal"))
-                    return;
-                if (Player.GetAuras(false, "Focus") < 1 && Player.SkillAvailable("5") == 0)
+                    return; 
+                if (Player.GetAuras(true, "Celestial Ruin") < 5 && Player.GetAuras(true, "vendetta") < 4 && Player.SkillAvailable("5") == 0)
                 {
+                    Task.Delay(new Random().Next(3000)+1000 ); //Random 1-4 sec taunt to ensure vendetta isn't stacked too much per chars
                     Player.UseSkill("5");
                 }
             }
@@ -387,7 +424,7 @@ namespace Grimoire.UI.Maid
                                         string specialMsg = m.Trim();
                                         if (!string.IsNullOrEmpty(specialMsg))
                                         {
-                                            if (msg.Contains(specialMsg) && ultraBossHandler(msg, monId))
+                                            if (msg.Contains(specialMsg) && ultraBossHandler(msg))
                                             {
                                                 forceSkill = true;
                                                 return;
@@ -484,7 +521,7 @@ namespace Grimoire.UI.Maid
         {
             for (int i = 0; i < monsterList.Length; i++)
             {
-                if (World.IsMonsterAvailable(monsterList[i]))
+                if (World.IsMonsterAvailable(monsterList[i]) && !Player.HasTarget)
                 {
                     Player.AttackMonster(monsterList[i]);
                     return;
@@ -759,7 +796,7 @@ namespace Grimoire.UI.Maid
         private int crystalCount = 0;
         private int beholdOurStarfireCount = 0;
 
-        private bool ultraBossHandler(string msg, int monId)
+        private bool ultraBossHandler(string msg, int monId = 0)
         {
             bool act = true;
             if (msg.Contains("shattering"))
@@ -768,19 +805,13 @@ namespace Grimoire.UI.Maid
                 {
                     case "Gramiel L1":
                     case "Gramiel L2":
-                        if (monId == 2)
-                        {
-                            crystalCount++;
-                            debug($"Defense shattering 'Left Crystal' count: {crystalCount}");
-                        }
+                        crystalCount++;
+                        debug($"Defense shattering 'Left Crystal' count: {crystalCount}");
                         break;
                     case "Gramiel R1":
                     case "Gramiel R2":
-                        if (monId == 3)
-                        {
-                            crystalCount++;
-                            debug($"Defense shattering 'Right Crystal' count: {crystalCount}");
-                        }
+                        crystalCount++;
+                        debug($"Defense shattering 'Right Crystal' count: {crystalCount}");
                         break;
                 }
             }
@@ -822,7 +853,7 @@ namespace Grimoire.UI.Maid
                     break;
                 case "Gramiel L1":
                 case "Gramiel R1":
-                    act = crystalCount % 4 != 0 || !msg.Contains("shattering");
+                    act = crystalCount % 4 == 2 || !msg.Contains("shattering");
                     break;
                 case "Gramiel L2":
                 case "Gramiel R2":
@@ -910,6 +941,12 @@ namespace Grimoire.UI.Maid
                     break;
                 case "TK":
                     ClassPreset.TK();
+                    break;
+                case "AI":
+                    ClassPreset.AI();
+                    break;
+                case "CSH":
+                    ClassPreset.CSH();
                     break;
             }
             ClassPreset.cbSet();
