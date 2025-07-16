@@ -17,6 +17,8 @@ using System.Reflection;
 using System.Linq;
 using Grimoire.FlashTools;
 using Grimoire.Utils;
+using System.Diagnostics;
+using Grimoire.Botting.Commands.Combat;
 
 namespace Grimoire.UI
 {
@@ -1399,13 +1401,26 @@ namespace Grimoire.UI
 			List<Skill> listSkill = new List<Skill>();
 			try
 			{
+				bool wait = false;
 				string playerClass = Player.EquippedClass;
 				string skillPreset = ClientConfig.GetValue($"{ClientConfig.C_SKILL_PRESET_PREFIX}{playerClass.ToUpper()}");
 				if (skillPreset != null)
 				{
+					if (skillPreset.Contains("wait"))
+					{
+                        skillPreset = skillPreset.Replace("wait","");
+						wait = true;
+                    }
 					string[] skills = skillPreset.Split(';');
 					foreach (string skill in skills)
 					{
+						if (wait)
+						{
+                            listSkill.Add(
+                                new Skill { Type = Skill.SkillType.Wait, Index = skill }
+                            );
+							continue;
+                        }
 						if (skill.Contains(':'))
 						{
 							string skillIndex = skill.Split(':')[0];
@@ -1445,7 +1460,9 @@ namespace Grimoire.UI
 						}
 					}
 				}
-			} catch { } 
+			} catch {
+				LogForm.Instance.AppendDebug("Error while loading skill preset for " + Player.EquippedClass + "\r\n");
+			} 
 			return listSkill;
 		}
 
@@ -1472,6 +1489,7 @@ namespace Grimoire.UI
 			while (chkAutoAttack.Checked)
 			{
 				if (!Player.HasTarget) Player.AttackMonster("*");
+				SpecialClassCombo();
 				if (listSkill.Count > 0)
 				{
 					if (listSkill[i].Type != Skill.SkillType.Label && Player.HasTarget)
@@ -1482,6 +1500,46 @@ namespace Grimoire.UI
 				if (i >= listSkill.Count) i = 0;
 			}
 		}
+
+		private void SpecialClassCombo()
+		{
+			string playerClass = Player.EquippedClass.ToLower();
+
+			if (playerClass.Contains("chrono shadow"))
+            {
+                if (Player.GetAuras(true,"Rounds Empty") == 0 || Player.Mana < 15)
+				{
+					useSkill("4");
+					Task.Delay(1000);
+					useSkill("1");
+				}
+            }
+            else if (playerClass.Equals("arcana invoker"))
+            {
+                if (Player.GetAuras(true, "XX - Judgement") == 1 ||
+                    Player.GetAuras(true, "End of the world") >= 13 ||
+                    Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)
+                {
+                    useSkill("1");
+                }
+            }
+            else if (playerClass.Equals("archmage"))
+			{
+                if (Player.GetAuras(true, "Arcane Flux") == 1 &&
+                    Player.GetAuras(true, "Corporeal Ascension") == 0 ||
+                    Player.GetAuras(true, "Arcane Sigil") == 0 )
+                {
+                    useSkill("4");
+                }
+            }
+        }
+
+		private void useSkill(string skillIndex)
+		{
+            if (Player.EquippedClass.Contains("CHRONO SHADOW")) 
+				Player.ForceUseSkill(skillIndex);
+            else Player.UseSkill(skillIndex);
+        }
 
 		private void chkStartBot_CheckedChanged(object sender, EventArgs e)
 		{

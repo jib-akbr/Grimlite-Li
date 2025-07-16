@@ -366,7 +366,7 @@ namespace Grimoire.UI.Maid
                 tbSkillList.Text = "2,3,4";
 
                 if (Player.GetAuras(true, "XX - Judgement") == 1 ||
-                    Player.GetAuras(true, "End of the world") >= 20 ||
+                    Player.GetAuras(true, "End of the world") >= 13 ||
                     Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)
                 {
                     useSkill("1");
@@ -378,14 +378,14 @@ namespace Grimoire.UI.Maid
             {
                 if (World.IsMonsterAvailable("Grace Crystal"))
                     return;
-                if (Player.GetAuras(true, "Celestial Ruin") < 5 && Player.GetAuras(true, "vendetta") < 4 && Player.SkillAvailable("5") == 0)
+                if (Player.GetAuras(true, "Celestial Ruin") < 5 && 
+                    Player.GetAuras(true, "vendetta") < 3 && 
+                    Player.SkillAvailable("5") == 0)
                 {
                     Task.Delay(new Random().Next(3000) + 1000); //Random 1-4 sec taunt to ensure vendetta isn't stacked too much per chars
                     useSkill("5");
                 }
             }
-
-            return;
         }
 
         private Grimoire.Networking.Message CreateMessage(string raw)
