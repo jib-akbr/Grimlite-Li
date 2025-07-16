@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Linq;
 using Grimoire.FlashTools;
 using Grimoire.Utils;
+using System.Diagnostics;
 
 namespace Grimoire.UI
 {
@@ -1399,13 +1400,26 @@ namespace Grimoire.UI
 			List<Skill> listSkill = new List<Skill>();
 			try
 			{
+				bool wait = false;
 				string playerClass = Player.EquippedClass;
 				string skillPreset = ClientConfig.GetValue($"{ClientConfig.C_SKILL_PRESET_PREFIX}{playerClass.ToUpper()}");
 				if (skillPreset != null)
 				{
+					if (skillPreset.Contains("wait"))
+					{
+                        skillPreset = skillPreset.Replace("wait","");
+						wait = true;
+                    }
 					string[] skills = skillPreset.Split(';');
 					foreach (string skill in skills)
 					{
+						if (wait)
+						{
+                            listSkill.Add(
+                                new Skill { Type = Skill.SkillType.Wait, Index = skill }
+                            );
+							continue;
+                        }
 						if (skill.Contains(':'))
 						{
 							string skillIndex = skill.Split(':')[0];
@@ -1445,7 +1459,9 @@ namespace Grimoire.UI
 						}
 					}
 				}
-			} catch { } 
+			} catch {
+				LogForm.Instance.AppendDebug("Error while loading skill preset for " + Player.EquippedClass + "\r\n");
+			} 
 			return listSkill;
 		}
 

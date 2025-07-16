@@ -99,7 +99,7 @@ namespace Grimoire.Game
         public static string Password => Flash.Call<string>("GetPassword", new string[0]);
 
         /// <summary>
-        /// Grabs Player Equipped Class string.
+        /// Grabs Player Equipped Class string (FULLY UPPERCASE).
         /// </summary>
         public static string EquippedClass => Flash.Call<string>("Class", new string[0]);
 
