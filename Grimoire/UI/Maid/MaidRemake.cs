@@ -178,7 +178,8 @@ namespace Grimoire.UI.Maid
 
                             if (cbUseHeal.Checked && tbHealSkill.Text != String.Empty && isHealthUnder(healthPercent))
                             {
-                                Player.UseSkill(healSkill[healIndex]);
+                                useSkill(healSkill[healIndex]);
+                                //Player.UseSkill(healSkill[healIndex]);
                                 healIndex++;
 
                                 if (healIndex >= healSkill.Length)
@@ -198,7 +199,8 @@ namespace Grimoire.UI.Maid
 
                                 if (cbBuffIfStop.Checked && tbBuffSkill.Text != String.Empty)
                                 {
-                                    Player.UseSkill(buffSkill[buffIndex]);
+                                    useSkill(buffSkill[buffIndex]);
+                                    //Player.UseSkill(buffSkill[buffIndex]);
                                     buffIndex++;
 
                                     if (buffIndex >= buffSkill.Length)
@@ -235,18 +237,17 @@ namespace Grimoire.UI.Maid
                                     string skillAct = numSkillAct.Value.ToString();
                                     await Task.Delay(1000);
                                     await Task.Delay(Player.SkillAvailable(skillAct));
-                                    Player.UseSkill(skillAct);
+                                    //Player.UseSkill(skillAct);
+                                    useSkill(skillAct);
                                     await Task.Delay(500);
-                                    Player.UseSkill(skillAct);
+                                    //Player.UseSkill(skillAct);
+                                    useSkill(skillAct);
                                     forceSkill = false;
                                 }
                                 else
                                 { // normal skill spamming
-                                    if (isUsingCSH())
-                                    {
-                                        Player.ForceUseSkill(skillList[skillIndex]);
-                                    }
-                                    else Player.UseSkill(skillList[skillIndex]);
+                                    //Previously Player.UseSkill(skillList[skillIndex]); 
+                                    useSkill(skillList[skillIndex]);
                                 }
                             }
 
@@ -301,6 +302,16 @@ namespace Grimoire.UI.Maid
             }
         }
 
+        private void useSkill(string skillIndex)
+        {
+            if (isUsingCSH())
+            {
+                Player.ForceUseSkill(skillIndex);
+                return;
+            }
+            Player.UseSkill(skillIndex);
+        }
+
         private void equipEnrage()
         {
             InventoryItem item = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => i.Name.Equals("Scroll of Enrage") && i.IsEquippable);
@@ -308,14 +319,15 @@ namespace Grimoire.UI.Maid
             Task.Delay(1000);
         }
 
-        private bool isUsingCSH() { 
+        private bool isUsingCSH()
+        {
             return Player.EquippedClass == "CHRONO SHADOWHUNTER" || Player.EquippedClass == "CHRONO SHADOWSLAYER";
         }
 
         private string msgTemp;
         private void DoLoopTaunt()
         {
-            
+
             if (Player.Map == "voidxyfrag" && Player.EquippedClass == "LEGION REVENANT")
             {
                 if (!string.IsNullOrWhiteSpace(msgTemp))
@@ -335,15 +347,16 @@ namespace Grimoire.UI.Maid
 
             if (isUsingCSH())
             {
-                if (Player.GetAuras(true, "Rounds Empty") == 1 && Player.Mana < 15)
+                if (Player.GetAuras(true, "Rounds Empty") == 1 || Player.Mana < 15)
                 {
                     Player.ForceUseSkill("4");
                     Task.Delay(1000);
                     Player.ForceUseSkill("1");
+                    return;
                 }
             }
 
-            if (Player.EquippedClass == "ARCANA INVOKER") 
+            if (Player.EquippedClass == "ARCANA INVOKER")
             {
                 if (!string.IsNullOrWhiteSpace(msgTemp))
                 {
@@ -354,9 +367,9 @@ namespace Grimoire.UI.Maid
 
                 if (Player.GetAuras(true, "XX - Judgement") == 1 ||
                     Player.GetAuras(true, "End of the world") >= 20 ||
-                    Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)  
+                    Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)
                 {
-                    Player.UseSkill("1");
+                    useSkill("1");
                 }
             }
 
@@ -364,11 +377,11 @@ namespace Grimoire.UI.Maid
             if (Player.Map == "ultragramiel")
             {
                 if (World.IsMonsterAvailable("Grace Crystal"))
-                    return; 
+                    return;
                 if (Player.GetAuras(true, "Celestial Ruin") < 5 && Player.GetAuras(true, "vendetta") < 4 && Player.SkillAvailable("5") == 0)
                 {
-                    Task.Delay(new Random().Next(3000)+1000 ); //Random 1-4 sec taunt to ensure vendetta isn't stacked too much per chars
-                    Player.UseSkill("5");
+                    Task.Delay(new Random().Next(3000) + 1000); //Random 1-4 sec taunt to ensure vendetta isn't stacked too much per chars
+                    useSkill("5");
                 }
             }
 

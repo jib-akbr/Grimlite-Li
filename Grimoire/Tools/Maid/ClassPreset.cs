@@ -70,11 +70,11 @@ namespace Grimoire.Tools.Maid
         public static void CSH()
         {
             // skill list
-            UI.Maid.MaidRemake.Instance.tbSkillList.Text = "3,3,3,3,3,3,4";
+            UI.Maid.MaidRemake.Instance.tbSkillList.Text = "3";
 
             // heal skill
             UI.Maid.MaidRemake.Instance.tbHealSkill.Text = "2";
-            UI.Maid.MaidRemake.Instance.numHealthPercent.Value = 60;
+            UI.Maid.MaidRemake.Instance.numHealthPercent.Value = 80;
 
             // buff skill
             UI.Maid.MaidRemake.Instance.tbBuffSkill.Text = "5";
