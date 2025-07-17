@@ -72,7 +72,7 @@ namespace Grimoire.UI.Maid
             KeyPreview = true;
 
             //KeyListener non Global Hook
-            this.KeyDown += new KeyEventHandler(this.hotkey);
+            //this.KeyDown += new KeyEventHandler(this.hotkey);
             if (Player.IsLoggedIn) cmbGotoUsername.Text = Player.Username;
             cmbUltraBoss.SelectedIndex = 0;
             this.Text = $"Maid Remake";
@@ -651,8 +651,8 @@ namespace Grimoire.UI.Maid
 
         private void cbEnableGlobalHotkey_CheckedChanged(object sender, EventArgs e)
         {
-            cbUnfollow.Enabled = cbEnableGlobalHotkey.Checked;
-            cbStopAttack.Enabled = cbEnableGlobalHotkey.Checked;
+            //cbUnfollow.Enabled = cbEnableGlobalHotkey.Checked;
+            //cbStopAttack.Enabled = cbEnableGlobalHotkey.Checked;
             if (cbEnableGlobalHotkey.Checked)
             {
                 kbh.OnKeyPressed += globalHotkey;
@@ -675,7 +675,7 @@ namespace Grimoire.UI.Maid
 
         private void hotkey(object sender, KeyEventArgs e)
         {
-            if (cmbGotoUsername.Focused || tbAttPriority.Focused)
+            if (cmbGotoUsername.Focused || tbAttPriority.Focused || tbSpecialMsg.Focused)
                 return;
 
             switch (e.KeyCode)

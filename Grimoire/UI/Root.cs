@@ -1507,7 +1507,7 @@ namespace Grimoire.UI
 
 			if (playerClass.Contains("chrono shadow"))
             {
-                if (Player.GetAuras(true,"Rounds Empty") == 0 || Player.Mana < 15)
+                if (Player.GetAuras(true,"Rounds Empty") == 1 || Player.Mana < 15)
 				{
 					useSkill("4");
 					Task.Delay(1000);

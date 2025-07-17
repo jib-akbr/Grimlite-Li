@@ -316,7 +316,7 @@
             // cbUnfollow
             // 
             this.cbUnfollow.AutoSize = true;
-            this.cbUnfollow.Enabled = false;
+            this.cbUnfollow.Enabled = true;
             this.cbUnfollow.Location = new System.Drawing.Point(107, 19);
             this.cbUnfollow.Name = "cbUnfollow";
             this.cbUnfollow.Size = new System.Drawing.Size(84, 17);
@@ -327,7 +327,7 @@
             // cbStopAttack
             // 
             this.cbStopAttack.AutoSize = true;
-            this.cbStopAttack.Enabled = false;
+            this.cbStopAttack.Enabled = true;
             this.cbStopAttack.Location = new System.Drawing.Point(197, 19);
             this.cbStopAttack.Name = "cbStopAttack";
             this.cbStopAttack.Size = new System.Drawing.Size(95, 17);
