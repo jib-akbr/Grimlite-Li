@@ -194,6 +194,7 @@ namespace Grimoire.Game
 
         /// <summary>
         /// Checks if int skill is available (i think if its also off cooldown).
+        /// 0 = Skill is ready to use, else is the remaining cooldown in Miliseconds.
         /// </summary>
         /// <param name="index"></param>
         public static int SkillAvailable(string index) => Flash.Call<int>("SkillAvailable", new string[1]{index});
