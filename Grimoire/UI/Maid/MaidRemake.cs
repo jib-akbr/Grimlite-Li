@@ -378,11 +378,10 @@ namespace Grimoire.UI.Maid
             {
                 if (World.IsMonsterAvailable("Grace Crystal"))
                     return;
-                if (Player.GetAuras(true, "Celestial Ruin") < 5 && 
-                    Player.GetAuras(true, "vendetta") < 3 && 
-                    Player.SkillAvailable("5") == 0)
+                if (Player.GetAuras(true, "Celestial Ruin") < 4 && Player.GetAuras(true, "vendetta") < 3 && 
+                    Player.SkillAvailable("5") == 0 && Player.GetAuras(true, "Invulnerable") == 0)
                 {
-                    Task.Delay(new Random().Next(3000) + 1000); //Random 1-4 sec taunt to ensure vendetta isn't stacked too much per chars
+                    Task.Delay(new Random().Next(3000) + 3000); //Random 3-6 sec taunt to ensure vendetta isn't stacked too much per chars
                     useSkill("5");
                 }
             }
@@ -534,7 +533,7 @@ namespace Grimoire.UI.Maid
         {
             for (int i = 0; i < monsterList.Length; i++)
             {
-                if (World.IsMonsterAvailable(monsterList[i]) && !Player.HasTarget)
+                if (World.IsMonsterAvailable(monsterList[i]))
                 {
                     Player.AttackMonster(monsterList[i]);
                     return;
