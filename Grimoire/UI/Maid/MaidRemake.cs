@@ -379,10 +379,10 @@ namespace Grimoire.UI.Maid
             {
                 if (World.IsMonsterAvailable("Grace Crystal"))
                     return;
-                if (Player.GetAuras(true, "Celestial Ruin") < 4 && Player.GetAuras(true, "vendetta") < 3 && 
+                if (Player.GetAuras(true, "vendetta") < 40 && 
                     Player.SkillAvailable("5") == 0 && Player.GetAuras(true, "Invulnerable") == 0)
-                {
-                    Task.Delay(new Random().Next(3000) + 3000); //Random 3-6 sec taunt to ensure vendetta isn't stacked too much per chars
+                {//idk Why vendetta stacks 10 times per stack
+                    Task.Delay(new Random().Next(3000) + 2000); //Random 3-5 sec taunt to ensure vendetta isn't stacked too much per chars
                     useSkill("5");
                 }
             }
