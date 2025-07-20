@@ -382,7 +382,7 @@ namespace Grimoire.UI.Maid
                 if (Player.GetAuras(true, "vendetta") < 40 && 
                     Player.SkillAvailable("5") == 0 && Player.GetAuras(true, "Invulnerable") == 0)
                 {//idk Why vendetta stacks 10 times per stack
-                    Task.Delay(new Random().Next(3000) + 2000); //Random 3-5 sec taunt to ensure vendetta isn't stacked too much per chars
+                    Task.Delay(new Random().Next(5000) + 1000); //Random 3-5 sec taunt to ensure vendetta isn't stacked too much per chars
                     useSkill("5");
                 }
             }
@@ -695,7 +695,7 @@ namespace Grimoire.UI.Maid
 
         private void globalHotkey(object sender, Keys e)
         {
-            if (cmbGotoUsername.Focused || tbAttPriority.Focused || !cbEnablePlugin.Checked)
+            if (cmbGotoUsername.Focused || tbAttPriority.Focused || tbSpecialMsg.Focused)
                 return;
 
             switch (e)
