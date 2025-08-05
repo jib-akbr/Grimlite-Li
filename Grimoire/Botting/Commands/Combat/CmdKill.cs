@@ -86,8 +86,7 @@ namespace Grimoire.Botting.Commands.Combat
 			int Count = instance.Configuration.Skills.Count - 1;
 			this.Index = ClassIndex;
 
-			bool hasTarget = Player.HasTarget;
-			while (!this._cts.IsCancellationRequested && !onPause && hasTarget)
+			while (!this._cts.IsCancellationRequested && !onPause && Player.HasTarget)
 			{
 				switch (this.Monster.ToLower())
 				{
@@ -181,7 +180,6 @@ namespace Grimoire.Botting.Commands.Combat
 					await Task.Delay(instance.Configuration.SkillDelay);
 				}
 				await Task.Delay(instance.Configuration.SkillDelay);
-				hasTarget = Player.HasTarget;
 			}
 
 			if (Player.HasTarget)
