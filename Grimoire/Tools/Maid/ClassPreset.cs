@@ -77,6 +77,7 @@ namespace Grimoire.Tools.Maid
             // heal skill
             UI.Maid.MaidRemake.Instance.tbHealSkill.Text = String.Empty;
             UI.Maid.MaidRemake.Instance.numHealthPercent.Value = 80;
+            heal = false;
 
             // buff skill
             UI.Maid.MaidRemake.Instance.tbBuffSkill.Text = "5";

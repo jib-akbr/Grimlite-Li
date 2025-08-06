@@ -147,6 +147,7 @@ namespace Grimoire.Tools
                             treeNode3.Nodes.Add($"ID: {item2.Id}");
                             treeNode3.Nodes.Add(string.Format("Cost: {0} {1}", item2.Cost, item2.IsAcItem ? "AC" : "Gold"));
                             treeNode3.Nodes.Add($"Category: {item2.Category}");
+                            treeNode3.Nodes.Add($"Level: {item2.Level}");
                             treeNode3.Nodes.Add($"Description: {item2.Description}");
                             if(item2.IsEquippableNonItem || item2.IsWeapon)
                             {
@@ -204,11 +205,13 @@ namespace Grimoire.Tools
                     treeNode.Nodes.Add($"Quantity: {item.Quantity}/{item.MaxStack}");
                     treeNode.Nodes.Add($"AC tagged: {item.IsAcItem}");
                     treeNode.Nodes.Add($"Category: {item.Category}");
+                    treeNode.Nodes.Add($"Level: {item.Level}");
                     treeNode.Nodes.Add($"Description: {item.Description}");
                     if (item.IsEquippableNonItem || item.IsWeapon)
                     {
                         treeNode.Nodes.Add($"sFile: {item.File}");
                         treeNode.Nodes.Add($"sLink: {item.Link}");
+                        treeNode.Nodes.Add($"Enhancement: {item.ForgeEnhancement}");
                     }
                 }
             }
