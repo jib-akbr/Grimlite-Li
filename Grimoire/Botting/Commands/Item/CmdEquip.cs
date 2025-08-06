@@ -23,7 +23,11 @@ namespace Grimoire.Botting.Commands.Item
 		public async Task Execute(IBotEngine instance)
 		{
 			var Value1 = ItemName;
-			InventoryItem item = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => i.Name.Equals((instance.IsVar(Value1) ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1), StringComparison.OrdinalIgnoreCase) && i.IsEquippable);
+            if (Enum.TryParse<InventoryItem.forgeID>(Value1, ignoreCase: true, out var result))
+            {
+                Value1 = Player.Inventory.Items.FirstOrDefault(i => i.ForgeEnhancement == result)?.Name;
+            }
+            InventoryItem item = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => i.Name.Equals((instance.IsVar(Value1) ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1), StringComparison.OrdinalIgnoreCase) && i.IsEquippable);
 			if (item == null) return;
 
 			while (instance.IsRunning && !IsEquipped(item.Id))

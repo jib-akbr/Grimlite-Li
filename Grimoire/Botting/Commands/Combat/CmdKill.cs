@@ -55,7 +55,7 @@ namespace Grimoire.Botting.Commands.Combat
 			Player.AttackMonster(Monster);
 
 			if (instance.Configuration.Skills.Count > 0)
-				Task.Run(() => UseSkillsSet(instance));
+				await Task.Run(() => UseSkillsSet(instance));
 
 			await instance.WaitUntil(() => !Player.HasTarget && !onPause, null, 8);
 			Player.CancelTarget();
@@ -177,7 +177,6 @@ namespace Grimoire.Botting.Commands.Combat
 					int count = instance.Configuration.Skills.Count - 1;
 
 					_skillIndex = _skillIndex >= count ? 0 : ++_skillIndex;
-					await Task.Delay(instance.Configuration.SkillDelay);
 				}
 				await Task.Delay(instance.Configuration.SkillDelay);
 			}
