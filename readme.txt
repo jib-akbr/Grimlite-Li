@@ -1,3 +1,2 @@
-GrimLite Ligma 1.6.0
-
-15-06-2025
+GrimLite Ligma 1.7.X
+XX-XX-2025
