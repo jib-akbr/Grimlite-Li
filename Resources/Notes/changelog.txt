@@ -1,3 +1,20 @@
+v 1.7.3
+- Setvar support for current equipped item
+- Equip support for finding specific forge enh
+- Killcmd optimized
+
+v 1.7.2
+- Autoattack & Maid tweak to support CSH, Arcana & Archmage
+
+v 1.7.1
+- Fixed Ultra Gramiel handler phase 1 taunting
+
+v 1.7.0
+- Added Ultra Boss w/ Extra: Ultra Gramiel
+
+v 1.6.0
+- Added "Auto Zone - Colossal Vordred"
+
 v 1.5.4
 - Fixed "Fast Travels 2" duplicated room number
 - Added Maid Ultra boss handler for "Astral Empyrean"
