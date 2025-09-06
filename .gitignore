@@ -346,3 +346,5 @@ RBot/Properties/licenses.licx
 RBot/bin
 /bin/Debug/Grimoire.pdb
 /bin/Debug/Grimoire.pdb
+/SwfExtract/scripts
+/SwfExtract/grimoire
