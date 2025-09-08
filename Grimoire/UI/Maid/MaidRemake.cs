@@ -228,8 +228,8 @@ namespace Grimoire.UI.Maid
                             // do attack with skills
                             if (Player.HasTarget)
                             {
-                                //general loop taunt
-                                DoLoopTaunt();
+                                //For class with some aura detection or Ultragramiel boss fight
+                                await SpecialCombo();
 
                                 // force, to ensure a skill is REALLY executed 
                                 if (forceSkill)
@@ -319,15 +319,26 @@ namespace Grimoire.UI.Maid
             Task.Delay(1000);
         }
 
+
+
         private bool isUsingCSH()
         {
-            return Player.EquippedClass == "CHRONO SHADOWHUNTER" || Player.EquippedClass == "CHRONO SHADOWSLAYER";
+            return Player.EquippedClass.Contains("CHRONO SHADOW");
         }
 
-        private string msgTemp;
-        private void DoLoopTaunt()
-        {
+        private InventoryItem potion;
 
+        private string msgTemp;
+        private async Task SpecialCombo()
+        {
+            potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i)
+                => i.IsEquipped && i.Name.Equals("Potent Honor Potion") || i.Name.Equals("Potent Malice Potion"));
+            if (potion.IsEquipped && Player.GetAuras(true, "Potent Honor Malice") == 0) 
+            {
+                useSkill("5");
+                await Task.Delay(200);
+                return;
+            }
             if (Player.Map == "voidxyfrag" && Player.EquippedClass == "LEGION REVENANT")
             {
                 if (!string.IsNullOrWhiteSpace(msgTemp))
@@ -345,14 +356,15 @@ namespace Grimoire.UI.Maid
                 }
             }
 
-            if (isUsingCSH())
+            if (isUsingCSH() && cmbPreset.SelectedItem.ToString() == "CSH")
             {
                 if (Player.GetAuras(true, "Rounds Empty") == 1 || Player.Mana < 15)
                 {
-                    Player.ForceUseSkill("4");
-                    Task.Delay(100);
-                    Task.Delay(Player.SkillAvailable("1"));
-                    Player.ForceUseSkill("1");
+                    useSkill("4");
+                    await Task.Delay(Player.SkillAvailable("1"));
+                    await Task.Delay(100);
+                    useSkill("1");
+                    await Task.Delay(200);
                     return;
                 }
             }
@@ -371,6 +383,8 @@ namespace Grimoire.UI.Maid
                     Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)
                 {
                     useSkill("1");
+                    await Task.Delay(200);
+                    return;
                 }
             }
 
@@ -382,7 +396,7 @@ namespace Grimoire.UI.Maid
                 if (Player.GetAuras(true, "vendetta") < 40 && 
                     Player.SkillAvailable("5") == 0 && Player.GetAuras(true, "Invulnerable") == 0)
                 {//idk Why vendetta stacks 10 times per stack
-                    Task.Delay(new Random().Next(5000) + 1000); //Random 3-5 sec taunt to ensure vendetta isn't stacked too much per chars
+                    await Task.Delay(new Random().Next(3000) + 2000); //Random 2-5 sec taunt to ensure vendetta isn't stacked too much per chars
                     useSkill("5");
                 }
             }
@@ -534,6 +548,9 @@ namespace Grimoire.UI.Maid
         {
             for (int i = 0; i < monsterList.Length; i++)
             {
+                //if (monsterList[i].Equals(Player.GetTargetName(), StringComparison.OrdinalIgnoreCase))
+                if (monsterList[i].IndexOf(Player.GetTargetName(),StringComparison.OrdinalIgnoreCase) >= 0 )
+                    return; //Made special for CSH non autoattack cases
                 if (World.IsMonsterAvailable(monsterList[i]))
                 {
                     Player.AttackMonster(monsterList[i]);
@@ -960,6 +977,9 @@ namespace Grimoire.UI.Maid
                     break;
                 case "CSH":
                     ClassPreset.CSH();
+                    break;
+                case "CSH v2":
+                    ClassPreset.CSHGunslinger();
                     break;
             }
             ClassPreset.cbSet();

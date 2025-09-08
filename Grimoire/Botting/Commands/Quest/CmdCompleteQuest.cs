@@ -19,24 +19,24 @@ namespace Grimoire.Botting.Commands.Quest
             await instance.WaitUntil(() => World.IsActionAvailable(LockActions.TryQuestComplete));
             bool provokeMons = instance.Configuration.ProvokeMonsters;
 
-            if (!Player.Quests.AcceptedQuests.Contains(Quest)) Quest.Accept();
-            if (Player.Quests.CanComplete(Quest.Id) && instance.IsRunning && Player.IsLoggedIn)
+            //if (!Player.Quests.AcceptedQuests.Contains(Quest)) Quest.Accept();
+            //if (Player.Quests.CanComplete(Quest.Id) && instance.IsRunning && Player.IsLoggedIn)
+            //{
+            //}
+            if (provokeMons) instance.Configuration.ProvokeMonsters = false;
+            if (instance.Configuration.ExitCombatBeforeQuest)
             {
-                if (provokeMons) instance.Configuration.ProvokeMonsters = false;
-                if (instance.Configuration.ExitCombatBeforeQuest)
-                {
-                    Player.MoveToCell(Player.Cell, Player.Pad);
-                    await instance.WaitUntil(() => Player.CurrentState != Player.State.InCombat);
-                    await Task.Delay(1000);
-                }
-                Quest.Complete(CompleteTry);
-                //await instance.WaitUntil(() => !Player.Quests.IsInProgress(Quest.Id));
+                Player.MoveToCell(Player.Cell, Player.Pad);
+                await instance.WaitUntil(() => Player.CurrentState != Player.State.InCombat);
+                await Task.Delay(1000);
             }
+            Quest.Complete(CompleteTry);
+            //await instance.WaitUntil(() => !Player.Quests.IsInProgress(Quest.Id));
             instance.Configuration.ProvokeMonsters = provokeMons;
 
             if (ReAccept)
             {
-                await Task.Delay(1000);
+                await Task.Delay(1200);
                 Quest.Accept();
             }
         }

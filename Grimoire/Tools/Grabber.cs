@@ -251,6 +251,27 @@ namespace Grimoire.Tools
             }
         }
 
+        public static void GrabAllMonsters(TreeView tree)
+        {
+            List<Monster> list = World.GetAllMonsters();
+            //    (from x in World.AvailableMonsters?.GroupBy((Monster m) => m.MonMapID)
+            //                      select x.First()).ToList();
+            if (list != null && list.Count > 0)
+            {
+                foreach (Monster item in list)
+                {
+                    TreeNode treeNode = tree.Nodes.Add($"{item.Name} ({item.cell})");
+                    treeNode.ContextMenuStrip = Wiki(item.Name);
+                    treeNode.Nodes.Add($"ID: {item.Id}");
+                    treeNode.Nodes.Add($"MonMapID: {item.MonMapID}");
+                    //treeNode.Nodes.Add($"Cell: {item.cell}");
+                    treeNode.Nodes.Add($"Race: {item.Race}");
+                    treeNode.Nodes.Add($"Level: {item.Level}");
+                    treeNode.Nodes.Add($"Health: {item.Health}/{item.MaxHealth}");
+                }
+            }
+        }
+
         private static ContextMenuStrip Wiki(string item)
         {
             ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
@@ -262,6 +283,10 @@ namespace Grimoire.Tools
             {
                 Text = "Search on Wiki"
             };
+            ToolStripMenuItem toolStripMenuItem2 = new ToolStripMenuItem
+            {
+                Text = "Copy To Clipboard"
+            };
             toolStripMenuItem.Click += delegate (object S, EventArgs E)
             {
                 //System.Diagnostics.Process.Start
@@ -272,8 +297,13 @@ namespace Grimoire.Tools
                 //System.Diagnostics.Process.Start
                 Search("https://aqwwiki.wikidot.com/search:site/q/" + item.Replace(" ", "+"));
             };
+            toolStripMenuItem2.Click += delegate (object S, EventArgs E)
+            {
+                Clipboard.SetText(item);
+            };
             contextMenuStrip.Items.Add(toolStripMenuItem);
             contextMenuStrip.Items.Add(toolStripMenuItem1);
+            contextMenuStrip.Items.Add(toolStripMenuItem2);
             return contextMenuStrip;
         }
 

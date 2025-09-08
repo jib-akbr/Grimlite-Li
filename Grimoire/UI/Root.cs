@@ -112,6 +112,7 @@ namespace Grimoire.UI
 			Hotkeys.Instance.LoadHotkeys();
 			LoadPlugins();
 			LoadCharSelect();
+			auraClearer();
 		}
 
 		private void LoadPlugins()
@@ -1489,7 +1490,7 @@ namespace Grimoire.UI
 			while (chkAutoAttack.Checked)
 			{
 				if (!Player.HasTarget) Player.AttackMonster("*");
-				SpecialClassCombo();
+				await SpecialClassCombo();
 				if (listSkill.Count > 0)
 				{
 					if (listSkill[i].Type != Skill.SkillType.Label && Player.HasTarget)
@@ -1501,7 +1502,7 @@ namespace Grimoire.UI
 			}
 		}
 
-		private void SpecialClassCombo()
+		private async Task SpecialClassCombo()
 		{
 			string playerClass = Player.EquippedClass.ToLower();
 
@@ -1510,8 +1511,8 @@ namespace Grimoire.UI
                 if (Player.GetAuras(true,"Rounds Empty") == 1 || Player.Mana < 15)
 				{
 					useSkill("4");
-					Task.Delay(1000);
 					useSkill("1");
+					await Task.Delay(200);
 				}
             }
             else if (playerClass.Equals("arcana invoker"))
@@ -1521,6 +1522,7 @@ namespace Grimoire.UI
                     Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)
                 {
                     useSkill("1");
+                    await Task.Delay(200);
                 }
             }
             else if (playerClass.Equals("archmage"))
@@ -1530,12 +1532,14 @@ namespace Grimoire.UI
                     Player.GetAuras(true, "Arcane Sigil") == 0 )
                 {
                     useSkill("4");
+                    await Task.Delay(200);
                 }
             }
         }
 
 		private void useSkill(string skillIndex)
 		{
+			Task.Delay(Player.SkillAvailable(skillIndex));
             if (Player.EquippedClass.Contains("CHRONO SHADOW")) 
 				Player.ForceUseSkill(skillIndex);
             else Player.UseSkill(skillIndex);
@@ -1631,5 +1635,37 @@ namespace Grimoire.UI
 		{
 			ShowForm(Maid.MaidRemake.Instance);
 		}
-	}
+
+        private DateTime _lastPacketSent = DateTime.MinValue;
+        private void auraClearer()
+        {
+			bool _lastIsAlive = false;
+            Task.Run(async () =>
+            {
+                while (true) 
+                {
+					if (Player.IsLoggedIn)
+					{
+						// Send every 15 minutes
+						if ((DateTime.Now - _lastPacketSent).Seconds >= 60*15)
+						{
+						    await Proxy.Instance.SendToClient("{\"t\":\"xt\",\"b\":{\"r\":-1,\"o\":{\"cmd\":\"clearAuras\"}}}");
+						    _lastPacketSent = DateTime.Now;
+							//LogForm.Instance.AppendDebug($"[{DateTime.Now}] Executing Clear Aura");
+						}
+
+						// Death detection
+						bool isAlive = Player.IsAlive;
+						if (_lastIsAlive && !isAlive)
+						{
+						    await Proxy.Instance.SendToClient("{\"t\":\"xt\",\"b\":{\"r\":-1,\"o\":{\"cmd\":\"clearAuras\"}}}");
+                            //LogForm.Instance.AppendDebug($"[{DateTime.Now}] Clearing Aura due to Death");
+                        }
+                        _lastIsAlive = isAlive;
+					} 
+					await Task.Delay(1000);
+                }
+            });
+        }
+    }
 }

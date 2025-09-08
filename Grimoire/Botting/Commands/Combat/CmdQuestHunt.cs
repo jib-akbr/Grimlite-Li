@@ -1,11 +1,14 @@
 ﻿using Grimoire.Botting.Commands.Map;
+using Grimoire.Game.Data;
 using Grimoire.Game;
 using Grimoire.Tools;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Grimoire.UI;
 
 namespace Grimoire.Botting.Commands.Combat
 {
-    class CmdShortHunt : IBotCommand
+    class CmdQuestHunt : IBotCommand
     {
         public string Map { get; set; }
         public string Cell { get; set; }
@@ -14,24 +17,24 @@ namespace Grimoire.Botting.Commands.Combat
         public string ItemName { get; set; }
         public ItemType ItemType { get; set; }
         public string Quantity { get; set; }
+        public Game.Data.Quest Quest
+        {
+            get;
+            set;
+        }
         public string KillPriority { get; set; } = "";
-        public bool AntiCounter { get; set; } = false;
-        public string QuestId { get; set; }
         public int DelayAfterKill { get; set; } = 50;
         public bool BlankFirst { get; set; }
 
         public async Task Execute(IBotEngine instance)
         {
+            string[] items = ItemName.Split(',');
             if (ItemType == ItemType.Items)
             {
-                if (Player.Inventory.ContainsItem(ItemName, Quantity)) return;
-            }
-            else
-            {
-                if (Player.TempInventory.ContainsItem(ItemName, Quantity)) return;
+                return;
             }
 
-            while (!Player.Map.Equals(Map.Split('-')[0]))
+            if (!Player.Map.Equals(Map.Split('-')[0]))
             {
                 CmdJoin join = new CmdJoin
                 {
@@ -50,12 +53,15 @@ namespace Grimoire.Botting.Commands.Combat
 
                 await join.Execute(instance);
             }
+            if (!Player.Cell.Equals(Cell)) Player.MoveToCell(Cell, Pad);
             
-            if (!Player.Cell.Equals(Cell))
-            Player.MoveToCell(Cell, Pad);
-            
-
             await Task.Delay(1000);
+
+
+            for (int i = 0; i < items.Length; i++)
+            {
+
+            }
 
             CmdKillFor killFor = new CmdKillFor
             {
@@ -63,10 +69,8 @@ namespace Grimoire.Botting.Commands.Combat
                 ItemName = this.ItemName,
                 ItemType = this.ItemType,
                 Quantity = this.Quantity,
-                QuestId = this.QuestId,
                 DelayAfterKill = this.DelayAfterKill,
                 KillPriority = this.KillPriority,
-                AntiCounter = this.AntiCounter
             };
 
             await killFor.Execute(instance);

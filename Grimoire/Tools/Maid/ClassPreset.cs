@@ -86,6 +86,23 @@ namespace Grimoire.Tools.Maid
             UI.Maid.MaidRemake.Instance.cbWaitSkill.Checked = true;
         }
 
+        public static void CSHGunslinger()
+        {
+            // skill list
+            UI.Maid.MaidRemake.Instance.tbSkillList.Text = "2,3,2,3,1,4,1";
+
+            // heal skill
+            UI.Maid.MaidRemake.Instance.tbHealSkill.Text = String.Empty;
+            UI.Maid.MaidRemake.Instance.numHealthPercent.Value = 80;
+            heal = false;
+
+            // buff skill
+            UI.Maid.MaidRemake.Instance.tbBuffSkill.Text = "5";
+
+            // additional settings
+            UI.Maid.MaidRemake.Instance.cbWaitSkill.Checked = true;
+        }
+
         public static void SC()
         {
             // skill list

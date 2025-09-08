@@ -28,6 +28,33 @@ namespace Grimoire.Game
 
 		public static List<Monster> AvailableMonsters => Flash.Call<List<Monster>>("GetMonstersInCell", new string[0]);
 
+        public static List<Monster> GetAllMonsters()
+        {
+            List<Monster> allMonsters = new List<Monster>();
+            foreach (string cell in Cells)
+            {
+                try
+                {
+                    // Ambil string JSON dari SWF
+                    string json = Flash.Call("GetMonstersInCell2", new object[] { cell });
+
+                    if (!string.IsNullOrEmpty(json) && json.StartsWith("["))
+                    {
+                        var monstersInCell = JsonConvert.DeserializeObject<List<Monster>>(json);
+                        if (monstersInCell != null && monstersInCell.Count > 0)
+                        {
+                            //LogForm.Instance.AppendDebug($"Getting monsters on : {cell}");
+                            allMonsters.AddRange(monstersInCell);
+                        } //else LogForm.Instance.AppendDebug($"[FAILED] Getting monsters on : {cell}");
+                    }
+                }
+                catch
+                {
+                }
+            }
+            return allMonsters;
+        }
+
         public static void ReloadMap()
         {
             Flash.Call("ReloadMap", new string[0]);

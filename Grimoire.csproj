@@ -180,6 +180,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdCancelTarget.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Combat\CmdQuestHunt.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraEquals.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraGreaterThan.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraLessThan.cs" />

@@ -40,25 +40,34 @@ namespace Grimoire.Botting
             return true;
         }
 
+        
+
         public static void LoadAllQuests(this IBotEngine instance)
         {
             List<int> list = new List<int>();
+            void AddUnique(int id)
+            {
+                if (!list.Contains(id))
+                    list.Add(id);
+            }
             foreach (IBotCommand command in instance.Configuration.Commands)
             {
-                if (command is CmdAcceptQuest cmdAcceptQuest)
+                if (command is CmdAcceptQuest Accept)
                 {
-                    list.Add(cmdAcceptQuest.Quest.Id);
+                    AddUnique(Accept.Quest.Id);
                 }
-                else if (command is CmdCompleteQuest cmdCompleteQuest)
+                else if (command is CmdCompleteQuest Complete)
                 {
-                    list.Add(cmdCompleteQuest.Quest.Id);
+                    AddUnique(Complete.Quest.Id);
                 }
-                else if (command is CmdAddQuestList cmdAddQuestList)
+                else if (command is CmdAddQuestList AddQList)
                 {
-                    list.Add(cmdAddQuestList.Id);
+                    AddUnique(AddQList.Id);
                 }
-            }
-            list.AddRange(instance.Configuration.Quests.Select((Quest q) => q.Id));
+            } //changed to not load the quest (again) if already loaded
+            foreach (var q in instance.Configuration.Quests)
+                AddUnique(q.Id);
+            // list.AddRange(instance.Configuration.Quests.Select((Quest q) => q.Id));
             if (list.Count > 0)
             {
                 Player.Quests.Get(list);

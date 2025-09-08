@@ -26,6 +26,13 @@ namespace Grimoire.Game.Data
             }
         }
 
+        [JsonProperty("Cell")]
+        public string cell
+        {
+            get;
+            set;
+        }
+
         [JsonProperty("MonID")]
         public int Id
         {
