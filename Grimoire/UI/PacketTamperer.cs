@@ -77,7 +77,8 @@ namespace Grimoire.UI
 			if (function == "packetFromServer")
             {
                 string packet = args[0].ToString();
-				if (packet.Contains(tbFilter.Text))
+				//if (packet.Contains(tbFilter.Text)) changed with ignorecase one
+				if (packet.IndexOf(tbFilter.Text, StringComparison.OrdinalIgnoreCase) >= 0)
 				{
 					this.txtSend.Invoke(new Action(delegate ()
                     {
