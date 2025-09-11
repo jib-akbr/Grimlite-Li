@@ -333,7 +333,7 @@ namespace Grimoire.UI.Maid
         {
             potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i)
                 => i.IsEquipped && i.Name.Equals("Potent Honor Potion") || i.Name.Equals("Potent Malice Potion"));
-            if (potion.IsEquipped && Player.GetAuras(true, "Potent Honor Malice") == 0) 
+            if (potion.IsEquipped && potion.Quantity >=1 && Player.GetAuras(true, "Potent Honor Malice") == 0) 
             {
                 useSkill("5");
                 await Task.Delay(200);
@@ -365,26 +365,26 @@ namespace Grimoire.UI.Maid
                     await Task.Delay(100);
                     useSkill("1");
                     await Task.Delay(200);
-                    return;
                 }
-            }
-
-            if (Player.EquippedClass == "ARCANA INVOKER")
+            } 
+            else if (Player.EquippedClass == "ARCANA INVOKER")
             {
-                if (!string.IsNullOrWhiteSpace(msgTemp))
-                {
-                    tbSkillList.Text = msgTemp;
-                    msgTemp = string.Empty; // Reset setelah keluar map
-                }
-                tbSkillList.Text = "2,3,4";
-
                 if (Player.GetAuras(true, "XX - Judgement") == 1 ||
                     Player.GetAuras(true, "End of the world") >= 13 ||
                     Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)
                 {
                     useSkill("1");
                     await Task.Delay(200);
-                    return;
+                }
+            } 
+            else if (Player.EquippedClass == "ARCHMAGE")
+            {
+                if (Player.GetAuras(true, "Arcane Flux") == 1 &&
+                    Player.GetAuras(true, "Corporeal Ascension") == 0 ||
+                    Player.GetAuras(true, "Arcane Sigil") == 0)
+                {
+                    useSkill("4");
+                    await Task.Delay(200);
                 }
             }
 
@@ -546,10 +546,11 @@ namespace Grimoire.UI.Maid
 
         private void doPriorityAttack()
         {
+            string currentTarget = Player.GetTargetName();
             for (int i = 0; i < monsterList.Length; i++)
             {
                 //if (monsterList[i].Equals(Player.GetTargetName(), StringComparison.OrdinalIgnoreCase))
-                if (monsterList[i].IndexOf(Player.GetTargetName(),StringComparison.OrdinalIgnoreCase) >= 0 )
+                if (currentTarget?.IndexOf(monsterList[i], StringComparison.OrdinalIgnoreCase) >= 0 )
                     return; //Made special for CSH non autoattack cases
                 if (World.IsMonsterAvailable(monsterList[i]))
                 {
@@ -974,6 +975,9 @@ namespace Grimoire.UI.Maid
                     break;
                 case "AI":
                     ClassPreset.AI();
+                    break;
+                case "AM":
+                    ClassPreset.AM();
                     break;
                 case "CSH":
                     ClassPreset.CSH();
