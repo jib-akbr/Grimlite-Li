@@ -32,6 +32,8 @@ namespace Grimoire.Botting.Commands.Item
 
 			while (instance.IsRunning && !IsEquipped(item.Id))
 			{
+				using (new pauseProvoke(instance.Configuration))
+				{
 				if (Safe)
 				{
 					BotData.BotState = BotData.State.Transaction;
@@ -47,6 +49,7 @@ namespace Grimoire.Botting.Commands.Item
 					Player.EquipPotion(item.Id, item.Description, item.File, item.Name);
 				else
 					Player.Equip(item.Id);
+				}
 			}
 		}
 

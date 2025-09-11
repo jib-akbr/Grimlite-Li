@@ -45,9 +45,14 @@ namespace Grimoire.Botting
         public static void LoadAllQuests(this IBotEngine instance)
         {
             List<int> list = new List<int>();
+			
+			HashSet<int> loadedQuests = new HashSet<int>(
+				Player.Quests.QuestTree?.Select(q => q.Id) ?? Enumerable.Empty<int>()
+			);
+			
             void AddUnique(int id)
             {
-                if (!list.Contains(id))
+                if (!list.Contains(id) && !loadedQuests.Contains(id))
                     list.Add(id);
             }
             foreach (IBotCommand command in instance.Configuration.Commands)
@@ -70,7 +75,13 @@ namespace Grimoire.Botting
             // list.AddRange(instance.Configuration.Quests.Select((Quest q) => q.Id));
             if (list.Count > 0)
             {
-                Player.Quests.Get(list);
+				const int batchSize = 30; //max GetQuest
+				for (int i = 0; i < list.Count; i += batchSize)
+				{
+					int take = Math.Min(batchSize, list.Count - i);
+					var batch = list.GetRange(i, take);
+					Player.Quests.Get(list);
+				}
             }
         }
 
@@ -111,6 +122,24 @@ namespace Grimoire.Botting
         static BotUtilities()
         {
             BankLoadEvent = new ManualResetEvent(initialState: false);
+        }
+    }
+
+    class pauseProvoke : IDisposable
+    {
+        private readonly Configuration _config;
+        private readonly bool _originalValue;
+
+        public pauseProvoke(Configuration config)
+        {
+            _config = config;
+            _originalValue = config.ProvokeMonsters;
+            _config.ProvokeMonsters = false;
+        }
+
+        public void Dispose()
+        {
+            _config.ProvokeMonsters = _originalValue;
         }
     }
 }
