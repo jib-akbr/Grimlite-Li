@@ -23,15 +23,12 @@ namespace Grimoire.Botting.Commands.Combat
         public async Task Execute(IBotEngine instance)
         {
             if (ItemType == ItemType.Items)
-            {
                 if (Player.Inventory.ContainsItem(ItemName, Quantity)) return;
-            }
-            else
-            {
+                else
                 if (Player.TempInventory.ContainsItem(ItemName, Quantity)) return;
-            }
 
-            while (!Player.Map.Equals(Map.Split('-')[0]))
+            Map = Map.ToLower();
+            while (!Player.Map.Equals(Map.Split('-')[0]) && instance.IsRunning)
             {
                 CmdJoin join = new CmdJoin
                 {
@@ -44,18 +41,14 @@ namespace Grimoire.Botting.Commands.Combat
                 {
                     string[] safeCell = ClientConfig.GetValue(ClientConfig.C_SAFE_CELL).Split(',');
                     Player.MoveToCell(safeCell[0], safeCell[1]);
-                    await instance.WaitUntil(() => Player.CurrentState != Player.State.InCombat, timeout:3);
+                    await instance.WaitUntil(() => Player.CurrentState != Player.State.InCombat, timeout: 3);
                     await Task.Delay(1000);
                 }
-
                 await join.Execute(instance);
             }
-            
-            if (!Player.Cell.Equals(Cell))
-            Player.MoveToCell(Cell, Pad);
-            
 
             await Task.Delay(1000);
+            if (!Player.Cell.Equals(Cell)) Player.MoveToCell(Cell, Pad);
 
             CmdKillFor killFor = new CmdKillFor
             {

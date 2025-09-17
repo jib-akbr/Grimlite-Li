@@ -344,7 +344,8 @@ namespace Grimoire.Game
         /// <param name="isSelf">False = enemy | True = self aura</param>
         /// <param name="auraName"></param>
         public static int GetAuras(bool isSelf, string auraName) => Flash.Call<int>("GetAurasValue", isSelf.ToString(), auraName);
-
+        
+        public static List<TempItem> recentMapItem = new List<TempItem>();
         static Player()
         {
             Bank = new Bank();

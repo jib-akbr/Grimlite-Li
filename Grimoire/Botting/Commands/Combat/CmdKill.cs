@@ -57,7 +57,7 @@ namespace Grimoire.Botting.Commands.Combat
 			if (instance.Configuration.Skills.Count > 0)
 				await Task.Run(() => UseSkillsSet(instance));
 
-			await instance.WaitUntil(() => !Player.HasTarget && !onPause);
+			await instance.WaitUntil(() => !Player.HasTarget && !onPause, timeout:5);
 			Player.CancelTarget();
 
 			if (AntiCounter)
