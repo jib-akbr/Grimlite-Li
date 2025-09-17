@@ -1489,6 +1489,7 @@ namespace Grimoire.UI
             }
 
             int i = 0;
+			BotData.BotState = BotData.State.Combat;
             while (chkAutoAttack.Checked)
             {
                 if (BotData.BotState == BotData.State.Combat)
