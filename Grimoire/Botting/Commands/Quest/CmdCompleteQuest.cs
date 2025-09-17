@@ -1,4 +1,5 @@
 using Grimoire.Game;
+using Newtonsoft.Json;
 using System.Threading.Tasks;
 
 namespace Grimoire.Botting.Commands.Quest
@@ -11,6 +12,7 @@ namespace Grimoire.Botting.Commands.Quest
             set;
         }
         public int CompleteTry { get; set; } = 1;
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Include)]
         public bool ReAccept { get; set; } = false;
         public bool InBlank { get; set; } = false;
 

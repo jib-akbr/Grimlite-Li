@@ -30,7 +30,7 @@ namespace Grimoire.UI
             get;
             set;
         }
-        
+
         private static UserFriendlyCommandEditor commandEditor
         {
             get;
@@ -58,7 +58,7 @@ namespace Grimoire.UI
         };
 
         private List<StatementCommand> statementCommands;
-        
+
         private UserFriendlyCommandEditor()
         {
             InitializeComponent();
@@ -67,7 +67,7 @@ namespace Grimoire.UI
 
         private void RawCommandEditor_Load(object sender, EventArgs e)
         {
-           
+
         }
 
         private void txtCmd_KeyDown(object sender, KeyEventArgs e)
@@ -83,7 +83,7 @@ namespace Grimoire.UI
                     break;
             }
         }
-        
+
         public static string Show(object obj)
         {
             cmdObj = obj;
@@ -98,7 +98,7 @@ namespace Grimoire.UI
                 Dictionary<string, KeyValuePair<DarkLabel, DarkTextBox>> currentVars = new Dictionary<string, KeyValuePair<DarkLabel, DarkTextBox>>();
                 foreach (KeyValuePair<string, JToken> item in content)
                 {
-                    
+
                     if (!string.IsNullOrEmpty(item.Key) && Array.IndexOf(skip, item.Key) == -1 && commandEditor.statementCommands.Find((StatementCommand s) => s.GetType() == content.GetType())?.Text != item.Key)
                     {
                         string lblText = item.Key;
@@ -114,7 +114,9 @@ namespace Grimoire.UI
                                 tbText = tbText == lblText ? "" : tbText;
                                 break;
                             case "Quest":
-                                tbText = JsonConvert.DeserializeObject<Quest>(item.Value.ToString()).Id.ToString() + " (use Raw Editor)";
+                                var qObj = JsonConvert.DeserializeObject<Quest>(item.Value.ToString());
+                                lblText = "Quest ID"; 
+                                tbText = qObj.Id.ToString(); 
                                 break;
                         }
                         currentVars.Add(item.Key, new KeyValuePair<DarkLabel, DarkTextBox>(
@@ -123,7 +125,7 @@ namespace Grimoire.UI
                                 Name = $"lbl{item.Key}{count}",
                                 Text = lblText,
                                 Size = new System.Drawing.Size(90, 20),
-                                Location = new System.Drawing.Point(25, currentY+2),
+                                Location = new System.Drawing.Point(25, currentY + 2),
                                 Anchor = AnchorStyles.Left | AnchorStyles.Top
                             },
                             new DarkTextBox()
@@ -151,7 +153,17 @@ namespace Grimoire.UI
                     {
                         if (currentVars.ContainsKey(item.Key))
                         {
+                            if (item.Key == "Quest")
+                                continue;
                             content[item.Key] = currentVars[item.Key].Value.Text;
+                        }
+                    }
+                    if (currentVars.ContainsKey("Quest"))
+                    {
+                        if (int.TryParse(currentVars["Quest"].Value.Text, out int newId))
+                        {
+                            JObject questObj = (JObject)content["Quest"];
+                            questObj["QuestID"] = newId; // update hanya field QuestID
                         }
                     }
                     var serialized = JsonConvert.SerializeObject(content, Formatting.Indented, _serializerSettings);
@@ -174,88 +186,88 @@ namespace Grimoire.UI
 
         private void InitializeComponent()
         {
-			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UserFriendlyCommandEditor));
-			this.btnOK = new DarkUI.Controls.DarkButton();
-			this.btnCancel = new DarkUI.Controls.DarkButton();
-			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-			this.btnRawCommand = new DarkUI.Controls.DarkButton();
-			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-			this.splitContainer1.Panel1.SuspendLayout();
-			this.splitContainer1.Panel2.SuspendLayout();
-			this.splitContainer1.SuspendLayout();
-			this.SuspendLayout();
-			// 
-			// btnOK
-			// 
-			this.btnOK.Checked = false;
-			this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.btnOK.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.btnOK.Location = new System.Drawing.Point(0, 0);
-			this.btnOK.Name = "btnOK";
-			this.btnOK.Size = new System.Drawing.Size(137, 23);
-			this.btnOK.TabIndex = 0;
-			this.btnOK.Text = "OK";
-			// 
-			// btnCancel
-			// 
-			this.btnCancel.Checked = false;
-			this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.btnCancel.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.btnCancel.Location = new System.Drawing.Point(0, 0);
-			this.btnCancel.Name = "btnCancel";
-			this.btnCancel.Size = new System.Drawing.Size(141, 23);
-			this.btnCancel.TabIndex = 1;
-			this.btnCancel.Text = "Cancel";
-			// 
-			// splitContainer1
-			// 
-			this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UserFriendlyCommandEditor));
+            this.btnOK = new DarkUI.Controls.DarkButton();
+            this.btnCancel = new DarkUI.Controls.DarkButton();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.btnRawCommand = new DarkUI.Controls.DarkButton();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // btnOK
+            // 
+            this.btnOK.Checked = false;
+            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnOK.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnOK.Location = new System.Drawing.Point(0, 0);
+            this.btnOK.Name = "btnOK";
+            this.btnOK.Size = new System.Drawing.Size(137, 23);
+            this.btnOK.TabIndex = 0;
+            this.btnOK.Text = "OK";
+            // 
+            // btnCancel
+            // 
+            this.btnCancel.Checked = false;
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnCancel.Location = new System.Drawing.Point(0, 0);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(141, 23);
+            this.btnCancel.TabIndex = 1;
+            this.btnCancel.Text = "Cancel";
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.splitContainer1.Location = new System.Drawing.Point(12, 46);
-			this.splitContainer1.Name = "splitContainer1";
-			// 
-			// splitContainer1.Panel1
-			// 
-			this.splitContainer1.Panel1.Controls.Add(this.btnCancel);
-			// 
-			// splitContainer1.Panel2
-			// 
-			this.splitContainer1.Panel2.Controls.Add(this.btnOK);
-			this.splitContainer1.Size = new System.Drawing.Size(282, 23);
-			this.splitContainer1.SplitterDistance = 141;
-			this.splitContainer1.TabIndex = 2;
-			// 
-			// btnRawCommand
-			// 
-			this.btnRawCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.splitContainer1.Location = new System.Drawing.Point(12, 46);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.btnCancel);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.btnOK);
+            this.splitContainer1.Size = new System.Drawing.Size(282, 23);
+            this.splitContainer1.SplitterDistance = 141;
+            this.splitContainer1.TabIndex = 2;
+            // 
+            // btnRawCommand
+            // 
+            this.btnRawCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnRawCommand.Checked = false;
-			this.btnRawCommand.DialogResult = System.Windows.Forms.DialogResult.Abort;
-			this.btnRawCommand.Location = new System.Drawing.Point(12, 17);
-			this.btnRawCommand.Name = "btnRawCommand";
-			this.btnRawCommand.Size = new System.Drawing.Size(282, 23);
-			this.btnRawCommand.TabIndex = 3;
-			this.btnRawCommand.Text = "Raw Command Editor";
-			// 
-			// UserFriendlyCommandEditor
-			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(308, 81);
-			this.Controls.Add(this.btnRawCommand);
-			this.Controls.Add(this.splitContainer1);
-			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.MaximizeBox = false;
-			this.Name = "UserFriendlyCommandEditor";
-			this.Text = "Command Editor";
-			this.TopMost = true;
-			this.Load += new System.EventHandler(this.RawCommandEditor_Load);
-			this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.UserFriendlyCommandEditor_KeyDown);
-			this.splitContainer1.Panel1.ResumeLayout(false);
-			this.splitContainer1.Panel2.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-			this.splitContainer1.ResumeLayout(false);
-			this.ResumeLayout(false);
+            this.btnRawCommand.Checked = false;
+            this.btnRawCommand.DialogResult = System.Windows.Forms.DialogResult.Abort;
+            this.btnRawCommand.Location = new System.Drawing.Point(12, 17);
+            this.btnRawCommand.Name = "btnRawCommand";
+            this.btnRawCommand.Size = new System.Drawing.Size(282, 23);
+            this.btnRawCommand.TabIndex = 3;
+            this.btnRawCommand.Text = "Raw Command Editor";
+            // 
+            // UserFriendlyCommandEditor
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(308, 81);
+            this.Controls.Add(this.btnRawCommand);
+            this.Controls.Add(this.splitContainer1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.Name = "UserFriendlyCommandEditor";
+            this.Text = "Command Editor";
+            this.TopMost = true;
+            this.Load += new System.EventHandler(this.RawCommandEditor_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.UserFriendlyCommandEditor_KeyDown);
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
+            this.ResumeLayout(false);
 
         }
 
@@ -272,5 +284,5 @@ namespace Grimoire.UI
                     break;
             }
         }
-	}
+    }
 }
