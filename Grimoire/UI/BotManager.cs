@@ -1402,18 +1402,18 @@ namespace Grimoire.UI
 		{
 			string findCmd = this.lbLabels.SelectedItem.ToString();
 			string data2 = this.lbLabels.SelectedItem.ToString().Replace("[", "").Replace("]", "");
-			this.txtLabel.Text = $"{data2}";
-			selectionMode(SelectionMode.One);
-            for (int i = 0; i < lstCommands.Items.Count; i++)
-            {
-                if (lstCommands.Items[i].ToString().Contains(findCmd))
-                {
-                    lstCommands.SelectedIndex = i;
-                    lstCommands.TopIndex = i; // scroll to label index
-                    break;
-                }
-            }
-			selectionMode(SelectionMode.MultiExtended);
+			if ((ModifierKeys & Keys.Control) == Keys.Control)
+			{ 
+                for (int i = 0; i < lstCommands.Items.Count; i++)
+				{
+				    if (lstCommands.Items[i].ToString().Contains(findCmd))
+				    {
+				        lstCommands.SelectedIndex = i;
+				        //lstCommands.TopIndex = i; // scroll to label index
+				        break;
+				    }
+				}
+			} else this.txtLabel.Text = $"{data2}";
         }
 
 		private void btnGotoLabel_Click(object sender, EventArgs e)
