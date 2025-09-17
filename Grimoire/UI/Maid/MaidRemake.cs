@@ -20,6 +20,8 @@ using System.Windows.Interop;
 using System.Security.Cryptography;
 using Grimoire.Game.Data;
 using System.Linq;
+using System.Threading;
+using System.Collections.Generic;
 
 namespace Grimoire.UI.Maid
 {
@@ -107,6 +109,8 @@ namespace Grimoire.UI.Maid
                 startUI();
 
                 int gotoTry = 0;
+                string equippedclass = Player.EquippedClass.ToLower();
+                var skillproperties = Flash.Instance.GetGameObject<List<JObject>>("world.actions.active");
 
                 string[] skillList = tbSkillList.Text.Split(',');
                 int skillIndex = 0;
@@ -211,12 +215,22 @@ namespace Grimoire.UI.Maid
                                 continue;
                             }
 
-                            if (cbAttackPriority.Checked)
+                            if (cbAttackPriority.Checked && !forceSkill)
                                 doPriorityAttack();
 
                             // set targetting to availabe monster in current cell
                             if (World.IsMonsterAvailable("*") && !Player.HasTarget)
                                 Player.AttackMonster("*");
+
+                            //keep using buff when no enemy target & checking waitskill
+                            string selfskill = skillproperties[int.Parse(skillList[skillIndex])]?["tgt"]?.ToString();
+                            if (cbWaitSkill.Checked && selfskill == "s")
+                            {
+                                await Task.Delay(Player.SkillAvailable(skillList[skillIndex]));
+                                Player.ForceUseSkill(skillList[skillIndex]);
+                                await Task.Delay(150);
+                                skillIndex = (skillIndex + 1) % skillList.Length;
+                            }
 
                             // waiting for skill CD if 'Wait' skill checked
                             if (cbWaitSkill.Checked && (Player.SkillAvailable(skillList[skillIndex]) > 0 || !Player.HasTarget))
@@ -230,7 +244,8 @@ namespace Grimoire.UI.Maid
                             {
                                 //For class with some aura detection or Ultragramiel boss fight
                                 await SpecialCombo();
-
+                                if (tauntTask == null)
+                                    taunt();
                                 // force, to ensure a skill is REALLY executed 
                                 if (forceSkill)
                                 {
@@ -239,10 +254,8 @@ namespace Grimoire.UI.Maid
                                     await Task.Delay(Player.SkillAvailable(skillAct));
                                     //Player.UseSkill(skillAct);
                                     useSkill(skillAct);
-                                    await Task.Delay(500);
-                                    //Player.UseSkill(skillAct);
-                                    useSkill(skillAct);
                                     forceSkill = false;
+                                    await Task.Delay(500);
                                 }
                                 else
                                 { // normal skill spamming
@@ -319,7 +332,58 @@ namespace Grimoire.UI.Maid
             Task.Delay(1000);
         }
 
+        private void taunt()
+        {
+            if (tbSpecialMsg.Text.StartsWith("tc;", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    string[] parts = tbSpecialMsg.Text.Split(';');
 
+                    // Default value
+                    int cycle = 2;
+                    string mon = "*";
+                    int second = 12;
+                    int order = -1;
+
+                    if (parts.Length > 1 && !int.TryParse(parts[1], out cycle))
+                        throw new Exception("Cycle harus berupa angka!");
+
+                    if (parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2]))
+                        mon = parts[2];
+
+                    if (parts.Length > 3 && !int.TryParse(parts[3], out second))
+                        throw new Exception("Second harus berupa angka!");
+                    if (parts.Length > 4 && !int.TryParse(parts[4], out order))
+                        order -= 1;
+
+                    if (tauntTask == null && World.IsMonsterAvailable(mon))
+                    {
+                        ResetToken(true);
+                        tauntTask = Task.Run(() =>
+                            cycleTaunt(cycle, mon, second, order)
+                        );
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Task.Run(() =>
+                    MessageBox.Show(
+                        $"Input TauntCycle salah:\n{ex.Message}" +
+                        $"\n\nFormat yang benar: tc;<cycle>;<monster>;<second>" +
+                        $"\nNoh kubenerin pake default value",
+                        "TauntCycle Error",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    )
+                    );
+                    Task.Delay(2000);
+                    Player.MoveToCell(Player.Cell,Player.Pad);
+                    stopMaid();
+                    tbSpecialMsg.Text = $"tc;2;*;14;<order 1-4>(optional)";
+                }
+            }
+        }
 
         private bool isUsingCSH()
         {
@@ -333,11 +397,14 @@ namespace Grimoire.UI.Maid
         {
             potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i)
                 => i.IsEquipped && i.Name.Equals("Potent Honor Potion") || i.Name.Equals("Potent Malice Potion"));
-            if (potion.IsEquipped && potion.Quantity >=1 && Player.GetAuras(true, "Potent Honor Malice") == 0) 
+            if (potion != null)
             {
-                useSkill("5");
-                await Task.Delay(200);
-                return;
+                if (potion.IsEquipped && potion.Quantity >= 1 && Player.GetAuras(true, "Potent Honor Malice") == 0)
+                {
+                    useSkill("5");
+                    await Task.Delay(200);
+                    return;
+                }
             }
             if (Player.Map == "voidxyfrag" && Player.EquippedClass == "LEGION REVENANT")
             {
@@ -366,7 +433,7 @@ namespace Grimoire.UI.Maid
                     useSkill("1");
                     await Task.Delay(200);
                 }
-            } 
+            }
             else if (Player.EquippedClass == "ARCANA INVOKER")
             {
                 if (Player.GetAuras(true, "XX - Judgement") == 1 ||
@@ -376,7 +443,7 @@ namespace Grimoire.UI.Maid
                     useSkill("1");
                     await Task.Delay(200);
                 }
-            } 
+            }
             else if (Player.EquippedClass == "ARCHMAGE")
             {
                 if (Player.GetAuras(true, "Arcane Flux") == 1 &&
@@ -393,13 +460,57 @@ namespace Grimoire.UI.Maid
             {
                 if (World.IsMonsterAvailable("Grace Crystal"))
                     return;
-                if (Player.GetAuras(true, "vendetta") < 40 && 
-                    Player.SkillAvailable("5") == 0 && Player.GetAuras(true, "Invulnerable") == 0)
-                {//idk Why vendetta stacks 10 times per stack
-                    await Task.Delay(new Random().Next(3000) + 2000); //Random 2-5 sec taunt to ensure vendetta isn't stacked too much per chars
-                    useSkill("5");
+                if (tauntTask == null)
+                {
+                    ResetToken(true);
+                    tauntTask = Task.Run(() => cycleTaunt(4, "Gramiel", 20));
+                } else if (!World.IsMonsterAvailable("Gramiel"))
+                {
+                    ResetToken(false);
                 }
             }
+        }
+        private Task tauntTask = null;
+        private CancellationTokenSource cts;
+        private void ResetToken(bool createNew)
+        {
+            if (cts != null)
+            {
+                cts.Cancel();
+                cts.Dispose();
+                tauntTask = null;
+                cts = null;
+            }
+            if (createNew)
+                cts = new CancellationTokenSource();
+        }
+        private async Task cycleTaunt(int cycle = 2, string mon = "*", int second = 12, int count = -1)
+        {
+            if (count == -1)
+            {
+                count = cmbGotoUsername.Items.IndexOf(Player.Username.ToLower());
+            }
+            if (count > cycle)
+            {
+                count %= cycle;
+            }
+            debug($"Executing tauntcycle with Cycle = {cycle}, Every {second}s, initial taunt at {(count+1)*second}s");
+            while (World.IsMonsterAvailable(mon) && !cts.IsCancellationRequested)
+            {
+                if (count <= 0)
+                {
+                    debug($"Count = {count} forcing to taunt");
+                    count = cycle;
+                    forceSkill = true;
+                    Player.AttackMonster(mon);
+                }
+                else
+                    debug($"Count = {count}");
+                count--;
+                await Task.Delay(second / cycle * 1000);
+            }
+            debug($"Monster no longer detected, stopping taunt cycle");
+            ResetToken(false);
         }
 
         private Grimoire.Networking.Message CreateMessage(string raw)
@@ -550,7 +661,7 @@ namespace Grimoire.UI.Maid
             for (int i = 0; i < monsterList.Length; i++)
             {
                 //if (monsterList[i].Equals(Player.GetTargetName(), StringComparison.OrdinalIgnoreCase))
-                if (currentTarget?.IndexOf(monsterList[i], StringComparison.OrdinalIgnoreCase) >= 0 )
+                if (currentTarget?.IndexOf(monsterList[i], StringComparison.OrdinalIgnoreCase) >= 0)
                     return; //Made special for CSH non autoattack cases
                 if (World.IsMonsterAvailable(monsterList[i]))
                 {
@@ -640,6 +751,7 @@ namespace Grimoire.UI.Maid
             cmbUltraBoss.Enabled = true;
             cbEnablePlugin.Checked = false;
             onPause = false;
+            ResetToken(false);
             if (!string.IsNullOrWhiteSpace(msgTemp))
             {
                 tbSpecialMsg.Text = msgTemp;

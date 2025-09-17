@@ -74,5 +74,7 @@ namespace Grimoire.Game.Data
             get;
             set;
         }
+        [JsonIgnore]
+        public bool IsAlive => Health > 0;
     }
 }
