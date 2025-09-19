@@ -645,6 +645,7 @@ namespace Grimoire.UI.Maid
             {
                 crystalCount = 0;
             }
+            counterAttack = false;
         }
 
         /* Hotkey */
