@@ -224,7 +224,8 @@ namespace Grimoire.UI.Maid
 
                             //keep using buff when no enemy target & checking waitskill
                             string selfskill = skillproperties[int.Parse(skillList[skillIndex])]?["tgt"]?.ToString();
-                            if (cbWaitSkill.Checked && selfskill == "s")
+                            //debug($"{selfskill}");
+                            if (cbWaitSkill.Checked && selfskill == "f") //H or F [H - monster/hostile, F - Friendly/self]
                             {
                                 await Task.Delay(Player.SkillAvailable(skillList[skillIndex]));
                                 Player.ForceUseSkill(skillList[skillIndex]);
@@ -258,8 +259,8 @@ namespace Grimoire.UI.Maid
                                     await Task.Delay(500);
                                 }
                                 else
-                                { // normal skill spamming
-                                    //Previously Player.UseSkill(skillList[skillIndex]); 
+                                {   // normal skill spamming
+                                    // Previously Player.UseSkill(skillList[skillIndex]); 
                                     useSkill(skillList[skillIndex]);
                                 }
                             }
@@ -378,8 +379,9 @@ namespace Grimoire.UI.Maid
                     )
                     );
                     Task.Delay(2000);
-                    Player.MoveToCell(Player.Cell,Player.Pad);
                     stopMaid();
+                    Task.Delay(100);
+                    Player.MoveToCell(Player.Cell,Player.Pad);
                     tbSpecialMsg.Text = $"tc;2;*;14;<order 1-4>(optional)";
                 }
             }
