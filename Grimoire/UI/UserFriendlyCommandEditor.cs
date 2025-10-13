@@ -2,6 +2,7 @@ using DarkUI.Controls;
 using DarkUI.Forms;
 using Grimoire.Botting.Commands.Misc.Statements;
 using Grimoire.Botting.Commands.Quest;
+using Grimoire.Game;
 using Grimoire.Game.Data;
 using Grimoire.Properties;
 using Newtonsoft.Json;
@@ -24,6 +25,7 @@ namespace Grimoire.UI
         private SplitContainer splitContainer1;
         private DarkButton btnRawCommand;
         private DarkButton btnCancel;
+        private DarkButton btnGetInfo;
 
         private static object cmdObj
         {
@@ -138,12 +140,29 @@ namespace Grimoire.UI
                             }));
                         commandEditor.Controls.Add(currentVars[item.Key].Key);
                         commandEditor.Controls.Add(currentVars[item.Key].Value);
+
+                        // Make key handler for each textbox
+                        currentVars[item.Key].Value.KeyDown += commandEditor.txtCmd_KeyDown;
                         count++;
                         currentY += 30;
                     }
                     //honestly i have no fucking idea how to implement this properly
                 }
-                commandEditor.Size = new Size(commandEditor.Size.Width, commandEditor.Size.Height + currentY - 13);
+                bool hasMapProps = currentVars.Keys.Any(k =>
+    k.IndexOf("cell", StringComparison.OrdinalIgnoreCase) >= 0 ||
+    k.IndexOf("map", StringComparison.OrdinalIgnoreCase) >= 0 ||
+    k.IndexOf("pad", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                if (!hasMapProps)
+                {
+                    commandEditor.btnGetInfo.Visible = false;
+                    commandEditor.Size = new Size(commandEditor.Size.Width, commandEditor.Size.Height + currentY - 13);
+                }
+                else
+                {
+                    commandEditor.btnGetInfo.Visible = true;
+                    commandEditor.Size = new Size(commandEditor.Size.Width, commandEditor.Size.Height + currentY + 10);
+                }
                 DialogResult results = commandEditor.ShowDialog();
                 bool dialog = results == DialogResult.OK;
                 bool dialog2 = results == DialogResult.Abort;
@@ -191,6 +210,7 @@ namespace Grimoire.UI
             this.btnCancel = new DarkUI.Controls.DarkButton();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.btnRawCommand = new DarkUI.Controls.DarkButton();
+            this.btnGetInfo = new DarkUI.Controls.DarkButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -221,7 +241,7 @@ namespace Grimoire.UI
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.splitContainer1.Location = new System.Drawing.Point(12, 46);
             this.splitContainer1.Name = "splitContainer1";
@@ -239,7 +259,7 @@ namespace Grimoire.UI
             // 
             // btnRawCommand
             // 
-            this.btnRawCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            this.btnRawCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnRawCommand.Checked = false;
             this.btnRawCommand.DialogResult = System.Windows.Forms.DialogResult.Abort;
@@ -249,11 +269,24 @@ namespace Grimoire.UI
             this.btnRawCommand.TabIndex = 3;
             this.btnRawCommand.Text = "Raw Command Editor";
             // 
+            // btnGetInfo
+            // 
+            this.btnGetInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnGetInfo.Checked = false;
+            this.btnGetInfo.Location = new System.Drawing.Point(12, -12);
+            this.btnGetInfo.Name = "btnGetInfo";
+            this.btnGetInfo.Size = new System.Drawing.Size(282, 23);
+            this.btnGetInfo.TabIndex = 4;
+            this.btnGetInfo.Text = "Get Cell / Map / Pad";
+            this.btnGetInfo.Click += new System.EventHandler(this.BtnGetInfo_Click);
+            // 
             // UserFriendlyCommandEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(308, 81);
+            this.Controls.Add(this.btnGetInfo);
             this.Controls.Add(this.btnRawCommand);
             this.Controls.Add(this.splitContainer1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -270,7 +303,35 @@ namespace Grimoire.UI
             this.ResumeLayout(false);
 
         }
+        private void BtnGetInfo_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //Player current location
+                string cell = Player.Cell;
+                string map = Player.Map;
+                string pad = Player.Pad;
 
+                // Fill relevant textbox
+                foreach (Control ctrl in this.Controls)
+                {
+                    if (ctrl is DarkTextBox tb)
+                    {
+                        if (tb.Name.IndexOf("Cell", StringComparison.OrdinalIgnoreCase) >= 0 && 
+                            tb.Name.IndexOf("maxcell", StringComparison.OrdinalIgnoreCase) < 0)
+                            tb.Text = cell;
+                        else if (tb.Name.IndexOf("Map", StringComparison.OrdinalIgnoreCase) >= 0)
+                            tb.Text = map;
+                        else if (tb.Name.IndexOf("Pad", StringComparison.OrdinalIgnoreCase) >= 0)
+                            tb.Text = pad;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Gagal mengambil info dari Player.\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
         private void UserFriendlyCommandEditor_KeyDown(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
