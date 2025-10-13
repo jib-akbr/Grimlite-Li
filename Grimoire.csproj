@@ -206,6 +206,7 @@
     <Compile Include="Grimoire\Networking\Handlers\Maid\PartyInvitationHandler.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\TargetHandler.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\WarningMsgHandler.cs" />
+    <Compile Include="Grimoire\Tools\MapConfig.cs" />
     <Compile Include="Grimoire\Tools\Maid\ClassPreset.cs" />
     <Compile Include="Grimoire\Tools\LowLevelKeyboardHook.cs" />
     <Compile Include="Grimoire\Tools\Maid\MaidConfig.cs" />
