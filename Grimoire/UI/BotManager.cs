@@ -2843,8 +2843,21 @@ namespace Grimoire.UI
 							lstDrops.Items.Add(item);
 					}
 				}
+                if ((Control.ModifierKeys & Keys.Alt) == Keys.Alt)
+                {
+					this.AddCommand(new CmdQuestHunt
+					{
+						Map = tbMapF.Text,
+						Cell = tbCellF.Text,
+						Pad = tbPadF.Text,
+						ItemName = itemName.Trim(),
+						Quantity = itemQty.Trim(),
+						Monster = monster.Trim()
+					});
+					return;
+                }
 
-				CmdShortHunt cmd = new CmdShortHunt
+                CmdShortHunt cmd = new CmdShortHunt
 				{
 					Map = tbMapF.Text,
 					Cell = tbCellF.Text,

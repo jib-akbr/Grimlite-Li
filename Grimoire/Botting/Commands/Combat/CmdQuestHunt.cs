@@ -151,10 +151,20 @@ namespace Grimoire.Botting.Commands.Combat
         {
             List<Monster> monMap = World.GetAllMonsters();
             
+			if (monsterName == "*")
+			{
+				// Semua monster, urutkan berdasarkan cell dengan jumlah terbanyak
+				return monMap
+					.Where(m => !string.IsNullOrEmpty(m.cell))
+					.GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
+					.OrderByDescending(g => g.Count())
+					.Select(g => g.Key)
+					.ToList();
+			}
             // Ambil semua cell unik tempat monsterName spawn
             List<string> targetCells = monMap
                 .Where(m => m.Name != null &&
-                            m.Name.Equals(monsterName, StringComparison.OrdinalIgnoreCase)) //&& m.IsAlive)
+                            m.Name.IndexOf(monsterName, StringComparison.OrdinalIgnoreCase) >= 0) //&& m.IsAlive)
                 .GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
                 .OrderByDescending(g => g.Count()) // cell dengan monster hidup terbanyak
                 .Select(g => g.Key)
@@ -180,10 +190,10 @@ namespace Grimoire.Botting.Commands.Combat
                     await Task.Delay(1000);
                 }
                 await join.Execute(instance);
-                await Task.Delay(2000);
+                await Task.Delay(1500);
             }
             if (!Player.Cell.Equals(Cell)) Player.MoveToCell(Cell, Pad);
-            await Task.Delay(1000);
+            //await Task.Delay(1000);
         }
 
         public override string ToString()

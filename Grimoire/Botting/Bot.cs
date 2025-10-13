@@ -185,10 +185,11 @@ namespace Grimoire.Botting
 			OptionsManager.Stop();
 			StopBackGroundSpammer();
 			IsRunning = false;
+			paused = false;
 			BotData.BotState = BotData.State.Others;
 			this.StopCommands();
 		}
-
+		public bool paused = false;
 		private async Task Activate()
 		{
 			if (Configuration.Quests.Count > 0)
@@ -270,6 +271,8 @@ namespace Grimoire.Botting
 				{
 					lastCommand = cmd.ToString();
 					await cmd.Execute(this);
+					while (paused) //Might be useful for handler uses in the future
+						await Task.Delay(100);
 				}
 
 				if (_ctsBot.IsCancellationRequested)
@@ -485,8 +488,8 @@ namespace Grimoire.Botting
 				int ii = i;
 				Task.Run(async delegate
 				{
-					await Task.Delay(1000 * ii);
-					qs[ii].Accept();
+					await Task.Delay(700 * ii);
+					qs[ii].GhostAccept();
 				});
 			}
 		}
