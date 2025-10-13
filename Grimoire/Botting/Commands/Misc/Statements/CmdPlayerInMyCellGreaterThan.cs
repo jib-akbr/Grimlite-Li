@@ -24,13 +24,13 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                     pl,
                     Player.Cell
                 });
-                if (bool.Parse(reqs))
+                if (bool.TryParse(reqs,out bool result) && result)
                 {
                     count++;
                 }
             }
-
-            if (count <= int.Parse((instance.IsVar(Value1) ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1)))
+            int inputCount = int.Parse(Bot.Instance.ResolveVars(Value1));
+            if (count <= inputCount)
             {
                 instance.Index++;
             }
