@@ -225,7 +225,7 @@ namespace Grimoire.UI.Maid
                             //keep using buff when no enemy target & checking waitskill
                             string selfskill = skillproperties[int.Parse(skillList[skillIndex])]?["tgt"]?.ToString();
                             //debug($"{selfskill}");
-                            if (cbWaitSkill.Checked && selfskill == "f") //H or F [H - monster/hostile, F - Friendly/self]
+                            if (cbWaitSkill.Checked && selfskill != "h") //H or F [H - monster/hostile, F - Friendly/self]
                             {
                                 await Task.Delay(Player.SkillAvailable(skillList[skillIndex]));
                                 Player.ForceUseSkill(skillList[skillIndex]);
