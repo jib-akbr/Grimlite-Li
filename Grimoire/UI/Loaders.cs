@@ -391,7 +391,7 @@ namespace Grimoire.UI
             this.numTQuests.Location = new System.Drawing.Point(192, 12);
             this.numTQuests.LoopValues = false;
             this.numTQuests.Maximum = new decimal(new int[] {
-            20,
+            30,
             0,
             0,
             0});
