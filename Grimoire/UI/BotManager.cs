@@ -1400,9 +1400,21 @@ namespace Grimoire.UI
 
 		private void lbLabels_DoubleClick(object sender, EventArgs e)
 		{
+			string findCmd = this.lbLabels.SelectedItem.ToString();
 			string data2 = this.lbLabels.SelectedItem.ToString().Replace("[", "").Replace("]", "");
-			this.txtLabel.Text = $"{data2}";
-		}
+			if ((ModifierKeys & Keys.Control) == Keys.Control)
+			{ 
+                for (int i = 0; i < lstCommands.Items.Count; i++)
+				{
+				    if (lstCommands.Items[i].ToString().Contains(findCmd))
+				    {
+				        lstCommands.SelectedIndex = i;
+				        //lstCommands.TopIndex = i; // scroll to label index
+				        break;
+				    }
+				}
+			} else this.txtLabel.Text = $"{data2}";
+        }
 
 		private void btnGotoLabel_Click(object sender, EventArgs e)
 		{
@@ -1458,7 +1470,19 @@ namespace Grimoire.UI
 			string path = Path.Combine(txtSaved.Text, e.Node.FullPath);
 			if (File.Exists(path))
 			{
-				if (!TryDeserialize(File.ReadAllText(path), out Configuration config))
+                if ((ModifierKeys & Keys.Control) == Keys.Control)
+                {
+                    string relativePath = "Bots" + path.Substring(txtSaved.Text.Length);
+					LogForm.Instance.AppendDebug($"Path : {path}\r\nRelative path : {relativePath}\r\nNode : {e.Node.FullPath}");
+                    AddCommand(new CmdLoadBot
+                    {
+                        BotFileName = Path.GetFileName(path),       // "06 - The lovers embrace.gbot"
+                        BotFilePath = relativePath					// "...\Bots\Arcana"
+                    }, Insert:true);
+                    return;
+                }
+
+                if (!TryDeserialize(File.ReadAllText(path), out Configuration config))
 				{
 					return;
 				}
@@ -2819,8 +2843,21 @@ namespace Grimoire.UI
 							lstDrops.Items.Add(item);
 					}
 				}
+                if ((Control.ModifierKeys & Keys.Alt) == Keys.Alt)
+                {
+					this.AddCommand(new CmdQuestHunt
+					{
+						Map = tbMapF.Text,
+						Cell = tbCellF.Text,
+						Pad = tbPadF.Text,
+						ItemName = itemName.Trim(),
+						Quantity = itemQty.Trim(),
+						Monster = monster.Trim()
+					}, (Control.ModifierKeys & Keys.Control) == Keys.Control);
+					return;
+                }
 
-				CmdShortHunt cmd = new CmdShortHunt
+                CmdShortHunt cmd = new CmdShortHunt
 				{
 					Map = tbMapF.Text,
 					Cell = tbCellF.Text,

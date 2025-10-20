@@ -8,6 +8,7 @@ namespace Grimoire.Tools.Maid
 {
     public static class ClassPreset
     {
+        static bool heal = true;
         public static void LR()
         {
             // skill list
@@ -27,11 +28,12 @@ namespace Grimoire.Tools.Maid
         public static void LC()
         {
 			// skill list
-			UI.Maid.MaidRemake.Instance.tbSkillList.Text = "1,2,4";
+			UI.Maid.MaidRemake.Instance.tbSkillList.Text = "1,2,4,1,2,4,3";
 
             // heal skill
             UI.Maid.MaidRemake.Instance.tbHealSkill.Text = "3";
 			UI.Maid.MaidRemake.Instance.numHealthPercent.Value = 60;
+            heal = true;
 
 			// buff skill
 			UI.Maid.MaidRemake.Instance.tbBuffSkill.Text = String.Empty;
@@ -62,19 +64,48 @@ namespace Grimoire.Tools.Maid
 
             // buff skill
             UI.Maid.MaidRemake.Instance.tbBuffSkill.Text = "5";
+            heal = false;
 
             // additional settings
             UI.Maid.MaidRemake.Instance.cbWaitSkill.Checked = false;
         }
+        public static void AM()
+        {
+            // skill list
+            UI.Maid.MaidRemake.Instance.tbSkillList.Text = "2,3,1";
 
+            // buff skill
+            UI.Maid.MaidRemake.Instance.tbBuffSkill.Text = "5";
+
+            // additional settings
+            UI.Maid.MaidRemake.Instance.cbWaitSkill.Checked = false;
+        }
         public static void CSH()
         {
             // skill list
-            UI.Maid.MaidRemake.Instance.tbSkillList.Text = "3";
+            UI.Maid.MaidRemake.Instance.tbSkillList.Text = "3,3,3,2";
 
             // heal skill
-            UI.Maid.MaidRemake.Instance.tbHealSkill.Text = "2";
+            UI.Maid.MaidRemake.Instance.tbHealSkill.Text = String.Empty;
             UI.Maid.MaidRemake.Instance.numHealthPercent.Value = 80;
+            heal = false;
+
+            // buff skill
+            UI.Maid.MaidRemake.Instance.tbBuffSkill.Text = "5";
+
+            // additional settings
+            UI.Maid.MaidRemake.Instance.cbWaitSkill.Checked = true;
+        }
+
+        public static void CSHGunslinger()
+        {
+            // skill list
+            UI.Maid.MaidRemake.Instance.tbSkillList.Text = "3,2,3,2,3,4,1";
+
+            // heal skill
+            UI.Maid.MaidRemake.Instance.tbHealSkill.Text = String.Empty;
+            UI.Maid.MaidRemake.Instance.numHealthPercent.Value = 80;
+            heal = false;
 
             // buff skill
             UI.Maid.MaidRemake.Instance.tbBuffSkill.Text = "5";
@@ -166,7 +197,7 @@ namespace Grimoire.Tools.Maid
         public static void TK()
         {
             // skill list
-            UI.Maid.MaidRemake.Instance.tbSkillList.Text = "2,1,1,1,2,1,4,3,1";
+            UI.Maid.MaidRemake.Instance.tbSkillList.Text = "1,2,1,4,1,3";
 
             // heal skill
             UI.Maid.MaidRemake.Instance.tbHealSkill.Text = String.Empty;
@@ -189,7 +220,14 @@ namespace Grimoire.Tools.Maid
 
         public static void cbSet()
         {
-            UI.Maid.MaidRemake.Instance.cbUseHeal.Checked = true;
+            if (heal)
+            {
+                UI.Maid.MaidRemake.Instance.cbUseHeal.Checked = true;
+            }
+            else
+            {
+                UI.Maid.MaidRemake.Instance.cbUseHeal.Checked = false;
+            }
             UI.Maid.MaidRemake.Instance.cbBuffIfStop.Checked = true;
         } 
     }

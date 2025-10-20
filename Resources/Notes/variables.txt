@@ -4,3 +4,34 @@ Variables in Packet Cmd
 {GETMAP} = map name
 PLAYERNAME = player username
 
+Variables in setvar [WIP]
+{weapon} = Current equipped weapon useful for spesific skill locking
+{class}
+{cape}
+{helm} 
+
+Variables in Equip Command (ignore case sensitive)
+ForgeCape
+Lament	
+Penitence
+Vainglory
+Absolutio
+Avarice	
+
+ForgeHelm
+Hearty	
+Examen	
+Anima	
+Pneuma	
+Vim		
+
+ForgeWeap
+Praxis	
+Dauntless
+Ravenous
+Acheron	
+Elysium	
+Smite	
+Valiance
+Arcana	
+Lacerate

@@ -329,14 +329,23 @@ namespace Grimoire.Game
         public static void Logout() => Flash.Call("Logout", new string[0]);
 
         public static void SetTargetPlayer(string username) => Flash.Call("SetTargetPlayer", username);
+        /// <summary>
+        /// Gets Monstername.
+        /// Returned as null if targeted into player/no target
+        /// </summary>
+        public static string GetTargetName() => Flash.GetGameObject("world.myAvatar.target.objData.strMonName");
+        public static string GetAccessLevel(string username) => Flash.Call<string>("GetAccessLevel", username);
 
-		public static string GetAccessLevel(string username) => Flash.Call<string>("GetAccessLevel", username);
-
-		/// <summary>
-		/// Gets Auras.
-		/// </summary>
-		public static int GetAuras(bool isSelf, string auraName) => Flash.Call<int>("GetAurasValue", isSelf.ToString(), auraName);
-
+        /// <summary>
+        /// Gets Auras.
+        /// Returned as int aura stack <br></br>
+        /// (note : the actual aura can be Float, but only on specific cases like LR's defense buff)
+        /// </summary>
+        /// <param name="isSelf">False = enemy | True = self aura</param>
+        /// <param name="auraName"></param>
+        public static int GetAuras(bool isSelf, string auraName) => Flash.Call<int>("GetAurasValue", isSelf.ToString(), auraName);
+        
+        public static List<TempItem> recentMapItem = new List<TempItem>();
         static Player()
         {
             Bank = new Bank();

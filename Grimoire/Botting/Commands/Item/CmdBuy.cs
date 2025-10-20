@@ -55,26 +55,29 @@ namespace Grimoire.Botting.Commands.Item
 			BotData.BotState = BotData.State.Transaction;
 			string ItemName = (instance.IsVar(this.ItemName) ? Configuration.Tempvariable[instance.GetVar(this.ItemName)] : this.ItemName);
 			await instance.WaitUntil(() => World.IsActionAvailable(LockActions.BuyItem));
-			Shop.ResetShopInfo();
-			Shop.Load(ShopId);
-			await instance.WaitUntil(() => Shop.IsShopLoaded);
-			InventoryItem i = Player.Inventory.Items.FirstOrDefault((InventoryItem item) => item.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase));
-			if (ByID)
-			{
-				Shop.BuyItemQty(itemId: ItemId, shopItemId: ShopItemId, qty: Qty);
-			} 
-			else
-			{
-				Shop.BuyItemQty(name: ItemName, qty: Qty);
-			}
-			if (i != null)
-			{
-				await instance.WaitUntil(() => Player.Inventory.Items.FirstOrDefault((InventoryItem it) => it.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase)).Quantity != i.Quantity);
-			}
-			else
-			{
-				await instance.WaitUntil(() => Player.Inventory.Items.FirstOrDefault((InventoryItem it) => it.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase)) != null);
-			}
+            using (new pauseProvoke(instance.Configuration))
+            {
+				Shop.ResetShopInfo();
+				Shop.Load(ShopId);
+				await instance.WaitUntil(() => Shop.IsShopLoaded);
+				InventoryItem i = Player.Inventory.Items.FirstOrDefault((InventoryItem item) => item.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase));
+				if (ByID)
+				{
+					Shop.BuyItemQty(itemId: ItemId, shopItemId: ShopItemId, qty: Qty);
+				} 
+				else
+				{
+					Shop.BuyItemQty(name: ItemName, qty: Qty);
+				}
+				if (i != null)
+				{
+					await instance.WaitUntil(() => Player.Inventory.Items.FirstOrDefault((InventoryItem it) => it.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase)).Quantity != i.Quantity);
+				}
+				else
+				{
+					await instance.WaitUntil(() => Player.Inventory.Items.FirstOrDefault((InventoryItem it) => it.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase)) != null);
+				}
+            }
 		}
 
 		public override string ToString()

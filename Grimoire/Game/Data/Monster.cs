@@ -26,6 +26,13 @@ namespace Grimoire.Game.Data
             }
         }
 
+        [JsonProperty("Cell")]
+        public string cell
+        {
+            get;
+            set;
+        }
+
         [JsonProperty("MonID")]
         public int Id
         {
@@ -67,5 +74,7 @@ namespace Grimoire.Game.Data
             get;
             set;
         }
+        [JsonIgnore]
+        public bool IsAlive => Health > 0;
     }
 }

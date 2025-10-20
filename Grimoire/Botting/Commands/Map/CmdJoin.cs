@@ -49,7 +49,10 @@ namespace Grimoire.Botting.Commands.Map
 				}
 				while (_try > 0 && Player.Map != Map)
 				{
-					await this.TryJoin(instance, namName, roomNumber);
+                    using (new pauseProvoke(instance.Configuration))
+                    {
+						await this.TryJoin(instance, namName, roomNumber);
+                    }
 					_try--;
 				}
 			}
@@ -86,7 +89,7 @@ namespace Grimoire.Botting.Commands.Map
 			}
 			String join = RoomNumber.Length > 0 ? $"{MapName}-{RoomNumber}" : MapName;
 			Player.JoinMap(join, _Cell, _Pad);
-			await instance.WaitUntil(() => Player.Map.Equals(MapName, StringComparison.OrdinalIgnoreCase), null, 10);
+			await instance.WaitUntil(() => Player.Map.Equals(MapName, StringComparison.OrdinalIgnoreCase), null, 5);
 			await instance.WaitUntil(() => !World.IsMapLoading, null, 40);
 		}
 

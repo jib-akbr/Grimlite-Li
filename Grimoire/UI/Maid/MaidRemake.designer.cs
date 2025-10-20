@@ -242,13 +242,14 @@
             "SC",
             "AP",
             "AI",
+            "AM",
             "CCMD",
             "SSOT",
             "NCM",
             "TK",
-            "CSH"});
-            this.cmbPreset.Location = new System.Drawing.Point(126, 157);
-            this.cmbPreset.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            "CSH",
+            "CSH v2"});
+            this.cmbPreset.Location = new System.Drawing.Point(84, 102);
             this.cmbPreset.Name = "cmbPreset";
             this.cmbPreset.Size = new System.Drawing.Size(100, 27);
             this.cmbPreset.TabIndex = 21;
@@ -335,8 +336,7 @@
             // cbUnfollow
             // 
             this.cbUnfollow.AutoSize = true;
-            this.cbUnfollow.Location = new System.Drawing.Point(160, 29);
-            this.cbUnfollow.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cbUnfollow.Location = new System.Drawing.Point(107, 19);
             this.cbUnfollow.Name = "cbUnfollow";
             this.cbUnfollow.Size = new System.Drawing.Size(122, 24);
             this.cbUnfollow.TabIndex = 16;
@@ -346,8 +346,7 @@
             // cbStopAttack
             // 
             this.cbStopAttack.AutoSize = true;
-            this.cbStopAttack.Location = new System.Drawing.Point(296, 29);
-            this.cbStopAttack.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cbStopAttack.Location = new System.Drawing.Point(197, 19);
             this.cbStopAttack.Name = "cbStopAttack";
             this.cbStopAttack.Size = new System.Drawing.Size(138, 24);
             this.cbStopAttack.TabIndex = 17;

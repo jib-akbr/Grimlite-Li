@@ -180,6 +180,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdCancelTarget.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Combat\CmdQuestHunt.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraEquals.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraGreaterThan.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraLessThan.cs" />
@@ -205,6 +206,7 @@
     <Compile Include="Grimoire\Networking\Handlers\Maid\PartyInvitationHandler.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\TargetHandler.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\WarningMsgHandler.cs" />
+    <Compile Include="Grimoire\Tools\MapConfig.cs" />
     <Compile Include="Grimoire\Tools\Maid\ClassPreset.cs" />
     <Compile Include="Grimoire\Tools\LowLevelKeyboardHook.cs" />
     <Compile Include="Grimoire\Tools\Maid\MaidConfig.cs" />

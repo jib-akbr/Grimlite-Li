@@ -147,8 +147,9 @@ namespace Grimoire.Tools
                             treeNode3.Nodes.Add($"ID: {item2.Id}");
                             treeNode3.Nodes.Add(string.Format("Cost: {0} {1}", item2.Cost, item2.IsAcItem ? "AC" : "Gold"));
                             treeNode3.Nodes.Add($"Category: {item2.Category}");
+                            treeNode3.Nodes.Add($"Level: {item2.Level}");
                             treeNode3.Nodes.Add($"Description: {item2.Description}");
-                            if(item2.IsEquippableNonItem || item2.IsWeapon)
+                            if (item2.IsEquippableNonItem || item2.IsWeapon)
                             {
                                 treeNode3.Nodes.Add($"sFile: {item2.File}");
                                 treeNode3.Nodes.Add($"sLink: {item2.Link}");
@@ -164,7 +165,7 @@ namespace Grimoire.Tools
             List<Quest> list = Player.Quests.QuestTree?.OrderBy((Quest q) => q.Name).ToList();
             switch (orderBy)
             {
-                case OrderBy.Name: 
+                case OrderBy.Name:
                     list = Player.Quests.QuestTree?.OrderBy((Quest q) => q.Name).ToList();
                     break;
                 case OrderBy.Id:
@@ -175,7 +176,7 @@ namespace Grimoire.Tools
             {
                 foreach (Quest item in list)
                 {
-                    tree.Nodes.Add($"{item.Id} - {item.Name}").ContextMenuStrip = MenuQuest(item.Id);
+                    tree.Nodes.Add($"{item.Id} - {item.Name}").ContextMenuStrip = MenuQuest(item.Id, item.RequiredItems);
                 }
             }
         }
@@ -204,11 +205,13 @@ namespace Grimoire.Tools
                     treeNode.Nodes.Add($"Quantity: {item.Quantity}/{item.MaxStack}");
                     treeNode.Nodes.Add($"AC tagged: {item.IsAcItem}");
                     treeNode.Nodes.Add($"Category: {item.Category}");
+                    treeNode.Nodes.Add($"Level: {item.Level}");
                     treeNode.Nodes.Add($"Description: {item.Description}");
                     if (item.IsEquippableNonItem || item.IsWeapon)
                     {
                         treeNode.Nodes.Add($"sFile: {item.File}");
                         treeNode.Nodes.Add($"sLink: {item.Link}");
+                        treeNode.Nodes.Add($"Enhancement: {item.ForgeEnhancement}");
                     }
                 }
             }
@@ -224,8 +227,8 @@ namespace Grimoire.Tools
                     TreeNode treeNode = tree.Nodes.Add(item.Name);
                     treeNode.ContextMenuStrip = Wiki(item.Name);
                     treeNode.Nodes.Add($"ID: {item.Id}");
-					treeNode.Nodes.Add($"Quantity: {item.Quantity}");
-				}
+                    treeNode.Nodes.Add($"Quantity: {item.Quantity}");
+                }
             }
         }
 
@@ -248,6 +251,27 @@ namespace Grimoire.Tools
             }
         }
 
+        public static void GrabAllMonsters(TreeView tree)
+        {
+            List<Monster> list = World.GetAllMonsters();
+            //    (from x in World.AvailableMonsters?.GroupBy((Monster m) => m.MonMapID)
+            //                      select x.First()).ToList();
+            if (list != null && list.Count > 0)
+            {
+                foreach (Monster item in list)
+                {
+                    TreeNode treeNode = tree.Nodes.Add($"{item.Name} ({item.cell})");
+                    treeNode.ContextMenuStrip = Wiki(item.Name);
+                    treeNode.Nodes.Add($"ID: {item.Id}");
+                    treeNode.Nodes.Add($"MonMapID: {item.MonMapID}");
+                    //treeNode.Nodes.Add($"Cell: {item.cell}");
+                    treeNode.Nodes.Add($"Race: {item.Race}");
+                    treeNode.Nodes.Add($"Level: {item.Level}");
+                    treeNode.Nodes.Add($"Health: {item.Health}/{item.MaxHealth}");
+                }
+            }
+        }
+
         private static ContextMenuStrip Wiki(string item)
         {
             ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
@@ -259,6 +283,10 @@ namespace Grimoire.Tools
             {
                 Text = "Search on Wiki"
             };
+            ToolStripMenuItem toolStripMenuItem2 = new ToolStripMenuItem
+            {
+                Text = "Copy To Clipboard"
+            };
             toolStripMenuItem.Click += delegate (object S, EventArgs E)
             {
                 //System.Diagnostics.Process.Start
@@ -269,8 +297,13 @@ namespace Grimoire.Tools
                 //System.Diagnostics.Process.Start
                 Search("https://aqwwiki.wikidot.com/search:site/q/" + item.Replace(" ", "+"));
             };
+            toolStripMenuItem2.Click += delegate (object S, EventArgs E)
+            {
+                Clipboard.SetText(item);
+            };
             contextMenuStrip.Items.Add(toolStripMenuItem);
             contextMenuStrip.Items.Add(toolStripMenuItem1);
+            contextMenuStrip.Items.Add(toolStripMenuItem2);
             return contextMenuStrip;
         }
 
@@ -346,6 +379,8 @@ namespace Grimoire.Tools
                     slot = "co";
                 else if (txt == "Helm")
                     slot = "he";
+                else if (txt == "Misc")
+                    slot = "mi";
                 else
                     slot = "Weapon";
                 dynamic equip = new ExpandoObject();
@@ -356,12 +391,12 @@ namespace Grimoire.Tools
             };
             contextMenuStrip.Items.Add(toolStripMenuItem);
             contextMenuStrip.Items.Add(toolStripMenuItem1);
-            if(Item.IsWeapon || Item.IsEquippableNonItem)
+            if (Item.IsWeapon || Item.IsEquippableNonItem)
                 contextMenuStrip.Items.Add(toolStripMenuItem2);
             return contextMenuStrip;
         }
 
-        private static ContextMenuStrip MenuQuest(int QuestID)
+        private static ContextMenuStrip MenuQuest(int QuestID, List<InventoryItem> Items = null)
         {
             ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
             ToolStripMenuItem toolStripMenuItem = new ToolStripMenuItem
@@ -400,6 +435,23 @@ namespace Grimoire.Tools
             contextMenuStrip.Items.Add(toolStripMenuItem1);
             contextMenuStrip.Items.Add(toolStripMenuItem2);
             contextMenuStrip.Items.Add(toolStripMenuItem3);
+
+            if (Items != null)
+            {
+                ToolStripMenuItem toolStripMenuItem4 = new ToolStripMenuItem
+                {
+                    Text = "Copy all Reqs"
+                };
+                toolStripMenuItem4.Click += delegate (object S, EventArgs E)
+                {
+                    string longString;
+                    string name = $"\"ItemName\" : \" {string.Join(",", Items.Select(i => i.Name))} \"";
+                    string qty = $"\"Quantity\" : \" {string.Join(",", Items.Select(i => i.Quantity))} \"";
+                    longString = $"{name}\"\n{qty}\"";
+                    Clipboard.SetText(longString);
+                };
+                contextMenuStrip.Items.Add(toolStripMenuItem4);
+            }
             return contextMenuStrip;
         }
 
@@ -437,15 +489,28 @@ namespace Grimoire.Tools
             };
             toolStripMenuItem3.Click += delegate (object S, EventArgs E)
             {
-                foreach(InventoryItem Item in Items)
+                foreach (InventoryItem Item in Items)
                 {
                     Process.Start("https://aqwwiki.wikidot.com/search:site/q/" + Item.Name.Replace(" ", "+"));
                 }
+            };
+            ToolStripMenuItem toolStripMenuItem4 = new ToolStripMenuItem
+            {
+                Text = "Copy all"
+            };
+            toolStripMenuItem4.Click += delegate (object S, EventArgs E)
+            {
+                string longString;
+                string name = $"\"ItemName\" : \" {string.Join(",", Items.Select(i => i.Name))} \"";
+                string qty = $"\"Quantity\" : \" {string.Join(",", Items.Select(i => i.Quantity))} \"";
+                longString = $"{name}\"\n{qty}\"";
+                Clipboard.SetText(longString);
             };
             contextMenuStrip.Items.Add(toolStripMenuItem);
             contextMenuStrip.Items.Add(toolStripMenuItem1);
             contextMenuStrip.Items.Add(toolStripMenuItem2);
             contextMenuStrip.Items.Add(toolStripMenuItem3);
+            contextMenuStrip.Items.Add(toolStripMenuItem4);
             return contextMenuStrip;
         }
 
@@ -582,6 +647,8 @@ namespace Grimoire.Tools
                     slot = "co";
                 else if (txt == "Helm")
                     slot = "he";
+                else if (txt == "Misc")
+                    slot = "mi";
                 else
                     slot = "Weapon";
                 dynamic equip = new ExpandoObject();

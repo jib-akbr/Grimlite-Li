@@ -9,7 +9,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using DarkUI.Forms;
+using Grimoire.Game;
+using Grimoire.Tools;
 using Grimoire.UI;
+using Newtonsoft.Json.Linq;
 
 namespace Grimoire.UI
 {
@@ -128,6 +131,32 @@ namespace Grimoire.UI
             {
                 e.Handled = true;
                 e.SuppressKeyPress = true;
+            }
+        }
+
+        private void richTextBox1_TextChanged(object sender, EventArgs e)
+        {
+            if (richTextBox1.Text.Contains("debugskill"))
+            {
+                //richTextBox1.Text = Flash.GetGameObject("world.actions.active");
+
+                var actions = Flash.Instance.GetGameObject<List<JObject>>("world.actions.active");
+                string[] longProp = { "desc","auras" };
+                richTextBox1.Text = $"{Player.EquippedClass.ToLowerInvariant()}";
+                if (actions != null && actions.Count > 0)
+                {
+                    for (int i = 0; i < actions.Count; i++)
+                    {
+                        richTextBox1.Text += $"\r\nSkill-{i}\r\n";
+                        foreach (var prop in actions[i].Properties().OrderBy(p => p.Name))
+                        {
+                            if (!longProp.Any(k => prop.Name.Contains(k)))
+                            {
+                            richTextBox1.Text += $"{prop.Name}:{prop.Value}, ";
+                            }
+                        }
+                    }
+                }
             }
         }
     }

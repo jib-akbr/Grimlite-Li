@@ -2,6 +2,7 @@ using Grimoire.Tools;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using Grimoire.Botting;
+using Grimoire.Networking;
 
 namespace Grimoire.Game.Data
 {
@@ -201,7 +202,12 @@ namespace Grimoire.Game.Data
 			Flash.Call("Accept", Id.ToString());
 		}
 
-		public void Complete(int qty = 1)
+        public void GhostAccept()
+        {
+			Proxy.Instance.SendToServer($"%xt%zm%acceptQuest%1%{Id}");
+        }
+
+        public void Complete(int qty = 1)
 		{
 			if (!string.IsNullOrEmpty(ItemId))
 			{

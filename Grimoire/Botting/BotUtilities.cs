@@ -40,28 +40,45 @@ namespace Grimoire.Botting
             return true;
         }
 
+        
+
         public static void LoadAllQuests(this IBotEngine instance)
         {
             List<int> list = new List<int>();
+			
+			HashSet<int> loadedQuests = new HashSet<int>(
+				Player.Quests.QuestTree?.Select(q => q.Id) ?? Enumerable.Empty<int>()
+			);
+			
+            void AddUnique(int id)
+            {
+                if (!list.Contains(id) && !loadedQuests.Contains(id))
+                    list.Add(id);
+            }
             foreach (IBotCommand command in instance.Configuration.Commands)
             {
-                if (command is CmdAcceptQuest cmdAcceptQuest)
-                {
-                    list.Add(cmdAcceptQuest.Quest.Id);
-                }
-                else if (command is CmdCompleteQuest cmdCompleteQuest)
-                {
-                    list.Add(cmdCompleteQuest.Quest.Id);
-                }
-                else if (command is CmdAddQuestList cmdAddQuestList)
-                {
-                    list.Add(cmdAddQuestList.Id);
-                }
-            }
-            list.AddRange(instance.Configuration.Quests.Select((Quest q) => q.Id));
+                if (command is CmdAcceptQuest Accept)
+                    AddUnique(Accept.Quest.Id);
+                else if (command is CmdCompleteQuest Complete)
+                    AddUnique(Complete.Quest.Id);
+                else if (command is CmdAddQuestList AddQList)
+                    AddUnique(AddQList.Id);
+                else if (command is CmdQuestHunt Hunt)
+                    if (Hunt.QID != 0) AddUnique(Hunt.QID);                
+            } //changed to not load the quest (again) if already loaded
+            foreach (var q in instance.Configuration.Quests)
+                AddUnique(q.Id);
+            // list.AddRange(instance.Configuration.Quests.Select((Quest q) => q.Id));
             if (list.Count > 0)
             {
-                Player.Quests.Get(list);
+				const int batchSize = 30; //max GetQuest
+				for (int i = 0; i < list.Count; i += batchSize)
+				{
+					int take = Math.Min(batchSize, list.Count - i);
+					var batch = list.GetRange(i, take);
+					Player.Quests.Get(list);
+                    Task.Delay(800);
+				}
             }
         }
 
@@ -102,6 +119,24 @@ namespace Grimoire.Botting
         static BotUtilities()
         {
             BankLoadEvent = new ManualResetEvent(initialState: false);
+        }
+    }
+
+    class pauseProvoke : IDisposable
+    {
+        private readonly Configuration _config;
+        private readonly bool _originalValue;
+
+        public pauseProvoke(Configuration config)
+        {
+            _config = config;
+            _originalValue = config.ProvokeMonsters;
+            _config.ProvokeMonsters = false;
+        }
+
+        public void Dispose()
+        {
+            _config.ProvokeMonsters = _originalValue;
         }
     }
 }

@@ -7,6 +7,7 @@ using Grimoire.Tools;
 using Grimoire.UI;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -28,7 +29,43 @@ namespace Grimoire.Botting
 			return Regex.Replace(value, @"[\[\]']+", "");
 		}
 
-		public static Bot Instance = new Bot();
+        public string ResolveVars(string value)
+        {
+            // Match and replace all Tempvariable ex : "[var1]*[var2]"
+            string replaced = Regex.Replace(value, @"\[(.*?)\]", match =>
+            {
+                string key = match.Groups[1].Value;
+                if (Configuration.Tempvariable.ContainsKey(key))
+                    return Configuration.Tempvariable[key];
+				
+				LogForm.Instance.AppendDebug($"[Var Error] Key for [{match.Value}] not found");
+                return match.Value;
+            });
+
+            // Try to evaluate if the whole string is math operation (only support -,+,*,/)
+            string evaluated = TryEvaluateExpression(replaced);
+
+			//LogForm.Instance.AppendDebug($"Raw : {value}\r\nReplaced : {replaced}\r\nEvaluated/Final : {evaluated}");
+            return evaluated;
+        }
+
+        private string TryEvaluateExpression(string input)
+        {
+            try
+            {
+                // kalau input hanya angka atau ekspresi matematis
+                if (Regex.IsMatch(input, @"^[0-9\+\-\*\/\.\(\)\s]+$"))
+                {
+                    var dt = new DataTable();
+                    var result = dt.Compute(input, "");
+                    return result.ToString();
+                }
+            }
+            catch {}
+            return input;
+        }
+
+        public static Bot Instance = new Bot();
 
 		private int _index;
 
@@ -148,10 +185,11 @@ namespace Grimoire.Botting
 			OptionsManager.Stop();
 			StopBackGroundSpammer();
 			IsRunning = false;
+			paused = false;
 			BotData.BotState = BotData.State.Others;
 			this.StopCommands();
 		}
-
+		public bool paused = false;
 		private async Task Activate()
 		{
 			if (Configuration.Quests.Count > 0)
@@ -233,6 +271,8 @@ namespace Grimoire.Botting
 				{
 					lastCommand = cmd.ToString();
 					await cmd.Execute(this);
+					while (paused) //Might be useful for handler uses in the future
+						await Task.Delay(100);
 				}
 
 				if (_ctsBot.IsCancellationRequested)
@@ -448,8 +488,8 @@ namespace Grimoire.Botting
 				int ii = i;
 				Task.Run(async delegate
 				{
-					await Task.Delay(1000 * ii);
-					qs[ii].Accept();
+					await Task.Delay(700 * ii);
+					qs[ii].GhostAccept();
 				});
 			}
 		}
