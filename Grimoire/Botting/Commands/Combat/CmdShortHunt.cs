@@ -22,21 +22,23 @@ namespace Grimoire.Botting.Commands.Combat
 
         public async Task Execute(IBotEngine instance)
         {
+            string _Items = instance.ResolveVars(ItemName);
+            string _Qty = instance.ResolveVars(Quantity);
+            string _Map = instance.ResolveVars(Map.ToLower());
+
             if (ItemType == ItemType.Items)
-                if (Player.Inventory.ContainsItem(ItemName, Quantity)) return;
-                else
-                if (Player.TempInventory.ContainsItem(ItemName, Quantity)) return;
+                if (Player.Inventory.ContainsItem(_Items, _Qty)) return;
+            else
+                if (Player.TempInventory.ContainsItem(_Items, _Qty)) return;
 
-            Map = Map.ToLower();
-            while (!Player.Map.Equals(Map.Split('-')[0]) && instance.IsRunning)
+            CmdJoin join = new CmdJoin
             {
-                CmdJoin join = new CmdJoin
-                {
-                    Map = this.Map,
-                    Cell = this.Cell,
-                    Pad = this.Pad
-                };
-
+                Map = _Map,
+                Cell = Cell,
+                Pad = Pad
+            };
+            while (!Player.Map.Equals(_Map.Split('-')[0]) && instance.IsRunning)
+            {
                 if (BlankFirst)
                 {
                     string[] safeCell = ClientConfig.GetValue(ClientConfig.C_SAFE_CELL).Split(',');
@@ -46,23 +48,34 @@ namespace Grimoire.Botting.Commands.Combat
                 }
                 await join.Execute(instance);
             }
-
-            await Task.Delay(1000);
-            if (!Player.Cell.Equals(Cell)) Player.MoveToCell(Cell, Pad);
-
             CmdKillFor killFor = new CmdKillFor
             {
-                Monster = this.Monster,
-                ItemName = this.ItemName,
-                ItemType = this.ItemType,
-                Quantity = this.Quantity,
-                QuestId = this.QuestId,
-                DelayAfterKill = this.DelayAfterKill,
-                KillPriority = this.KillPriority,
-                AntiCounter = this.AntiCounter
+                Monster = Monster,
+                ItemName = _Items,
+                ItemType = ItemType,
+                Quantity = _Qty,
+                QuestId = QuestId,
+                DelayAfterKill = DelayAfterKill,
+                KillPriority = KillPriority,
+                AntiCounter = AntiCounter
             };
 
+
+            bool running = true;
+            var monitorTask = Task.Run(async () =>
+            {
+                while (running && instance.IsRunning)
+                {
+                    if (!Player.Cell.Equals(Cell))
+                        Player.MoveToCell(Cell, Pad);
+                    await Task.Delay(1000);
+                }
+            });
+
             await killFor.Execute(instance);
+
+            running = false;
+            await monitorTask;
         }
 
         public override string ToString()
