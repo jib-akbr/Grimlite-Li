@@ -29,14 +29,41 @@ namespace Grimoire.Botting.Commands.Combat
             string[] items = ItemName.Split(',');
             string[] quantities = Quantity.Split(',');
             string[] monsters = Monster.Split(',');
-            bool doQuest = QID == 0;
+            bool doQuest = QID != 0;
             if (doQuest)
             {
-                await instance.WaitUntil(() => Player.Quests.QuestTree.Any((Game.Data.Quest q) => q.Id == QID));
+                if (!Player.Quests.QuestTree.Exists(q => q.Id == QID))
+                {
+                    Player.Quests.Load(QID);
+                    await instance.WaitUntil(() => Player.Quests.QuestTree.Any((Game.Data.Quest q) => q.Id == QID));
+                }
+
+                Game.Data.Quest quest = Player.Quests.QuestTree.Find(q => q.Id == QID);
+                int progress = int.Parse(Flash.CallGameFunction2("world.getQuestValue", quest.ISlot));
+                if (progress >= quest.IValue)
+                    return;
+
                 if (!Player.Quests.IsInProgress(QID))
                 {
                     Player.Quests.Accept(QID);
+                    await instance.WaitUntil(() => !Player.Quests.IsInProgress(QID), timeout: 1);
                 }
+                var reqs = quest.RequiredItems;
+                for (int i = 0; i < reqs.Count; i++)
+                {
+                    string name = reqs[i].Name;
+                    string qty = reqs[i].Quantity.ToString();
+                    LogForm.Instance.AppendDebug($"Name = {name} | Qty = {qty}");
+                    if (!Player.Map.Equals(Map.Split('-')[0].ToLower()))
+                        await joinmap(Map, instance);
+                    if (int.TryParse(items[i], out _))
+                        await getMap(items[i], qty);
+                    else
+                        await hunt(name, qty, monsters[i], instance);
+                }
+                Player.Quests.Complete(QID);
+                await Task.Delay(600);
+                return;
             }
             for (int i = 0; i < items.Length; i++)
             {
@@ -85,7 +112,7 @@ namespace Grimoire.Botting.Commands.Combat
                         await kill.Execute(instance);
                         continue;
                     }
-                    Player.MoveToCell(targets[i], "left");
+                    Player.MoveToCell(targets[i], "Left");
                     i++;
                     if (i >= _maxcell)
                         i = 0;
@@ -150,17 +177,17 @@ namespace Grimoire.Botting.Commands.Combat
         List<string> GetMonsterCells(string monsterName)
         {
             List<Monster> monMap = World.GetAllMonsters();
-            
-			if (monsterName == "*")
-			{
-				// Semua monster, urutkan berdasarkan cell dengan jumlah terbanyak
-				return monMap
-					.Where(m => !string.IsNullOrEmpty(m.cell))
-					.GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
-					.OrderByDescending(g => g.Count())
-					.Select(g => g.Key)
-					.ToList();
-			}
+
+            if (monsterName == "*")
+            {
+                // Semua monster, urutkan berdasarkan cell dengan jumlah terbanyak
+                return monMap
+                    .Where(m => !string.IsNullOrEmpty(m.cell))
+                    .GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
+                    .OrderByDescending(g => g.Count())
+                    .Select(g => g.Key)
+                    .ToList();
+            }
             // Ambil semua cell unik tempat monsterName spawn
             List<string> targetCells = monMap
                 .Where(m => m.Name != null &&
@@ -206,6 +233,8 @@ namespace Grimoire.Botting.Commands.Combat
             {
                 wellShit += $"{i + 1}-{items[i]} x{quantities[i]} [{monsters[i]}] ";
             }
+			if (QID != 0)
+				return $"Quest-{QID} Map items:{string.Join(" | ", items)}";
             return $"Hunt {wellShit}";
         }
 

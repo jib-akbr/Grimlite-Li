@@ -58,17 +58,13 @@ namespace Grimoire.Botting
             foreach (IBotCommand command in instance.Configuration.Commands)
             {
                 if (command is CmdAcceptQuest Accept)
-                {
                     AddUnique(Accept.Quest.Id);
-                }
                 else if (command is CmdCompleteQuest Complete)
-                {
                     AddUnique(Complete.Quest.Id);
-                }
                 else if (command is CmdAddQuestList AddQList)
-                {
                     AddUnique(AddQList.Id);
-                }
+                else if (command is CmdQuestHunt Hunt)
+                    if (Hunt.QID != 0) AddUnique(Hunt.QID);                
             } //changed to not load the quest (again) if already loaded
             foreach (var q in instance.Configuration.Quests)
                 AddUnique(q.Id);
@@ -81,6 +77,7 @@ namespace Grimoire.Botting
 					int take = Math.Min(batchSize, list.Count - i);
 					var batch = list.GetRange(i, take);
 					Player.Quests.Get(list);
+                    Task.Delay(800);
 				}
             }
         }

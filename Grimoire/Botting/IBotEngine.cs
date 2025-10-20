@@ -21,6 +21,7 @@ namespace Grimoire.Botting
 
         bool IsVar(string value);
 
+        string ResolveVars(string value);
         Configuration Configuration
         {
             get;
