@@ -50,5 +50,7 @@ namespace Grimoire.Game.Data
         public bool CanComplete(string id) => Flash.Call<bool>("CanComplete", id);
 
         public bool IsAvailable(int id) => Flash.Call<bool>("IsAvailable", id.ToString());
+        public int progress(int id) => int.Parse(Flash.CallGameFunction2("world.getQuestValue", Quest(id).ISlot));
+        public Quest Quest (int id) => Player.Quests.QuestTree.Find(q => q.Id == id);
     }
 }

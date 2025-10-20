@@ -2853,7 +2853,7 @@ namespace Grimoire.UI
 						ItemName = itemName.Trim(),
 						Quantity = itemQty.Trim(),
 						Monster = monster.Trim()
-					});
+					}, (Control.ModifierKeys & Keys.Control) == Keys.Control);
 					return;
                 }
 
