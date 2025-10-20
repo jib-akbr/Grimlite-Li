@@ -495,9 +495,18 @@ namespace Grimoire.Tools
 		{
 			Configuration.Tempvariable["UID"] = Call<int>("UserID", new object[0]).ToString();
 			Configuration.Tempvariable["Username"] = Call<string>("GetUsername", new string[0]);
-			string nameColor = ClientConfig.GetValue(ClientConfig.C_NAME_COLOR);
-			if (nameColor != "0") Call("ChangeColorName", nameColor);
-		}
+			string[] nameColor = ClientConfig.GetValue(ClientConfig.C_NAME_COLOR).Split(',');
+			bool ismember = Call<bool>("IsMember", new string[0]);
+            if (ismember && nameColor.Length > 1)
+            {
+                Call("ChangeColorName", nameColor[1]);
+            }
+            else if (nameColor[0] != "0")
+            {
+                Call("ChangeColorName", nameColor[0]);
+            }
+            //if (nameColor != "0") Call("ChangeColorName", nameColor[0]);
+        }
 
 		public static string ProcessPext(string text)
 		{
