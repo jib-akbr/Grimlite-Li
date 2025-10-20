@@ -370,9 +370,9 @@ namespace Grimoire.UI.Maid
                 {
                     Task.Run(() =>
                     MessageBox.Show(
-                        $"Input TauntCycle salah:\n{ex.Message}" +
-                        $"\n\nFormat yang benar: tc;<cycle>;<monster>;<second>" +
-                        $"\nNoh kubenerin pake default value",
+                        $"Wrong format:\n{ex.Message}" +
+                        $"\n\nExample: tc;<cycle>;<monster>;<second>" +
+                        $"\nHere, i'll fix that for u",
                         "TauntCycle Error",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Warning
@@ -380,7 +380,7 @@ namespace Grimoire.UI.Maid
                     );
                     Task.Delay(2000);
                     stopMaid();
-                    Task.Delay(100);
+                    Task.Delay(200);
                     Player.MoveToCell(Player.Cell,Player.Pad);
                     tbSpecialMsg.Text = $"tc;2;*;14;<order 1-4>(optional)";
                 }
