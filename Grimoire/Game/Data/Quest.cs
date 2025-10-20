@@ -138,14 +138,15 @@ namespace Grimoire.Game.Data
 			set;
 		}
 
-		[JsonProperty("iSlot")]
-		public int ISlot
-		{
-			get;
-			set;
-		}
+        private int? _iSlot;
+        [JsonProperty("iSlot")]
+        public int? ISlot
+        {
+            get => (_iSlot == null || _iSlot == -1) ? 0 : _iSlot;
+            set => _iSlot = value;
+        }
 
-		[JsonProperty("iValue")]
+        [JsonProperty("iValue")]
 		public int IValue
 		{
 			get;
@@ -228,8 +229,9 @@ namespace Grimoire.Game.Data
 
 		#region ShouldSerialize
 		public bool ShouldSerializeFaction() => false;
+        public bool ShouldSerializeISlot() => false;
 
-		public bool ShouldSerializeClassPointsReward() => false;
+        public bool ShouldSerializeClassPointsReward() => false;
 
 		public bool ShouldSerializeDescription() => false;
 

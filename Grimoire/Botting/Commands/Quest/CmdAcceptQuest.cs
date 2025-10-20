@@ -1,4 +1,6 @@
 using Grimoire.Game;
+using Grimoire.Game.Data;
+using Grimoire.UI;
 using Newtonsoft.Json;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,11 +24,16 @@ namespace Grimoire.Botting.Commands.Quest
         public async Task Execute(IBotEngine instance)
         {
             BotData.BotState = BotData.State.Quest;
-            await instance.WaitUntil(() => Player.Quests.QuestTree.Any((Game.Data.Quest q) => q.Id == Quest.Id));
+            await instance.WaitUntil(() => Player.Quests.QuestTree.Any((Game.Data.Quest q) => q.Id == this.Quest.Id));
             await instance.WaitUntil(() => World.IsActionAvailable(LockActions.AcceptQuest));
+            var Quest = Player.Quests.Quest(this.Quest.Id);
             int i = 0;
             if (ghostAccept) 
             {
+                if (Quest.IValue <= Player.Quests.progress(Quest.Id) && Quest.ISlot != 0 && Quest.IsNotRepeatable)
+                {
+                    return;
+                }
                 Quest.GhostAccept();
                 await Task.Delay(600);
                 return;
