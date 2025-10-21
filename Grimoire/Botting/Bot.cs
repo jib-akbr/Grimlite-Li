@@ -488,7 +488,7 @@ namespace Grimoire.Botting
 				int ii = i;
 				Task.Run(async delegate
 				{
-					await Task.Delay(700 * ii);
+					await Task.Delay(600 * ii);
 					qs[ii].GhostAccept();
 				});
 			}
@@ -496,7 +496,11 @@ namespace Grimoire.Botting
 
 		private void OnQuestCompleted(CompletedQuest quest)
 		{
-			Configuration.Quests.FirstOrDefault((Quest q) => q.Id == quest.Id)?.Accept();
+			Task.Run(async () =>
+			{
+				await Task.Delay(600);
+				Configuration.Quests.FirstOrDefault((Quest q) => q.Id == quest.Id)?.GhostAccept();
+			});
 		}
 	}
 }

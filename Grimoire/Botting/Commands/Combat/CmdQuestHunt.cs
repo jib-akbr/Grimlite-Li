@@ -112,7 +112,13 @@ namespace Grimoire.Botting.Commands.Combat
                         await kill.Execute(instance);
                         continue;
                     }
-                    Player.MoveToCell(targets[i], "Left");
+                    else if (targets.Count > 1)
+                        Player.MoveToCell(targets[i], "Left");
+                    else if (Player.Cell != targets[i])
+                    {
+                        Player.MoveToCell(targets[i], "Left");
+                        await Task.Delay(200);
+                    }
                     i++;
                     if (i >= _maxcell)
                         i = 0;
