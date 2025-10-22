@@ -79,7 +79,9 @@ namespace Grimoire.UI.Maid
             cmbUltraBoss.SelectedIndex = 0;
             this.Text = $"Maid Remake";
 
-            ToolTip toolTip = new ToolTip();
+			Flash.FlashCall2 += AntiCounterHandler;
+
+			ToolTip toolTip = new ToolTip();
             toolTip.SetToolTip(this.cbPartyCmd,
                 "[Auto accept any party invitation when checked]" +
                 "\n\nEnter /p party chat's to use the commands below" +
