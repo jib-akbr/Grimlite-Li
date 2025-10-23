@@ -1,5 +1,7 @@
+using Grimoire.Networking;
 using Grimoire.Tools;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace Grimoire.Game.Data
@@ -44,7 +46,7 @@ namespace Grimoire.Game.Data
 
         public static void BuyItemQty(string name, int qty)
         {
-            Flash.Call("BuyItemQty", new string[] {name, qty.ToString()});
+            Flash.Call("BuyItemQty", new string[] { name, qty.ToString() });
         }
 
         public static void BuyItemQty(int itemId, int shopItemId, int qty)
@@ -60,12 +62,29 @@ namespace Grimoire.Game.Data
 
         public static void Load(int id)
         {
+            if (!World.LoadedShops.Exists(shop => shop.Id == id))
+            {
+                ResetShopInfo();
+            }
             Flash.Call("LoadShop", id.ToString());
         }
 
         public static void SellItem(string name)
         {
             Flash.Call("SellItem", name);
+        }
+        public static void SellItem(string name, int qty = 1)
+        {
+            var item = Player.Inventory.Items.Find(i => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (item == null)
+                return;
+
+            if (qty <= 0)
+                qty += item.Quantity; // 0 = sell whole stack, -1 = Leave 1 stack
+            if (qty > 0)
+            {
+                Proxy.Instance.SendToServer($"%xt%zm%sellItem%{World.RoomId}%{item.Id}%{qty}%");
+            }
         }
 
         public static void LoadHairShop(string id)
