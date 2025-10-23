@@ -189,7 +189,11 @@ namespace Grimoire.Botting
 			BotData.BotState = BotData.State.Others;
 			this.StopCommands();
 		}
-		public bool paused = false;
+		public bool paused 
+		{ 
+			get; 
+			set; 
+		}
 		private async Task Activate()
 		{
 			if (Configuration.Quests.Count > 0)

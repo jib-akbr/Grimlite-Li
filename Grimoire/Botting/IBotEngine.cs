@@ -18,6 +18,11 @@ namespace Grimoire.Botting
             get;
             set;
         }
+        bool paused 
+        { 
+            get; 
+            set; 
+        }
 
         bool IsVar(string value);
 

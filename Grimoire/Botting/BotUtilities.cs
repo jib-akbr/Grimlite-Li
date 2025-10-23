@@ -73,7 +73,7 @@ namespace Grimoire.Botting
             {
                 Task.Run(async () =>
                 {
-                    Bot.Instance.paused = true;
+                    instance.paused = true;
                     const int batchSize = 30; //max GetQuest
                     for (int i = 0; i < list.Count; i += batchSize)
                     {
@@ -82,7 +82,7 @@ namespace Grimoire.Botting
                         Player.Quests.Get(batch);
                         await Task.Delay(600);
                     }
-                    Bot.Instance.paused = false;
+                    instance.paused = false;
                 });
             }
         }
