@@ -317,7 +317,7 @@ namespace Grimoire.UI
                 {
                     if (ctrl is DarkTextBox tb)
                     {
-                        if (tb.Name.IndexOf("swf", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                        if (tb.Name.IndexOf("swf", StringComparison.OrdinalIgnoreCase) >= 0 ||
                             tb.Name.IndexOf("max", StringComparison.OrdinalIgnoreCase) >= 0)
                             continue;
                         else if (tb.Name.IndexOf("Cell", StringComparison.OrdinalIgnoreCase) >= 0)

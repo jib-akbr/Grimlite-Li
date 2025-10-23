@@ -2440,7 +2440,9 @@ namespace Grimoire.UI
 		private bool GetBoolCentered(string name)
 		{
 			Config c = Config.Load(Application.StartupPath + "\\config.cfg");
-			return bool.Parse(c.Get(name + "Centered") ?? "false");
+			bool.TryParse(c.Get(name + "Centered"), out bool result);
+			//Console.WriteLine($"{name} : {result}");
+			return result;
 		}
 
 		private void lstCommands_DrawItem(object sender, DrawItemEventArgs e)
@@ -2582,7 +2584,7 @@ namespace Grimoire.UI
 			if (cmdText.Contains(':'))
 			{
 				toDraw = lstCommands.Items[e.Index].ToString().Split(':');
-				Region second = DrawString(e.Graphics, toDraw[0] + ": ", font, color, region, GetCurrentBoolCentered(scmd) ? centered : StringFormat.GenericDefault);
+				Region second = DrawString(e.Graphics, toDraw[0] + ":", font, color, region, GetCurrentBoolCentered(scmd) ? centered : StringFormat.GenericDefault);
 				region = new RectangleF(region.X + second.GetBounds(e.Graphics).Width + 3, region.Y, region.Width, region.Height);
 				if (toDraw[1].Contains(","))
 				{
@@ -2604,8 +2606,10 @@ namespace Grimoire.UI
 
 		private Region DrawString(Graphics g, string s, Font font, Brush brush, RectangleF layoutRectangle, StringFormat format)
 		{
+			if (string.IsNullOrEmpty(s))
+				s = "<Blank must be filled>";
 			format.SetMeasurableCharacterRanges(new[] { new CharacterRange(0, s.Length) });
-			format.Alignment = StringAlignment.Near;
+			format.Alignment = StringAlignment.Near;  //THIS SHIT MADE EVERYTHING CAN'T BE CENTERED
 			g.DrawString(s, font, brush, layoutRectangle, format);
 			return g.MeasureCharacterRanges(s, font, layoutRectangle, format)[0];
 		}
