@@ -57,7 +57,7 @@ namespace Grimoire.Botting.Commands.Item
 			await instance.WaitUntil(() => World.IsActionAvailable(LockActions.BuyItem));
             using (new pauseProvoke(instance.Configuration))
             {
-				Shop.ResetShopInfo();
+				//Shop.ResetShopInfo(); //No Longer needed since Load will reset if shop was never loaded
 				Shop.Load(ShopId);
 				await instance.WaitUntil(() => Shop.IsShopLoaded);
 				InventoryItem i = Player.Inventory.Items.FirstOrDefault((InventoryItem item) => item.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase));
@@ -71,11 +71,11 @@ namespace Grimoire.Botting.Commands.Item
 				}
 				if (i != null)
 				{
-					await instance.WaitUntil(() => Player.Inventory.Items.FirstOrDefault((InventoryItem it) => it.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase)).Quantity != i.Quantity);
+					await instance.WaitUntil(() => Player.Inventory.Items.FirstOrDefault((InventoryItem it) => it.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase)).Quantity != i.Quantity, timeout: 2);
 				}
 				else
 				{
-					await instance.WaitUntil(() => Player.Inventory.Items.FirstOrDefault((InventoryItem it) => it.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase)) != null);
+					await instance.WaitUntil(() => Player.Inventory.Items.FirstOrDefault((InventoryItem it) => it.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase)) != null,timeout:2);
 				}
             }
 		}

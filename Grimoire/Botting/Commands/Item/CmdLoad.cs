@@ -18,7 +18,6 @@ namespace Grimoire.Botting.Commands.Item
             using (new pauseProvoke(instance.Configuration))
             {
                 await instance.WaitUntil(() => World.IsActionAvailable(LockActions.LoadShop));
-                Shop.ResetShopInfo();
                 Shop.Load(ShopId);
                 await instance.WaitUntil(() => Shop.IsShopLoaded);
             }
