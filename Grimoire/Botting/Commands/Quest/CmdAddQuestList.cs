@@ -34,7 +34,7 @@ namespace Grimoire.Botting.Commands.Quest
 				ItemId = ItemId,
 				SafeRelogin = SafeRelogin,
 			};
-
+			quest.GhostAccept();
 			if (instance.Configuration.Quests.FirstOrDefault(x => x.Id == quest.Id) == null)
 			{
 				BotManager.Instance.Invoke((MethodInvoker) delegate {

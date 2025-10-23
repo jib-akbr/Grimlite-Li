@@ -488,8 +488,8 @@ namespace Grimoire.Botting
 				int ii = i;
 				Task.Run(async delegate
 				{
+					qs[ii].Accept();
 					await Task.Delay(600 * ii);
-					qs[ii].GhostAccept();
 				});
 			}
 		}
