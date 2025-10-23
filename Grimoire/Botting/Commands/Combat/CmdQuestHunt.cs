@@ -27,8 +27,8 @@ namespace Grimoire.Botting.Commands.Combat
         public async Task Execute(IBotEngine instance)
         {
             string[] items = ItemName.Split(',');
-            string[] quantities = Quantity.Split(',');
             string[] monsters = Monster.Split(',');
+            string[] quantities = Quantity.Split(',');
             bool doQuest = QID != 0;
             if (doQuest)
             {
@@ -42,24 +42,29 @@ namespace Grimoire.Botting.Commands.Combat
                 int progress = int.Parse(Flash.CallGameFunction2("world.getQuestValue", quest.ISlot));
                 if (progress >= quest.IValue)
                     return;
-
                 if (!Player.Quests.IsInProgress(QID))
                 {
                     Player.Quests.Accept(QID);
                     await instance.WaitUntil(() => !Player.Quests.IsInProgress(QID), timeout: 1);
                 }
                 var reqs = quest.RequiredItems;
+                if (items.Length < reqs.Count)
+                    Array.Resize(ref items, reqs.Count);
                 for (int i = 0; i < reqs.Count; i++)
                 {
                     string name = reqs[i].Name;
                     string qty = reqs[i].Quantity.ToString();
+                    
+                    if (items[i] == null) 
+                        items[i] = "";
+                    
                     LogForm.Instance.AppendDebug($"Name = {name} | Qty = {qty}");
                     if (!Player.Map.Equals(Map.Split('-')[0].ToLower()))
                         await joinmap(Map, instance);
                     if (int.TryParse(items[i], out _))
                         await getMap(items[i], qty);
                     else
-                        await hunt(name, qty, monsters[i], instance);
+                        await hunt(name, qty, monsters[i]??"*", instance);
                 }
                 Player.Quests.Complete(QID);
                 await Task.Delay(600);
@@ -234,14 +239,36 @@ namespace Grimoire.Botting.Commands.Combat
             string[] items = ItemName.Split(',');
             string[] quantities = Quantity.Split(',');
             string[] monsters = Monster.Split(',');
-            string wellShit = "";
+            //string parts = "";
+            List<string> _parts = new List<string>();
+            if (QID != 0)
+            {
+                int _maxlen = Math.Max(items.Length, monsters.Length);
+                for (int i = 0; i < _maxlen; i++)
+                {
+                    string item = (i < items.Length) ? items[i].Trim() : "";
+                    string mob = (i < monsters.Length) ? monsters[i].Trim() : "";
+
+                    if (string.IsNullOrEmpty(item) && string.IsNullOrEmpty(mob))
+                    {
+                        _parts.Add("Blank");
+                        continue;
+                    }
+
+                    if (!string.IsNullOrEmpty(item))
+                        _parts.Add(item);
+                    else if (!string.IsNullOrEmpty(mob))
+                        _parts.Add(mob);
+                }
+                return $"Quest-{QID} items:{string.Join(" | ", _parts)}";
+            }
+
             for (int i = 0; i < items.Length; i++)
             {
-                wellShit += $"{i + 1}-{items[i]} x{quantities[i]} [{monsters[i]}] ";
+                //parts += $"{i + 1}-{items[i]} x{quantities[i]} [{monsters[i]}]";
+                _parts.Add($"{i + 1}-{items[i]} x{quantities[i]} [{monsters[i]}]");
             }
-			if (QID != 0)
-				return $"Quest-{QID} Map items:{string.Join(" | ", items)}";
-            return $"Hunt {wellShit}";
+            return $"Hunt : {string.Join(" | ", _parts)}";
         }
 
     }

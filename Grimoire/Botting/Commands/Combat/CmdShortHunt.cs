@@ -68,7 +68,7 @@ namespace Grimoire.Botting.Commands.Combat
                 {
                     if (!Player.Cell.Equals(Cell))
                         Player.MoveToCell(Cell, Pad);
-                    await Task.Delay(1000);
+                    await Task.Delay(1500);
                 }
             });
 
