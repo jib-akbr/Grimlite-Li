@@ -214,6 +214,7 @@ namespace Grimoire.Botting
 					LogForm.Instance.AppendDebug($"[{DateTime.Now:HH:mm:ss}] Disconnected. Last cmd: [{Index}]{lastCommand}");
 					StopQuestList();
 					StopBackGroundSpammer();
+					World.LoadedShops.Clear();
 
 					if (Configuration.AutoRelogin)
 					{

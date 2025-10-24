@@ -59,12 +59,13 @@ namespace Grimoire.Game.Data
         {
             Flash.Call("ResetShopInfo", new string[0]);
         }
-
+        private static int previousShop = 0;
         public static void Load(int id)
         {
-            if (!World.LoadedShops.Exists(shop => shop.Id == id))
+            if (previousShop != id)
             {
                 ResetShopInfo();
+                previousShop = id;
             }
             Flash.Call("LoadShop", id.ToString());
         }

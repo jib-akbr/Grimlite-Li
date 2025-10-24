@@ -105,7 +105,10 @@ namespace Grimoire.Game
         public static void OnShopLoaded(ShopInfo shopInfo)
         {
             ShopLoaded?.Invoke(shopInfo);
-            LoadedShops.Add(shopInfo);
+            if (!LoadedShops.Exists(s => s.Id == shopInfo.Id))
+            {
+                LoadedShops.Add(shopInfo);                
+            }
         }
 
         public static bool IsActionAvailable(LockActions action) => Flash.Call<bool>("IsActionAvailable", LockedActions[action]);

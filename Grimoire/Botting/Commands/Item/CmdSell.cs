@@ -29,8 +29,12 @@ namespace Grimoire.Botting.Commands.Item
             InventoryItem item = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => i.Name.Equals(_ItemName, StringComparison.OrdinalIgnoreCase));
             if (item != null)
             {
-                Shop.SellItem(_ItemName, _qty);
-                await instance.WaitUntil(() => !Player.Inventory.ContainsItem(item.Name, item.Quantity.ToString()));
+                using (new pauseProvoke(instance.Configuration))
+                {
+                    await Player.ExitCombat();
+                    Shop.SellItem(_ItemName, _qty);
+                    await instance.WaitUntil(() => !Player.Inventory.ContainsItem(item.Name, item.Quantity.ToString()));
+                }
             }
         }
 

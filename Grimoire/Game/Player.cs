@@ -126,6 +126,15 @@ namespace Grimoire.Game
         /// </summary>
         public static State CurrentState => (State)Flash.Call<int>("State", new string[0]);
 
+        public static async Task ExitCombat() {
+            
+            if (State.InCombat == CurrentState)
+            {
+                MoveToCell(Cell, Pad);
+                await Task.Delay(1500);
+            }
+        }
+
         /// <summary>
         /// Gets Current Health.
         /// </summary>
