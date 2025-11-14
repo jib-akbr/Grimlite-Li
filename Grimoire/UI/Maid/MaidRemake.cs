@@ -784,6 +784,8 @@ namespace Grimoire.UI.Maid
             Proxy.Instance.UnregisterHandler(CopyWalkHandler);
             if (cbSpecialAnims.Checked)
                 Flash.FlashCall2 -= AnimsMsgHandler;
+            if (cbAntiCounter.Checked)
+                Flash.FlashCall2 -= AntiCounterHandler;
 
             cbSpecialAnims.Enabled = true;
             tbSpecialMsg.Enabled = true;
@@ -1311,10 +1313,9 @@ namespace Grimoire.UI.Maid
         }
         private void antiCounter()
         {
+            Flash.FlashCall2 -= AntiCounterHandler;
             if (cbAntiCounter.Checked)
                 Flash.FlashCall2 += AntiCounterHandler;
-            else
-                Flash.FlashCall2 -= AntiCounterHandler;
         }
         private void cbSpecialAnims_CheckedChanged(object sender, EventArgs e)
         {
