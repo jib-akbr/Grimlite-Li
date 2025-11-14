@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Remoting.Contexts;
 using System.Windows.Forms;
 using DarkUI.Forms;
 using Grimoire.Game;
 using Grimoire.Tools;
-using Grimoire.UI;
 using Newtonsoft.Json.Linq;
 
 namespace Grimoire.UI
@@ -56,7 +52,7 @@ namespace Grimoire.UI
             {
                 FontDialog fdlg = new FontDialog();
                 fdlg.ShowDialog();
-                if(richTextBox1.SelectedText == null)
+                if (richTextBox1.SelectedText == null)
                 {
                     richTextBox1.Font = fdlg.Font;
                 }
@@ -113,7 +109,7 @@ namespace Grimoire.UI
 
         private void richTextBox1_KeyDown(object sender, KeyEventArgs e)
         {
-            if(ModifierKeys == Keys.Control && e.KeyCode == Keys.S)
+            if (ModifierKeys == Keys.Control && e.KeyCode == Keys.S)
             {
                 string text = this.richTextBox1.Text;
                 SaveFileDialog save = new SaveFileDialog
@@ -127,7 +123,7 @@ namespace Grimoire.UI
                     File.WriteAllText(save.FileName, text);
                 }
             }
-            if(e.KeyCode == Keys.Back && richTextBox1.Text.Length < 1)
+            if (e.KeyCode == Keys.Back && richTextBox1.Text.Length < 1)
             {
                 e.Handled = true;
                 e.SuppressKeyPress = true;
@@ -141,7 +137,7 @@ namespace Grimoire.UI
                 //richTextBox1.Text = Flash.GetGameObject("world.actions.active");
 
                 var actions = Flash.Instance.GetGameObject<List<JObject>>("world.actions.active");
-                string[] longProp = { "desc","auras" };
+                string[] longProp = { "desc", "auras" };
                 richTextBox1.Text = $"{Player.EquippedClass.ToLowerInvariant()}";
                 if (actions != null && actions.Count > 0)
                 {
@@ -152,11 +148,20 @@ namespace Grimoire.UI
                         {
                             if (!longProp.Any(k => prop.Name.Contains(k)))
                             {
-                            richTextBox1.Text += $"{prop.Name}:{prop.Value}, ";
+                                richTextBox1.Text += $"{prop.Name}:{prop.Value}, ";
                             }
                         }
                     }
                 }
+            }
+            if (richTextBox1.Text.Contains("mapitems"))
+            {
+                string longtext = string.Join(
+                    Environment.NewLine,
+                    Player.recentMapItem.Select(kvp => $"[{kvp.Key}] = {kvp.Value ?? "null"}")
+                );
+
+                richTextBox1.Text = $"Player map items :\n{longtext}";
             }
         }
     }
