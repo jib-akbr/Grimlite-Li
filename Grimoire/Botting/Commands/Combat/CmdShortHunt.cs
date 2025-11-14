@@ -1,6 +1,7 @@
 ﻿using Grimoire.Botting.Commands.Map;
 using Grimoire.Game;
 using Grimoire.Tools;
+using Grimoire.UI;
 using System.Threading.Tasks;
 
 namespace Grimoire.Botting.Commands.Combat
@@ -25,16 +26,17 @@ namespace Grimoire.Botting.Commands.Combat
             string _Items = instance.ResolveVars(ItemName);
             string _Qty = instance.ResolveVars(Quantity);
             string _Map = instance.ResolveVars(Map.ToLower());
+            string[] _Cells = instance.ResolveVars(Cell).Split(',');
 
             if (ItemType == ItemType.Items)
                 if (Player.Inventory.ContainsItem(_Items, _Qty)) return;
-            else
+                else
                 if (Player.TempInventory.ContainsItem(_Items, _Qty)) return;
 
             CmdJoin join = new CmdJoin
             {
                 Map = _Map,
-                Cell = Cell,
+                Cell = _Cells[0],
                 Pad = Pad
             };
             while (!Player.Map.Equals(_Map.Split('-')[0]) && instance.IsRunning)
@@ -64,11 +66,30 @@ namespace Grimoire.Botting.Commands.Combat
             bool running = true;
             var monitorTask = Task.Run(async () =>
             {
+                int i = 0;
                 while (running && instance.IsRunning)
                 {
-                    if (!Player.Cell.Equals(Cell))
-                        Player.MoveToCell(Cell, Pad);
-                    await Task.Delay(1500);
+                    if (!Player.Map.Equals(_Map.Split('-')[0]))
+                    {
+                        LogForm.Instance.devDebug($"Map change detected, Lock cell stopped");
+                        return;
+                    }
+
+                    if (World.IsMonsterAvailable(Monster))
+                    {
+                        await instance.WaitUntil(() => World.IsMonsterAvailable(Monster), interval: 200);
+                        continue;
+                    }
+
+                    if (Player.Cell != _Cells[i])
+                    {
+                        Player.MoveToCell(_Cells[i], "Left");
+                        LogForm.Instance.devDebug($"Cell : {_Cells[i]} [{i + 1}/{_Cells.Length}]");
+                    }
+
+                    await instance.WaitUntil(() => World.IsMonsterAvailable(Monster), interval: 50);
+                    if (++i >= _Cells.Length)
+                        i = 0;
                 }
             });
 
