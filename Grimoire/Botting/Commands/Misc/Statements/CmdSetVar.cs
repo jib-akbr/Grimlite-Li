@@ -32,17 +32,26 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                 default:
                     break;
             }
-
+            string RealString = Value2;
+            if (RealString.StartsWith("["))
+            {
+                RealVar = instance.ResolveVars(Value2);
+                RealString = RealVar;
+            }
             if (!Configuration.Tempvariable.ContainsKey(Value1))
-                Configuration.Tempvariable.Add(Value1, Value2);
+                Configuration.Tempvariable.Add(Value1, RealString);
             else
-                Configuration.Tempvariable[Value1] = Value2;
+                Configuration.Tempvariable[Value1] = RealString;
 
             return Task.FromResult<object>(null);
         }
-
+        private string RealVar;
         public override string ToString()
         {
+            if (!string.IsNullOrEmpty(RealVar))
+            {
+                return $"Variable {Value1}:{Value2} => {RealVar}";
+            }
             return $"Variable {Value1}: {Value2}";
         }
     }

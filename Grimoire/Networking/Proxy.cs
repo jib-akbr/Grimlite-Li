@@ -35,8 +35,11 @@ namespace Grimoire.Networking
 		{
 			this._handlersJson.Add(handler);
 		}
-
-		public void RegisterHandler(IXmlMessageHandler handler)
+        public bool IsHandlerRegistered(IJsonMessageHandler handler)
+        {
+            return _handlersJson.Contains(handler);
+        }
+        public void RegisterHandler(IXmlMessageHandler handler)
 		{
 			this._handlersXml.Add(handler);
 		}

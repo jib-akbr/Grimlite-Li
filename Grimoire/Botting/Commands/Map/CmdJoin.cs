@@ -16,48 +16,45 @@ namespace Grimoire.Botting.Commands.Map
 		public int Try { get; set; } = 1;
 
 		public string MapSwf { get; set; } = "";
-
 		private string _Cell;
-
 		private string _Pad;
-
 		public async Task Execute(IBotEngine instance)
 		{
 			BotData.BotState = BotData.State.Move;
 			await instance.WaitUntil(() => World.IsActionAvailable(LockActions.Transfer), null, 15);
 
-			_Cell = instance.IsVar(Cell) ? Configuration.Tempvariable[instance.GetVar(Cell)] : Cell;
-			_Pad = instance.IsVar(Pad) ? Configuration.Tempvariable[instance.GetVar(Pad)] : Pad;
-
+			_Cell = instance.ResolveVars(Cell);
+			_Pad  = instance.ResolveVars(Pad);
+			string _Map = instance.ResolveVars(Map);
 			//[MAP]-[NUMBER]
 
-			string _mapName = this.Map.Contains("-") ? this.Map.Split('-')[0] : this.Map;
-			string namName = (instance.IsVar(_mapName) ? Configuration.Tempvariable[instance.GetVar(_mapName)] : _mapName);
+			string MapName = _Map.Contains("-") ? _Map.Split('-')[0] : _Map;
+			//string MapName = (instance.IsVar(MapName) ? Configuration.Tempvariable[instance.GetVar(MapName)] : MapName);
 
-			string _roomNumber = this.Map.Contains("-") ? this.Map.Split('-')[1] : "";
-			string roomNumber = (instance.IsVar(_roomNumber) ? Configuration.Tempvariable[instance.GetVar(_roomNumber)] : _roomNumber);
+			string RoomNumber = _Map.Contains("-") ? _Map.Split('-')[1] : "";
+			//string RoomNumber = (instance.IsVar(RoomNumber) ? Configuration.Tempvariable[instance.GetVar(RoomNumber)] : RoomNumber);
 
 			int _try = Try;
 
-			if (!namName.Equals(Player.Map, StringComparison.OrdinalIgnoreCase))
+			if (!MapName.Equals(Player.Map, StringComparison.OrdinalIgnoreCase))
 			{
-				if (!int.TryParse(roomNumber, out int n) && roomNumber != "")
+				if (!int.TryParse(RoomNumber, out int n) && RoomNumber != "")
 				{
 					Random random = new Random();
 					int num = random.Next(1000, 99999);
-					roomNumber = num.ToString();
+					RoomNumber = num.ToString();
 				}
 				while (_try > 0 && Player.Map != Map)
 				{
                     using (new pauseProvoke(instance.Configuration))
                     {
-						await this.TryJoin(instance, namName, roomNumber);
+						await this.TryJoin(instance, MapName, RoomNumber);
                     }
 					_try--;
 				}
 			}
 
-			if (namName.Equals(Player.Map, StringComparison.OrdinalIgnoreCase))
+			if (MapName.Equals(Player.Map, StringComparison.OrdinalIgnoreCase))
 			{
 				if (!Player.Cell.Equals(_Cell, StringComparison.OrdinalIgnoreCase))
 				{
@@ -65,7 +62,7 @@ namespace Grimoire.Botting.Commands.Map
 					await Task.Delay(500);
 				}
 				World.SetSpawnPoint();
-				BotData.BotMap = namName;
+				BotData.BotMap = MapName;
 				BotData.BotCell = _Cell;
 				BotData.BotPad = _Pad;
 			}

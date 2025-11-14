@@ -678,58 +678,60 @@
             0,
             0,
             0});
-			// 
-			// btnMe
-			// 
-			this.btnMe.Checked = false;
-			this.btnMe.Location = new System.Drawing.Point(145, 28);
-			this.btnMe.Name = "btnMe";
-			this.btnMe.Size = new System.Drawing.Size(30, 21);
-			this.btnMe.TabIndex = 26;
-			this.btnMe.Text = "me";
-			this.btnMe.Click += new System.EventHandler(this.btnMe_Click);
-			// 
-			// MaidRemake
-			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(348, 365);
-			this.Controls.Add(this.btnMe);
-			this.Controls.Add(this.darkGroupBox1);
-			this.Controls.Add(this.gbConfig);
-			this.Controls.Add(this.gbActivation);
-			this.Controls.Add(this.darkLabel2);
-			this.Controls.Add(this.darkLabel1);
-			this.Controls.Add(this.numSkillDelay);
-			this.Controls.Add(this.cbWaitSkill);
-			this.Controls.Add(this.cmbGotoUsername);
-			this.Controls.Add(this.gbAdvancedOptions);
-			this.Controls.Add(this.gbOptions);
-			this.Controls.Add(this.label4);
-			this.Controls.Add(this.tbSkillList);
-			this.Controls.Add(this.trgtUsrnmLabel);
-			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.Name = "MaidRemake";
-			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-			this.Text = "Maid Remake";
-			this.TopMost = true;
-			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
-			this.gbOptions.ResumeLayout(false);
-			this.gbOptions.PerformLayout();
-			((System.ComponentModel.ISupportInitialize)(this.numRelogDelay)).EndInit();
-			this.gbAdvancedOptions.ResumeLayout(false);
-			this.gbAdvancedOptions.PerformLayout();
-			((System.ComponentModel.ISupportInitialize)(this.numHealthPercent)).EndInit();
-			((System.ComponentModel.ISupportInitialize)(this.numSkillDelay)).EndInit();
-			this.gbActivation.ResumeLayout(false);
-			this.gbActivation.PerformLayout();
-			this.gbConfig.ResumeLayout(false);
-			this.darkGroupBox1.ResumeLayout(false);
-			this.darkGroupBox1.PerformLayout();
-			((System.ComponentModel.ISupportInitialize)(this.numSkillAct)).EndInit();
-			this.ResumeLayout(false);
-			this.PerformLayout();
+            // 
+            // btnMe
+            // 
+            this.btnMe.Checked = false;
+            this.btnMe.Location = new System.Drawing.Point(218, 43);
+            this.btnMe.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnMe.Name = "btnMe";
+            this.btnMe.Size = new System.Drawing.Size(45, 32);
+            this.btnMe.TabIndex = 26;
+            this.btnMe.Text = "me";
+            this.btnMe.Click += new System.EventHandler(this.btnMe_Click);
+            // 
+            // MaidRemake
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(522, 562);
+            this.Controls.Add(this.btnMe);
+            this.Controls.Add(this.darkGroupBox1);
+            this.Controls.Add(this.gbConfig);
+            this.Controls.Add(this.gbActivation);
+            this.Controls.Add(this.darkLabel2);
+            this.Controls.Add(this.darkLabel1);
+            this.Controls.Add(this.numSkillDelay);
+            this.Controls.Add(this.cbWaitSkill);
+            this.Controls.Add(this.cmbGotoUsername);
+            this.Controls.Add(this.gbAdvancedOptions);
+            this.Controls.Add(this.gbOptions);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.tbSkillList);
+            this.Controls.Add(this.trgtUsrnmLabel);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.Name = "MaidRemake";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.Text = "Maid Remake";
+            this.TopMost = true;
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
+            this.gbOptions.ResumeLayout(false);
+            this.gbOptions.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numRelogDelay)).EndInit();
+            this.gbAdvancedOptions.ResumeLayout(false);
+            this.gbAdvancedOptions.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numHealthPercent)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numSkillDelay)).EndInit();
+            this.gbActivation.ResumeLayout(false);
+            this.gbActivation.PerformLayout();
+            this.gbConfig.ResumeLayout(false);
+            this.darkGroupBox1.ResumeLayout(false);
+            this.darkGroupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numSkillAct)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
 
 		}
 

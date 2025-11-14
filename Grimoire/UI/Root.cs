@@ -112,7 +112,7 @@ namespace Grimoire.UI
             Hotkeys.Instance.LoadHotkeys();
             LoadPlugins();
             LoadCharSelect();
-            auraClearer();
+            //auraClearer();
         }
 
         private void LoadPlugins()
@@ -1415,13 +1415,6 @@ namespace Grimoire.UI
                     string[] skills = skillPreset.Split(';');
                     foreach (string skill in skills)
                     {
-                        if (wait)
-                        {
-                            listSkill.Add(
-                                new Skill { Type = Skill.SkillType.Wait, Index = skill }
-                            );
-                            continue;
-                        }
                         if (skill.Contains(':'))
                         {
                             string skillIndex = skill.Split(':')[0];
@@ -1456,7 +1449,7 @@ namespace Grimoire.UI
                         else
                         {
                             listSkill.Add(
-                                new Skill { Type = Skill.SkillType.Normal, Index = skill }
+                                new Skill { Type = Skill.SkillType.Normal, Index = skill, waitCd = wait}
                             );
                         }
                     }
@@ -1531,10 +1524,12 @@ namespace Grimoire.UI
             {
                 if (Player.GetAuras(true, "XX - Judgement") == 1 ||
                     Player.GetAuras(true, "End of the world") >= 13 ||
-                    Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)
+                    Player.GetAuras(true, "XXI - The World") == 0 && 
+                    Player.GetAuras(true, "0 - The Fool") == 0 ||
+                    Player.AuraDuration(true, "0 - The Fool",75))
                 {
+                    await Task.Delay(Player.SkillAvailable("1"));
                     useSkill("1");
-                    await Task.Delay(200);
                 }
             }
             else if (playerClass.Equals("archmage"))

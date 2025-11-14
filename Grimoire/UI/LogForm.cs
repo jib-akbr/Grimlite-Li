@@ -1,6 +1,7 @@
 using DarkUI.Controls;
 using DarkUI.Forms;
 using Grimoire.Botting;
+using Grimoire.Tools;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -118,6 +119,14 @@ namespace Grimoire.UI
 		//
 		// Append Debug
 		//
+		public void devDebug(string msg) 
+		{
+			if (ClientConfig.GetValue(ClientConfig.C_LOG_DEBUG_SWF) == "true")
+			{
+				Console.WriteLine(msg);
+				AppendDebug(msg);
+			}
+        }
 		public void AppendDebug(string text, bool ignoreInvoke = true)
 		{
 			if (Visible || ignoreInvoke)

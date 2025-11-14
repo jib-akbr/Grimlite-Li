@@ -23,12 +23,12 @@ namespace Grimoire.Botting
 
         public static AxShockwaveFlash flash;
 
-        public static async Task WaitUntil(this IBotEngine instance, Func<bool> condition, Func<bool> prerequisite = null, int timeout = 15)
+        public static async Task WaitUntil(this IBotEngine instance, Func<bool> condition, Func<bool> prerequisite = null, int timeout = 15, int interval = 1000)
         {
             int iterations = 0;
             while ((prerequisite ?? (() => instance.IsRunning && Player.IsLoggedIn && Player.IsAlive))() && !condition() && (iterations < timeout || timeout == -1))
             {
-                await Task.Delay(1000);
+                await Task.Delay(interval);
                 iterations++;
             }
         }
@@ -71,14 +71,19 @@ namespace Grimoire.Botting
             // list.AddRange(instance.Configuration.Quests.Select((Quest q) => q.Id));
             if (list.Count > 0)
             {
-				const int batchSize = 30; //max GetQuest
-				for (int i = 0; i < list.Count; i += batchSize)
-				{
-					int take = Math.Min(batchSize, list.Count - i);
-					var batch = list.GetRange(i, take);
-					Player.Quests.Get(list);
-                    Task.Delay(800);
-				}
+                Task.Run(async () =>
+                {
+                    instance.paused = true;
+                    const int batchSize = 30; //max GetQuest
+                    for (int i = 0; i < list.Count; i += batchSize)
+                    {
+                        int take = Math.Min(batchSize, list.Count - i);
+                        var batch = list.GetRange(i, take);
+                        Player.Quests.Get(batch);
+                        await Task.Delay(600);
+                    }
+                    instance.paused = false;
+                });
             }
         }
 

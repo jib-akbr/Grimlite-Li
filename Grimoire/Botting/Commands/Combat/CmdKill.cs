@@ -55,10 +55,10 @@ namespace Grimoire.Botting.Commands.Combat
 			Player.AttackMonster(Monster);
 
 			if (instance.Configuration.Skills.Count > 0)
-				await Task.Run(() => UseSkillsSet(instance));
+				await UseSkillsSet(instance);
 
-			await instance.WaitUntil(() => !Player.HasTarget && !onPause, timeout:5);
-			Player.CancelTarget();
+			await instance.WaitUntil(() => !Player.HasTarget && !onPause, timeout:20);
+			Player.CancelTarget(); //timeout increased to 20 for Autoattack/empty skills users
 
 			if (AntiCounter)
 			{
@@ -94,6 +94,10 @@ namespace Grimoire.Botting.Commands.Combat
 						if (World.IsMonsterAvailable("Staff of Inversion"))
 							Player.AttackMonster("Staff of Inversion");
 						break;
+					case "commander gallaeon":
+						if (World.IsMonsterAvailable("hydra crew"))
+							Player.AttackMonster("hydra crew");
+						break;	
 					case "vath":
 						if (World.IsMonsterAvailable("Stalagbite"))
 							Player.AttackMonster("Stalagbite");
@@ -139,7 +143,7 @@ namespace Grimoire.Botting.Commands.Combat
 						continue;
 					}
 
-					if (instance.Configuration.WaitForSkill)
+					if (instance.Configuration.WaitForSkill || s.Type == Skill.SkillType.Wait)
 					{
 						BotManager.Instance.OnSkillIndexChanged(Index);
 						await Task.Delay(Player.SkillAvailable(s.Index));
@@ -159,14 +163,14 @@ namespace Grimoire.Botting.Commands.Combat
 						index = ClassIndex;
 					}
 					this.Index = index;
-					s = null;
 				}
 				else
 				{
 					//non label
+					
 					Skill s = instance.Configuration.Skills[_skillIndex];
-
-					if (instance.Configuration.WaitForSkill)
+                    //LogForm.Instance.AppendDebug($"Trying to execute Skill-{s.Index} at index {_skillIndex}/{Count}");
+                    if (instance.Configuration.WaitForSkill)
 					{
 						BotManager.Instance.OnSkillIndexChanged(Index);
 						await Task.Delay(Player.SkillAvailable(s.Index));

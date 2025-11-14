@@ -32,7 +32,11 @@ namespace Grimoire.Botting.Commands.Quest
                 await instance.WaitUntil(() => Player.CurrentState != Player.State.InCombat);
                 await Task.Delay(1000);
             }
-            Quest.Complete(CompleteTry);
+            bool max = false;
+            if (CompleteTry <= -1)
+                max = true;
+
+            Quest.Complete(CompleteTry,max);
             //await instance.WaitUntil(() => !Player.Quests.IsInProgress(Quest.Id));
             instance.Configuration.ProvokeMonsters = provokeMons;
 
@@ -42,10 +46,11 @@ namespace Grimoire.Botting.Commands.Quest
                 Quest.Accept();
             }
         }
-
+        
         public override string ToString()
         {
-            return $"Complete quest [{CompleteTry}x]: {(Quest.ItemId != null && Quest.ItemId != "0" ? $"{Quest.Id}^{Quest.ItemId}" : Quest.Id.ToString())} {(InBlank ? "[InBlank]" : "")}";
+            string quant = this.CompleteTry <= -1 ? "Ma" : CompleteTry.ToString();
+            return $"Complete quest [{quant}x]: {(Quest.ItemId != null && Quest.ItemId != "0" ? $"{Quest.Id}^{Quest.ItemId}" : Quest.Id.ToString())} {(InBlank ? "[InBlank]" : "")}";
         }
     }
 }
