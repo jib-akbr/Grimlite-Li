@@ -23,12 +23,12 @@ namespace Grimoire.Botting
 
         public static AxShockwaveFlash flash;
 
-        public static async Task WaitUntil(this IBotEngine instance, Func<bool> condition, Func<bool> prerequisite = null, int timeout = 15)
+        public static async Task WaitUntil(this IBotEngine instance, Func<bool> condition, Func<bool> prerequisite = null, int timeout = 15, int interval = 1000)
         {
             int iterations = 0;
             while ((prerequisite ?? (() => instance.IsRunning && Player.IsLoggedIn && Player.IsAlive))() && !condition() && (iterations < timeout || timeout == -1))
             {
-                await Task.Delay(1000);
+                await Task.Delay(interval);
                 iterations++;
             }
         }

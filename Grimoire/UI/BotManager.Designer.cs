@@ -1554,7 +1554,7 @@ namespace Grimoire.UI
             this.tabMap.Margin = new System.Windows.Forms.Padding(0);
             this.tabMap.Name = "tabMap";
             this.tabMap.Padding = new System.Windows.Forms.Padding(3);
-            this.tabMap.Size = new System.Drawing.Size(541, 298);
+            this.tabMap.Size = new System.Drawing.Size(192, 70);
             this.tabMap.TabIndex = 2;
             this.tabMap.Text = "Map";
             // 
@@ -1852,7 +1852,7 @@ namespace Grimoire.UI
             this.tabItem.Margin = new System.Windows.Forms.Padding(0);
             this.tabItem.Name = "tabItem";
             this.tabItem.Padding = new System.Windows.Forms.Padding(3);
-            this.tabItem.Size = new System.Drawing.Size(541, 298);
+            this.tabItem.Size = new System.Drawing.Size(192, 70);
             this.tabItem.TabIndex = 1;
             this.tabItem.Text = "Item";
             // 
@@ -2319,7 +2319,7 @@ namespace Grimoire.UI
             this.tabQuest.Margin = new System.Windows.Forms.Padding(0);
             this.tabQuest.Name = "tabQuest";
             this.tabQuest.Padding = new System.Windows.Forms.Padding(3);
-            this.tabQuest.Size = new System.Drawing.Size(541, 298);
+            this.tabQuest.Size = new System.Drawing.Size(192, 70);
             this.tabQuest.TabIndex = 3;
             this.tabQuest.Text = "Quest";
             // 
@@ -2777,7 +2777,7 @@ namespace Grimoire.UI
             this.tabMisc.Margin = new System.Windows.Forms.Padding(0);
             this.tabMisc.Name = "tabMisc";
             this.tabMisc.Padding = new System.Windows.Forms.Padding(3);
-            this.tabMisc.Size = new System.Drawing.Size(541, 298);
+            this.tabMisc.Size = new System.Drawing.Size(192, 70);
             this.tabMisc.TabIndex = 4;
             this.tabMisc.Text = "Misc";
             // 
@@ -3494,7 +3494,7 @@ namespace Grimoire.UI
             this.txtAuthor.Location = new System.Drawing.Point(7, 45);
             this.txtAuthor.Multiline = true;
             this.txtAuthor.Name = "txtAuthor";
-            this.txtAuthor.Size = new System.Drawing.Size(276, 20);
+            this.txtAuthor.Size = new System.Drawing.Size(283, 20);
             this.txtAuthor.TabIndex = 119;
             this.txtAuthor.Text = "Author";
             // 
@@ -3696,7 +3696,7 @@ namespace Grimoire.UI
             this.tabOptions.Margin = new System.Windows.Forms.Padding(0);
             this.tabOptions.Name = "tabOptions";
             this.tabOptions.Padding = new System.Windows.Forms.Padding(3);
-            this.tabOptions.Size = new System.Drawing.Size(541, 298);
+            this.tabOptions.Size = new System.Drawing.Size(192, 70);
             this.tabOptions.TabIndex = 5;
             this.tabOptions.Text = "Options";
             // 
@@ -3777,7 +3777,7 @@ namespace Grimoire.UI
             this.btnLog.ForeColor = System.Drawing.Color.Gainsboro;
             this.btnLog.Location = new System.Drawing.Point(0, 0);
             this.btnLog.Name = "btnLog";
-            this.btnLog.Size = new System.Drawing.Size(106, 23);
+            this.btnLog.Size = new System.Drawing.Size(100, 23);
             this.btnLog.TabIndex = 148;
             this.btnLog.Text = "Log Script";
             this.btnLog.Click += new System.EventHandler(this.logScript);
@@ -3789,7 +3789,7 @@ namespace Grimoire.UI
             this.btnLogDebug.ForeColor = System.Drawing.Color.Gainsboro;
             this.btnLogDebug.Location = new System.Drawing.Point(0, 0);
             this.btnLogDebug.Name = "btnLogDebug";
-            this.btnLogDebug.Size = new System.Drawing.Size(100, 23);
+            this.btnLogDebug.Size = new System.Drawing.Size(110, 23);
             this.btnLogDebug.TabIndex = 152;
             this.btnLogDebug.Text = "Log Debug";
             this.btnLogDebug.Click += new System.EventHandler(this.logDebug);

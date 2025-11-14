@@ -1,10 +1,10 @@
 using Grimoire.Game.Data;
 using Grimoire.Tools;
-using Grimoire.UI;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace Grimoire.Game
 {
@@ -12,7 +12,7 @@ namespace Grimoire.Game
     {
         public static void RefreshDictionary() => _players = JsonConvert.DeserializeObject<Dictionary<string, PlayerInfo>>(Flash.Call("Players", new object[0]));
 
-        private static Dictionary<string, PlayerInfo> _players; 
+        private static Dictionary<string, PlayerInfo> _players;
         /// <summary>
         /// Gets a list of all players in the current map.
         /// </summary>
@@ -26,17 +26,17 @@ namespace Grimoire.Game
 
         public static List<Monster> VisibleMonsters => Flash.Call<List<Monster>>("GetVisibleMonstersInCell", new string[0]);
 
-		public static List<Monster> AvailableMonsters => Flash.Call<List<Monster>>("GetMonstersInCell", new string[0]);
+        public static List<Monster> AvailableMonsters => Flash.Call<List<Monster>>("GetMonstersInCell", Player.Cell);
 
         public static List<Monster> GetAllMonsters()
         {
             List<Monster> allMonsters = new List<Monster>();
-            foreach (string cell in Cells)
+            try
             {
-                try
+                foreach (string cell in Cells)
                 {
                     // Ambil string JSON dari SWF
-                    string json = Flash.Call("GetMonstersInCell2", new object[] { cell });
+                    string json = Flash.Call("GetMonstersInCell", new object[] { cell });
 
                     if (!string.IsNullOrEmpty(json) && json.StartsWith("["))
                     {
@@ -48,9 +48,15 @@ namespace Grimoire.Game
                         } //else LogForm.Instance.AppendDebug($"[FAILED] Getting monsters on : {cell}");
                     }
                 }
-                catch
-                {
-                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Please wait for map loaded or Login first before grabbing\n\n{ex.Message}",
+                    "GrabAllMonsters Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
             }
             return allMonsters;
         }
@@ -58,13 +64,13 @@ namespace Grimoire.Game
         public static void ReloadMap()
         {
             Flash.Call("ReloadMap", new string[0]);
-		}
-		public static void LoadMap(string mapSwf)
-		{
-			Flash.Call("LoadMap", mapSwf);
-		}
+        }
+        public static void LoadMap(string mapSwf)
+        {
+            Flash.Call("LoadMap", mapSwf);
+        }
 
-		public static bool IsMapLoading => !Flash.Call<bool>("MapLoadComplete", new string[0]);
+        public static bool IsMapLoading => !Flash.Call<bool>("MapLoadComplete", new string[0]);
 
         public static List<string> PlayersInMap => Flash.Call<List<string>>("PlayersInMap", new string[0]);
 
@@ -82,7 +88,7 @@ namespace Grimoire.Game
         public static int RoomNumber => Flash.Call<int>("RoomNumber", new string[0]);
 
         public static int GetPlayerHealthPercentage(string username) => Flash.Call<int>("GetPlayerHealthPercentage", username);
-        
+
         public static int GetPlayerHealth(string username) => Flash.Call<int>("GetPlayerHealth", username);
 
         public static event Action<InventoryItem> ItemDropped;
@@ -107,7 +113,7 @@ namespace Grimoire.Game
             ShopLoaded?.Invoke(shopInfo);
             if (!LoadedShops.Exists(s => s.Id == shopInfo.Id))
             {
-                LoadedShops.Add(shopInfo);                
+                LoadedShops.Add(shopInfo);
             }
         }
 
@@ -118,11 +124,11 @@ namespace Grimoire.Game
         public static int GetMonsterHealth(string monster) => Flash.Call<int>("GetMonsterHealth", new string[] { monster });
 
         public static bool IsMonsterAvailable(string name)
-		{
-			if (name.StartsWith("id'"))
-			{
+        {
+            if (name.StartsWith("id'"))
+            {
                 return Flash.Call<bool>("IsMonsterAvailableByMonMapID", new string[1] { name.Split('\'')[1] });
-            } 
+            }
             else if (name.StartsWith("id."))
             {
                 return Flash.Call<bool>("IsMonsterAvailableByMonMapID", new string[1] { name.Split('.')[1] });
@@ -139,7 +145,7 @@ namespace Grimoire.Game
             {
                 return Flash.Call<bool>("IsMonsterAvailable", new string[1] { name });
             }
-		}
+        }
 
         static World()
         {
