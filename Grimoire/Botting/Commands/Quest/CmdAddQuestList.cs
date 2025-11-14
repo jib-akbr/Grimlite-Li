@@ -44,7 +44,6 @@ namespace Grimoire.Botting.Commands.Quest
 
 				if (instance.IsRunning)
 				{
-					instance.StopQuestList();
 					instance.StartQuestList();
 				}
 			}

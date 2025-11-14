@@ -42,7 +42,6 @@ namespace Grimoire.Botting.Commands.Quest
 				instance.Configuration.Quests.Remove(i);
 				if (instance.IsRunning)
 				{
-					instance.StopQuestList();
 					instance.StartQuestList();
 				}
 			}

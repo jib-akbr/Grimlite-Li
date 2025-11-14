@@ -28,12 +28,10 @@ namespace Grimoire.Botting.Commands.Quest
             await instance.WaitUntil(() => World.IsActionAvailable(LockActions.AcceptQuest));
             var Quest = Player.Quests.Quest(this.Quest.Id);
             int i = 0;
-            if (ghostAccept) 
+            if (Quest.IValue <= Player.Quests.progress(Quest.Id) && Quest.ISlot != 0 && Quest.IsNotRepeatable)
+                return;
+            if (ghostAccept)
             {
-                if (Quest.IValue <= Player.Quests.progress(Quest.Id) && Quest.ISlot != 0 && Quest.IsNotRepeatable)
-                {
-                    return;
-                }
                 Quest.GhostAccept();
                 await Task.Delay(600);
                 return;
