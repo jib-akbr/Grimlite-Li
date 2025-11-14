@@ -303,6 +303,18 @@ namespace Grimoire.Botting
             set;
         }
 
+        public static bool AnimationTriggered
+        {
+            get;
+            set;
+        } = false;
+
+        public static string LastAnimationMessage
+        {
+            get;
+            set;
+        } = string.Empty;
+
         public static Dictionary<string, int> Tempvalues = new Dictionary<string, int>();
         public static Dictionary<string, string> Tempvariable = new Dictionary<string, string>();
 

@@ -44,12 +44,15 @@ namespace Grimoire.UI
 		private IBotEngine _activeBotEngine = new Bot();
 
 		private List<StatementCommand> _statementCommands;
-
+		
 		private Dictionary<string, string> _defaultControlText;
-
+		
+		// Global handlers used while the bot is running
 		public IJsonMessageHandler SpecialJsonHandler;
-
 		public IXtMessageHandler SpecialXtHandler;
+		
+		// Always-on handler to feed animation messages to Misc "Special Anims" statements
+		private readonly IJsonMessageHandler _specialAnimsHandler = new HandlerSpecialAnims();
 
 		private readonly JsonSerializerSettings _serializerSettings = new JsonSerializerSettings
 		{
@@ -1954,10 +1957,14 @@ namespace Grimoire.UI
 					chkHidePlayers.Checked = false;
 				}
 
+				// Register any user-selected special handlers
 				if (SpecialJsonHandler != null)
 					Proxy.Instance.RegisterHandler(SpecialJsonHandler);
 				if (SpecialXtHandler != null)
 					Proxy.Instance.RegisterHandler(SpecialXtHandler);
+
+				// Always register the Special Anims handler so Misc "Special Anims" works
+				Proxy.Instance.RegisterHandler(_specialAnimsHandler);
 			}
 			else
 			{
@@ -1984,6 +1991,9 @@ namespace Grimoire.UI
 					Proxy.Instance.UnregisterHandler(SpecialJsonHandler);
 				if (SpecialXtHandler != null)
 					Proxy.Instance.UnregisterHandler(SpecialXtHandler);
+
+				// Unregister the always-on Special Anims handler
+				Proxy.Instance.UnregisterHandler(_specialAnimsHandler);
 
 				if (cmbSpecials.SelectedIndex != -1 && chkSpecial.Enabled)
 				{
@@ -3178,6 +3188,94 @@ namespace Grimoire.UI
 		}
 
 		private HandlerFollow HandlerFollow = new HandlerFollow();
+
+		private void UpdateSpecialHandler()
+		{
+			// Handle enabling/disabling and switching of special auto-zone handlers at runtime
+			if (!chkSpecial.Checked || cmbSpecials.SelectedIndex == -1)
+			{
+				// Turn off current handler if any
+				if (SpecialJsonHandler != null && ActiveBotEngine.IsRunning)
+				{
+					Proxy.Instance.UnregisterHandler(SpecialJsonHandler);
+				}
+				SpecialJsonHandler = null;
+				SpecialXtHandler = null;
+				return;
+			}
+
+			// Switching or enabling: unregister old if currently running
+			if (SpecialJsonHandler != null && ActiveBotEngine.IsRunning)
+			{
+				Proxy.Instance.UnregisterHandler(SpecialJsonHandler);
+			}
+
+			switch (cmbSpecials.SelectedItem.ToString())
+			{
+				case "Auto Zone - Ultradage":
+					SpecialJsonHandler = new HandlerAutoZoneUltraDage();
+					break;
+				case "Auto Zone - Dark Carnax":
+					SpecialJsonHandler = new HandlerAutoZoneDarkCarnax();
+					break;
+				case "Auto Zone - Astral Empyrean":
+					SpecialJsonHandler = new HandlerAutoZoneAstralEmpyrean();
+					break;
+				case "Auto Zone - Queen Iona":
+					SpecialJsonHandler = new HandlerAutoZoneQueenIona();
+					break;
+				case "Auto Zone - Colossal Vordred":
+					SpecialJsonHandler = new HandlerAutoZoneVordred();
+					break;
+				default:
+					SpecialJsonHandler = null;
+					break;
+			}
+
+			// Register new handler immediately if bot is already running
+			if (SpecialJsonHandler != null && ActiveBotEngine.IsRunning)
+			{
+				Proxy.Instance.RegisterHandler(SpecialJsonHandler);
+			}
+		}
+
+		/// <summary>
+		/// Helper used by script commands (CmdSpecialHandler) to control the special handler
+		/// using the same UI-backed logic as the Misc 2 panel.
+		/// </summary>
+		/// <param name="zone">Display name of the zone (must match an item in cmbSpecials).</param>
+		/// <param name="enabled">
+		/// true  = enable handler for the zone,
+		/// false = disable handler,
+		/// null  = keep current on/off state, just switch zone.
+		/// </param>
+		public static void SetSpecialHandlerFromScript(string zone, bool? enabled)
+		{
+			BotManager bm = Instance;
+			if (bm == null)
+				return;
+
+			void Apply()
+			{
+				if (!string.IsNullOrEmpty(zone))
+				{
+					int index = bm.cmbSpecials.FindStringExact(zone);
+					if (index >= 0)
+						bm.cmbSpecials.SelectedIndex = index;
+				}
+
+				if (enabled.HasValue)
+					bm.chkSpecial.Checked = enabled.Value;
+
+				bm.UpdateSpecialHandler();
+			}
+
+			if (bm.InvokeRequired)
+				bm.Invoke((Action)Apply);
+			else
+				Apply();
+		}
+
 		private async Task setFollowHandler()
 		{
 			if (chkFollowOnly.Checked && chkEnableSettings.Checked)
@@ -3223,6 +3321,50 @@ namespace Grimoire.UI
 			tooltip.SetToolTip(this.chkAntiMod, "Use skill when player has target only.");
 		}
 
+		private void cmbSpecials_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			// If you want automatic switching on dropdown change, uncomment the next line.
+			// UpdateSpecialHandler();
+		}
+
+		// These handlers are wired to buttons in the Misc 2 "Special handlers" groupbox.
+		// They insert script commands so the actions become part of the bot script.
+		private void btnSpecialStart_Click(object sender, EventArgs e)
+		{
+			if (cmbSpecials.SelectedItem == null)
+				return;
+
+			AddCommand(new CmdSpecialHandler
+			{
+				Zone = cmbSpecials.SelectedItem.ToString(),
+				Mode = CmdSpecialHandler.SpecialMode.Start
+			}, (ModifierKeys & Keys.Control) == Keys.Control);
+		}
+
+		private void btnSpecialStop_Click(object sender, EventArgs e)
+		{
+			if (cmbSpecials.SelectedItem == null)
+				return;
+
+			AddCommand(new CmdSpecialHandler
+			{
+				Zone = cmbSpecials.SelectedItem.ToString(),
+				Mode = CmdSpecialHandler.SpecialMode.Stop
+			}, (ModifierKeys & Keys.Control) == Keys.Control);
+		}
+
+		private void btnSpecialSwitch_Click(object sender, EventArgs e)
+		{
+			if (cmbSpecials.SelectedItem == null)
+				return;
+
+			AddCommand(new CmdSpecialHandler
+			{
+				Zone = cmbSpecials.SelectedItem.ToString(),
+				Mode = CmdSpecialHandler.SpecialMode.Switch
+			}, (ModifierKeys & Keys.Control) == Keys.Control);
+		}
+
 		private void btnAddSkillSet_Click(object sender, EventArgs e)
 		{
 			if (txtSkillSet.TextLength > 0)
@@ -3265,32 +3407,7 @@ namespace Grimoire.UI
 				return;
 			}
 			cmbSpecials.Enabled = !chkSpecial.Checked;
-			if (chkSpecial.Checked)
-			{
-				switch (cmbSpecials.SelectedItem.ToString())
-				{
-					case "Auto Zone - Ultradage":
-						SpecialJsonHandler = new HandlerAutoZoneUltraDage();
-						break;
-					case "Auto Zone - Dark Carnax":
-						SpecialJsonHandler = new HandlerAutoZoneDarkCarnax();
-						break;
-					case "Auto Zone - Astral Empyrean":
-						SpecialJsonHandler = new HandlerAutoZoneAstralEmpyrean();
-						break;
-					case "Auto Zone - Queen Iona":
-						SpecialJsonHandler = new HandlerAutoZoneQueenIona();
-						break;
-					case "Auto Zone - Colossal Vordred":
-						SpecialJsonHandler = new HandlerAutoZoneVordred();
-						break;
-				}
-			} 
-			else
-			{
-				SpecialJsonHandler = null;
-				SpecialXtHandler = null;
-			}
+			UpdateSpecialHandler();
 		}
 
 		private async void chkGender_CheckedChanged(object sender, EventArgs e)

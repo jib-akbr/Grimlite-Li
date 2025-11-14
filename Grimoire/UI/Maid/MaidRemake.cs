@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Grimoire.Botting;
 using Grimoire.Game;
 using Grimoire.Networking;
 using DarkUI.Forms;
@@ -560,6 +561,11 @@ namespace Grimoire.UI.Maid
                                     int monId = 0;
 
                                     int.TryParse(anim?["tInf"]?.ToString()?.Split(':')[1], out monId);
+                                    
+                                    // Store animation message for bot statement commands
+                                    Configuration.LastAnimationMessage = msg;
+                                    Configuration.AnimationTriggered = true;
+                                    
                                     string[] inputMsg = tbSpecialMsg.Text?.ToLower().Split(',');
                                     foreach (string m in inputMsg)
                                     {
