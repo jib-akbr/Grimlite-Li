@@ -11,13 +11,9 @@ using MaidRemake.WhitelistMap;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Grimoire.UI;
 using Grimoire.Tools.Maid;
 using Grimoire.Networking.Handlers.Maid;
-using System.Net.Sockets;
 using System.Drawing;
-using System.Windows.Interop;
-using System.Security.Cryptography;
 using Grimoire.Game.Data;
 using System.Linq;
 using System.Threading;
@@ -64,6 +60,7 @@ namespace Grimoire.UI.Maid
         bool onPause = false;
 
         bool forceSkill = false;
+        bool balance = false;
 
         Stopwatch stopwatch = new Stopwatch();
 
@@ -361,9 +358,7 @@ namespace Grimoire.UI.Maid
                     if (tauntTask == null && World.IsMonsterAvailable(mon))
                     {
                         ResetToken(true);
-                        tauntTask = Task.Run(() =>
-                            cycleTaunt(cycle, mon, second, order)
-                        );
+                        tauntTask = cycleTaunt(cycle, mon, second, order);
                     }
                 }
                 catch (Exception ex)
@@ -381,7 +376,7 @@ namespace Grimoire.UI.Maid
                     Task.Delay(2000);
                     stopMaid();
                     Task.Delay(200);
-                    Player.MoveToCell(Player.Cell,Player.Pad);
+                    Player.MoveToCell(Player.Cell, Player.Pad);
                     tbSpecialMsg.Text = $"tc;2;*;14;<order 1-4>(optional)";
                 }
             }
@@ -392,22 +387,28 @@ namespace Grimoire.UI.Maid
             return Player.EquippedClass.Contains("CHRONO SHADOW");
         }
 
-        private InventoryItem potion;
-
         private string msgTemp;
+        string[] potionNames = { "Felicitous Philtre", "Potent Malice", "Potent Honor" };
         private async Task SpecialCombo()
         {
-            potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i)
-                => i.IsEquipped && i.Name.Equals("Potent Honor Potion") || i.Name.Equals("Potent Malice Potion"));
+            var potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i)
+                => i.IsEquipped && i.Quantity >= 1 && potionNames.Contains(i.Name));
             if (potion != null)
             {
-                if (potion.IsEquipped && potion.Quantity >= 1 && Player.GetAuras(true, "Potent Honor Malice") == 0)
+                if (potion.Name.Contains("Potent") && Player.GetAuras(true, "Potent Honor Malice") == 0)
                 {
+                    await Task.Delay(Player.SkillAvailable("5"));
                     useSkill("5");
-                    await Task.Delay(200);
+                    return;
+                }
+                if (potion.Name.Contains("Felicitous") && Player.GetAuras(true, "Felicitous Philtre") == 0)
+                {
+                    await Task.Delay(Player.SkillAvailable("5"));
+                    useSkill("5");
                     return;
                 }
             }
+
             if (Player.Map == "voidxyfrag" && Player.EquippedClass == "LEGION REVENANT")
             {
                 if (!string.IsNullOrWhiteSpace(msgTemp))
@@ -460,18 +461,56 @@ namespace Grimoire.UI.Maid
             // ultra gramiel
             if (Player.Map == "ultragramiel")
             {
-                if (World.IsMonsterAvailable("Grace Crystal"))
+                // string target = Player.GetTargetName().ToLower();
+                if (Player.GetTargetName()?.IndexOf("grace crystal", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    World.IsMonsterAvailable("grace crystal"))
+                {
+                    CheckCrystalHealthBalance();
                     return;
+                }
+
                 if (tauntTask == null)
                 {
                     ResetToken(true);
-                    tauntTask = Task.Run(() => cycleTaunt(4, "Gramiel", 20));
-                } else if (!World.IsMonsterAvailable("Gramiel"))
+                    tauntTask = cycleTaunt(4, "Gramiel", 20);
+                }
+                else if (!World.IsMonsterAvailable("Gramiel"))
                 {
                     ResetToken(false);
                 }
             }
         }
+        private void CheckCrystalHealthBalance()
+        {
+            var monsters = World.GetAllMonsters();
+            var L_crystal = monsters.FirstOrDefault(m => m.MonMapID == 2);
+            var R_crystal = monsters.FirstOrDefault(m => m.MonMapID == 3);
+
+            if (forceSkill)
+            {
+                balance = false;
+                doPriorityAttack();
+                return;
+            }
+
+            const int threshold = 100;
+            int.TryParse(Flash.GetGameObject("world.myAvatar.target.objData.MonMapID").Replace("\"", ""), out int currentId);
+
+            if (currentId == 2 && L_crystal.Health <= threshold && R_crystal.Health > threshold)
+            {
+                Player.AttackMonster("id.3");
+                balance = true;
+                return;
+            }
+            else if (currentId == 3 && R_crystal.Health <= threshold && L_crystal.Health > threshold)
+            {
+                Player.AttackMonster("id.2");
+                balance = true;
+                return;
+            }
+            balance = false;
+        }
+
         private Task tauntTask = null;
         private CancellationTokenSource cts;
         private void ResetToken(bool createNew)
@@ -480,9 +519,9 @@ namespace Grimoire.UI.Maid
             {
                 cts.Cancel();
                 cts.Dispose();
-                tauntTask = null;
                 cts = null;
             }
+            tauntTask = null;
             if (createNew)
                 cts = new CancellationTokenSource();
         }
@@ -496,7 +535,7 @@ namespace Grimoire.UI.Maid
             {
                 count %= cycle;
             }
-            debug($"Executing tauntcycle with Cycle = {cycle}, Every {second}s, initial taunt at {(count+1)*second}s");
+            debug($"Executing tauntcycle with Cycle = {cycle}, Every {second}s, initial taunt at {second / (count + 1)}s");
             while (World.IsMonsterAvailable(mon) && !cts.IsCancellationRequested)
             {
                 if (count <= 0)
@@ -512,7 +551,7 @@ namespace Grimoire.UI.Maid
                 await Task.Delay(second / cycle * 1000);
             }
             debug($"Monster no longer detected, stopping taunt cycle");
-            ResetToken(false);
+            ResetToken(true);
         }
 
         private Grimoire.Networking.Message CreateMessage(string raw)
@@ -659,12 +698,16 @@ namespace Grimoire.UI.Maid
 
         private void doPriorityAttack()
         {
+            if (balance)
+                return;
+
             string currentTarget = Player.GetTargetName();
             for (int i = 0; i < monsterList.Length; i++)
             {
                 //if (monsterList[i].Equals(Player.GetTargetName(), StringComparison.OrdinalIgnoreCase))
                 if (currentTarget?.IndexOf(monsterList[i], StringComparison.OrdinalIgnoreCase) >= 0)
                     return; //Made special for CSH non autoattack cases
+
                 if (World.IsMonsterAvailable(monsterList[i]))
                 {
                     Player.AttackMonster(monsterList[i]);
@@ -730,6 +773,7 @@ namespace Grimoire.UI.Maid
                     WhitelistMapForm.Instance.WindowState = FormWindowState.Normal;
                 WhitelistMapForm.Instance.Hide();
             }
+            antiCounter();
         }
 
         public void stopMaid()
@@ -753,7 +797,7 @@ namespace Grimoire.UI.Maid
             cmbUltraBoss.Enabled = true;
             cbEnablePlugin.Checked = false;
             onPause = false;
-            ResetToken(false);
+            ResetToken(true);
             if (!string.IsNullOrWhiteSpace(msgTemp))
             {
                 tbSpecialMsg.Text = msgTemp;
@@ -1263,16 +1307,15 @@ namespace Grimoire.UI.Maid
 
         private void cbAntiCounter_CheckedChanged(object sender, EventArgs e)
         {
-            if (cbAntiCounter.Checked)
-            {
-                Flash.FlashCall2 += AntiCounterHandler;
-            }
-            else
-            {
-                Flash.FlashCall2 -= AntiCounterHandler;
-            }
+            antiCounter();
         }
-
+        private void antiCounter()
+        {
+            if (cbAntiCounter.Checked)
+                Flash.FlashCall2 += AntiCounterHandler;
+            else
+                Flash.FlashCall2 -= AntiCounterHandler;
+        }
         private void cbSpecialAnims_CheckedChanged(object sender, EventArgs e)
         {
             tbSpecialMsg.Enabled = cbSpecialAnims.Checked;
