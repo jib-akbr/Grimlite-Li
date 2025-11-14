@@ -20,6 +20,7 @@ namespace Grimoire.Game.Data
         public bool IsSafeMp { get; set; }
 
         public int SafeValue { get; set; }
+        public bool waitCd { get; set; } = false;
 
         public static string GetSkillName(string index)
         {
@@ -47,11 +48,10 @@ namespace Grimoire.Game.Data
         public void ExecuteSkill()
         {
             Skill s = this;
-            if (s.Type == Skill.SkillType.Wait)
+            bool wait = false;
+            if (s.Type == Skill.SkillType.Wait || s.waitCd)
             {
-                Task.Delay(Player.SkillAvailable(s.Index));
-                useSkill(s.Index);
-                return;
+                wait = true;
             }
 
             if (s.Type == Skill.SkillType.Safe)
@@ -62,15 +62,15 @@ namespace Grimoire.Game.Data
                     {
                         case Skill.SafeType.LowerThan:
                             if ((double)Player.Mana / Player.ManaMax * 100 <= s.SafeValue)
-                                useSkill(s.Index);
+                                useSkill(s.Index, wait);
                             break;
                         case Skill.SafeType.GreaterThan:
                             if ((double)Player.Mana / Player.ManaMax * 100 >= s.SafeValue)
-                                useSkill(s.Index);   
+                                useSkill(s.Index, wait);
                             break;
                         case Skill.SafeType.Equals:
                             if ((double)Player.Mana / Player.ManaMax * 100 == s.SafeValue)
-                                useSkill(s.Index);
+                                useSkill(s.Index, wait);
                             break;
                     }
                 }
@@ -80,28 +80,32 @@ namespace Grimoire.Game.Data
                     {
                         case Skill.SafeType.LowerThan:
                             if ((double)Player.Health / Player.HealthMax * 100 <= s.SafeValue)
-                                useSkill(s.Index);
+                                useSkill(s.Index, wait);
                             break;
                         case Skill.SafeType.GreaterThan:
                             if ((double)Player.Health / Player.HealthMax * 100 >= s.SafeValue)
-                                useSkill(s.Index);
+                                useSkill(s.Index, wait);
                             break;
                         case Skill.SafeType.Equals:
                             if ((double)Player.Health / Player.HealthMax * 100 == s.SafeValue)
-                                useSkill(s.Index);
+                                useSkill(s.Index, wait);
                             break;
                     }
                 }
             }
             else
             {
-                useSkill(s.Index);
+                useSkill(s.Index, wait);
                 //Player.UseSkill(s.Index);
             }
         }
 
-        private void useSkill(string Index)
+        private void useSkill(string Index, bool wait = false)
         {
+            if (wait)
+            {
+                Task.Delay(Player.SkillAvailable(Index));
+            }
             if (Player.EquippedClass.IndexOf("Chrono Shadow", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 Player.ForceUseSkill(Index);
@@ -124,20 +128,15 @@ namespace Grimoire.Game.Data
 
             string skillText = "";
 
-            if (Type == SkillType.Normal)
-            {
-                skillText = $"{Index}: {skillName}";
 
-            }
-            else if (Type == SkillType.Safe)
-            {
+            if (Type == SkillType.Safe)
                 skillText = $"[{safeType} {safeTypeS} {SafeValue}%] {Index}: {skillName}";
-            }
             else if (Type == SkillType.Label)
-            {
-                skillText = $"[{Text}]";
-            }
-
+                skillText = $"{Text}";
+            else //normal
+                skillText = $"{Index}: {skillName}";
+            if (Type == SkillType.Wait)
+                skillText.Insert(0, "[Wait]");
             return skillText;
         }
     }
