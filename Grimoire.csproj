@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
   <Import Project="packages\Costura.Fody.6.0.0\build\Costura.Fody.props" Condition="Exists('packages\Costura.Fody.6.0.0\build\Costura.Fody.props')" />
   <PropertyGroup>
     <ProjectGuid>{16F81920-2DC0-4AAB-AA6C-D9AE599F6367}</ProjectGuid>
@@ -414,6 +414,7 @@
     <Compile Include="Grimoire\Networking\Handlers\HandlerAFK.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAnimations.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerSpecialAnims.cs" />
+    <Compile Include="Grimoire\Networking\Handlers\HandlerUltraGramielTaunt.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerChat.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerDropItem.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerGetQuests.cs" />
@@ -727,26 +728,6 @@
     <None Include="Resources\GrimoireIconBig.png" />
     <None Include="Resources\GitHub.png" />
     <None Include="Resources\big.Ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <COMReference Include="Microsoft.Office.Interop.Word">
-      <Guid>{00020905-0000-0000-C000-000000000046}</Guid>
-      <VersionMajor>8</VersionMajor>
-      <VersionMinor>7</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>primary</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
-    <COMReference Include="VBIDE">
-      <Guid>{0002E157-0000-0000-C000-000000000046}</Guid>
-      <VersionMajor>5</VersionMajor>
-      <VersionMinor>3</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>primary</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -3194,20 +3194,24 @@ namespace Grimoire.UI
 			// Handle enabling/disabling and switching of special auto-zone handlers at runtime
 			if (!chkSpecial.Checked || cmbSpecials.SelectedIndex == -1)
 			{
-				// Turn off current handler if any
-				if (SpecialJsonHandler != null && ActiveBotEngine.IsRunning)
+				// Turn off current handler if any (even if bot is currently stopped)
+				if (SpecialJsonHandler != null)
 				{
 					Proxy.Instance.UnregisterHandler(SpecialJsonHandler);
+					if (SpecialJsonHandler is IDisposable disposableOld)
+						disposableOld.Dispose();
 				}
 				SpecialJsonHandler = null;
 				SpecialXtHandler = null;
 				return;
 			}
 
-			// Switching or enabling: unregister old if currently running
-			if (SpecialJsonHandler != null && ActiveBotEngine.IsRunning)
+			// Switching or enabling: always unregister old handler first
+			if (SpecialJsonHandler != null)
 			{
 				Proxy.Instance.UnregisterHandler(SpecialJsonHandler);
+				if (SpecialJsonHandler is IDisposable disposable)
+					disposable.Dispose();
 			}
 
 			switch (cmbSpecials.SelectedItem.ToString())
@@ -3226,6 +3230,18 @@ namespace Grimoire.UI
 					break;
 				case "Auto Zone - Colossal Vordred":
 					SpecialJsonHandler = new HandlerAutoZoneVordred();
+					break;
+				case "Gramiel P1":
+					SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P1);
+					break;
+				case "Gramiel P2":
+					SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P2);
+					break;
+				case "Gramiel P3":
+					SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P3);
+					break;
+				case "Gramiel P4":
+					SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P4);
 					break;
 				default:
 					SpecialJsonHandler = null;

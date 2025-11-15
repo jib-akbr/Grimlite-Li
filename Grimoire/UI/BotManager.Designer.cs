@@ -3407,7 +3407,11 @@ namespace Grimoire.UI
 				"Auto Zone - Dark Carnax",
 				"Auto Zone - Astral Empyrean",
 				"Auto Zone - Queen Iona",
-				"Auto Zone - Colossal Vordred"});
+				"Auto Zone - Colossal Vordred",
+				"Gramiel P1",
+				"Gramiel P2",
+				"Gramiel P3",
+				"Gramiel P4"});
 			this.cmbSpecials.Location = new System.Drawing.Point(20, 16);
 			this.cmbSpecials.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.cmbSpecials.Name = "cmbSpecials";
