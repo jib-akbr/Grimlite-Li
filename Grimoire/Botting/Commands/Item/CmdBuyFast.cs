@@ -22,8 +22,12 @@ namespace Grimoire.Botting.Commands.Item
         {
             BotData.BotState = BotData.State.Transaction;
             string ItemName = (instance.IsVar(this.ItemName) ? Configuration.Tempvariable[instance.GetVar(this.ItemName)] : this.ItemName);
-            await instance.WaitUntil(() => World.IsActionAvailable(LockActions.BuyItem));
-            Shop.BuyItemQty(ItemName, Qty);
+            await instance.WaitUntil(() => World.IsActionAvailable(LockActions.BuyItem), timeout: 3);
+            using (new pauseProvoke(instance.Configuration))
+            {
+                await Player.ExitCombat();
+                Shop.BuyItemQty(ItemName, Qty);
+            }
         }
 
         public override string ToString()

@@ -82,19 +82,20 @@ namespace Grimoire.Tools
                     if (item.IValue > 0) treeNode.Nodes.Add($"iValue: {item.IValue}");
                     treeNode.Nodes.Add($"Description: {item.Description}");
                     treeNode.ContextMenuStrip = MenuQuest(item.Id);
+                    //List<InventoryItem> requiredItems = new List<InventoryItem>();
                     List<InventoryItem> requiredItems = item.RequiredItems;
                     if (requiredItems != null && requiredItems.Count > 0)
                     {
                         TreeNode treeNode2 = treeNode.Nodes.Add("Required items");
-                        treeNode2.ContextMenuStrip = MenuItems(item.RequiredItems);
-                        foreach (InventoryItem requiredItem in item.RequiredItems)
+                        treeNode2.ContextMenuStrip = MenuItems(requiredItems);
+                        foreach (InventoryItem req in requiredItems)
                         {
-                            TreeNode treeNode3 = treeNode2.Nodes.Add(requiredItem.Name);
-                            treeNode3.ContextMenuStrip = MenuItem(requiredItem);
-                            treeNode3.Nodes.Add($"ID: {requiredItem.Id}");
-                            treeNode3.Nodes.Add($"Quantity: {requiredItem.Quantity}");
-                            treeNode3.Nodes.Add("Temporary: " + (requiredItem.IsTemporary ? "Yes" : "No"));
-                            treeNode3.Nodes.Add($"Description: {requiredItem.Description}");
+                            TreeNode treeNode3 = treeNode2.Nodes.Add(req.Name);
+                            treeNode3.ContextMenuStrip = MenuItem(req);
+                            treeNode3.Nodes.Add($"ID: {req.Id}");
+                            treeNode3.Nodes.Add($"Quantity: {req.Quantity}");
+                            treeNode3.Nodes.Add("Temporary: " + (req.IsTemporary ? "Yes" : "No"));
+                            treeNode3.Nodes.Add($"Description: {req.Description}");
                         }
                     }
                     List<InventoryItem> rewards = item.Rewards;
@@ -234,8 +235,22 @@ namespace Grimoire.Tools
 
         public static void GrabMonsters(TreeView tree)
         {
-            List<Monster> list = (from x in World.AvailableMonsters?.GroupBy((Monster m) => m.MonMapID)
-                                  select x.First()).ToList();
+            List<Monster> list = null;
+            try
+            {
+                list = (from x in World.AvailableMonsters?.GroupBy((Monster m) => m.MonMapID)
+                        select x.First()).ToList();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Please wait for map loaded or Login first before grabbing\n\n{ex.Message}",
+                    "GrabMonsters Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+            }
+
             if (list != null && list.Count > 0)
             {
                 foreach (Monster item in list)
@@ -409,7 +424,7 @@ namespace Grimoire.Tools
             };
             ToolStripMenuItem toolStripMenuItem2 = new ToolStripMenuItem
             {
-                Text = "Complete Quest"
+                Text = "Complete Quest (Once)"
             };
             ToolStripMenuItem toolStripMenuItem3 = new ToolStripMenuItem
             {
@@ -435,22 +450,31 @@ namespace Grimoire.Tools
             contextMenuStrip.Items.Add(toolStripMenuItem1);
             contextMenuStrip.Items.Add(toolStripMenuItem2);
             contextMenuStrip.Items.Add(toolStripMenuItem3);
+            ToolStripMenuItem toolStripMenuItem4 = new ToolStripMenuItem
+            {
+                Text = "Complete Quest (Maxed)"
+            };
+            toolStripMenuItem4.Click += delegate (object S, EventArgs E)
+            {
+                Player.Quests.Quest(QuestID).Complete(max:true);
+            };
+            contextMenuStrip.Items.Add(toolStripMenuItem4);
 
             if (Items != null)
             {
-                ToolStripMenuItem toolStripMenuItem4 = new ToolStripMenuItem
+                ToolStripMenuItem toolStripMenuItem5 = new ToolStripMenuItem
                 {
                     Text = "Copy all Reqs"
                 };
-                toolStripMenuItem4.Click += delegate (object S, EventArgs E)
+                toolStripMenuItem5.Click += delegate (object S, EventArgs E)
                 {
                     string longString;
-                    string name = $"\"ItemName\" : \" {string.Join(",", Items.Select(i => i.Name))} \"";
-                    string qty = $"\"Quantity\" : \" {string.Join(",", Items.Select(i => i.Quantity))} \"";
+                    string name = $"\"ItemName\" : \"{string.Join(",", Items.Select(i => i.Name))}";
+                    string qty = $"\"Quantity\" : \"{string.Join(",", Items.Select(i => i.Quantity))}";
                     longString = $"{name}\"\n{qty}\"";
                     Clipboard.SetText(longString);
                 };
-                contextMenuStrip.Items.Add(toolStripMenuItem4);
+                contextMenuStrip.Items.Add(toolStripMenuItem5);
             }
             return contextMenuStrip;
         }
