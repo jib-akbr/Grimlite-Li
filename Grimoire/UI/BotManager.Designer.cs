@@ -107,11 +107,11 @@ namespace Grimoire.UI
 		public DarkNumericUpDown numWalkSpeed;
 		public DarkCheckBox chkSkipCutscenes;
 		public DarkCheckBox chkHidePlayers;
-		public DarkCheckBox chkLag;
-		public DarkCheckBox chkMagnet;
-		public DarkCheckBox chkProvoke;
-		public DarkCheckBox chkInfiniteRange;
-		private DarkGroupBox grpLogin;
+			public DarkCheckBox chkLag;
+			public DarkCheckBox chkMagnet;
+			public DarkCheckBox chkProvoke;
+			public DarkCheckBox chkInfiniteRange;
+			private DarkGroupBox grpLogin;
 		private DarkComboBox cbServers;
 		private DarkCheckBox chkRelogRetry;
 		private DarkCheckBox chkRelog;
@@ -610,6 +610,7 @@ namespace Grimoire.UI
 			this.btnChangeGuildCmd = new DarkUI.Controls.DarkButton();
 			this.btnchangeGuild = new DarkUI.Controls.DarkButton();
 			this.txtGuild = new DarkUI.Controls.DarkTextBox();
+			this.grpAlignment = new DarkUI.Controls.DarkGroupBox();
 			this.tabHunt = new System.Windows.Forms.TabPage();
 			this.pictureBox1 = new System.Windows.Forms.PictureBox();
 			this.darkLabel9 = new DarkUI.Controls.DarkLabel();
@@ -3411,7 +3412,11 @@ namespace Grimoire.UI
 				"Gramiel P1",
 				"Gramiel P2",
 				"Gramiel P3",
-				"Gramiel P4"});
+				"Gramiel P4",
+				"Ultra Speaker DPS",
+				"Ultra Speaker LR",
+				"Ultra Speaker LOO",
+				"Ultra Speaker AP"});
 			this.cmbSpecials.Location = new System.Drawing.Point(20, 16);
 			this.cmbSpecials.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.cmbSpecials.Name = "cmbSpecials";

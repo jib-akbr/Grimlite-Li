@@ -166,6 +166,14 @@ namespace Grimoire.Botting
             set;
         }
 
+        public bool UseSkillZeroAutomatically
+        {
+            get;
+            set;
+        }
+
+
+
         public bool LagKiller
         {
             get;
