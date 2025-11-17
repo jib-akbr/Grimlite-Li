@@ -189,6 +189,7 @@ namespace Grimoire.Botting
             paused = false;
             BotData.BotState = BotData.State.Others;
             this.StopCommands();
+            TauntCycle.Reset();
         }
         public bool paused
         {

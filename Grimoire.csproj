@@ -183,6 +183,7 @@
   <ItemGroup>
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdCancelTarget.cs" />
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdQuestHunt.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Misc\CmdTauntcycle.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraEquals.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraGreaterThan.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraLessThan.cs" />
@@ -202,12 +203,12 @@
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneDarkCarnax.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneVordred.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerFollow.cs" />
-    <Compile Include="Grimoire\Networking\Handlers\HandlerSpecial.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\CellJumperHandler.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\CopyWalkHandler.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\JoinMapHandler.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\PartyChatHandler.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\PartyInvitationHandler.cs" />
+    <Compile Include="Grimoire\Networking\Handlers\TauntCycle.cs" />
     <Compile Include="Grimoire\Networking\Handlers\MapItemHandler.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\TargetHandler.cs" />
     <Compile Include="Grimoire\Networking\Handlers\Maid\WarningMsgHandler.cs" />

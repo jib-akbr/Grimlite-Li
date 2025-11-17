@@ -22,11 +22,11 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             //        You can separate multiple keys with commas: "resist,shattering"
             // Value2 = optional skill index to cast immediately when matched (like Maid's message skill)
 
-            string raw = (instance.IsVar(Value1) ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1);
+            string raw = instance.ResolveVars(Value1);
             string lastMessage = Configuration.LastAnimationMessage?.ToLower();
 
             // Normalise and support comma-separated search terms like Maid does
-            string[] targets = string.IsNullOrWhiteSpace(raw)
+            string[] message = string.IsNullOrWhiteSpace(raw)
                 ? Array.Empty<string>()
                 : raw.ToLower()
                      .Split(',')
@@ -34,11 +34,11 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                      .Where(t => !string.IsNullOrEmpty(t))
                      .ToArray();
 
-            bool matched = !string.IsNullOrEmpty(lastMessage) && targets.Length > 0 &&
-                           Array.Exists(targets, t => lastMessage.Contains(t));
+            bool matched = !string.IsNullOrEmpty(lastMessage) && message.Length > 0 &&
+                           Array.Exists(message, t => lastMessage.Contains(t));
 
             // Debug so we can see what the statement sees
-            LogForm.Instance.AppendDebug($"[SpecialAnims] last='{lastMessage}' targets=[{string.Join(",", targets)}] matched={matched}");
+            LogForm.Instance.AppendDebug($"[SpecialAnims] last='{lastMessage}' targets=[{string.Join(",", message)}] matched={matched}");
 
             // Two modes:
             // 1) If a skill index is provided (Value2):
@@ -50,9 +50,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             string resolvedSkillIndex = null;
             if (!string.IsNullOrWhiteSpace(Value2))
             {
-                resolvedSkillIndex = instance.IsVar(Value2)
-                    ? Configuration.Tempvariable[instance.GetVar(Value2)]
-                    : Value2;
+                resolvedSkillIndex = instance.ResolveVars(Value2);
                 if (string.IsNullOrWhiteSpace(resolvedSkillIndex))
                     resolvedSkillIndex = null;
             }
@@ -119,7 +117,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 
         public override string ToString()
         {
-            return "Special Anims: " + Value1 + (string.IsNullOrEmpty(Value2) ? "" : " | Skill: " + Value2);
+            return $"Special Anims: {Value1} {(string.IsNullOrEmpty(Value2) ? "" : "| Skill: " + Value2)}";
         }
     }
 }
