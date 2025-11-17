@@ -72,14 +72,14 @@ namespace Grimoire.UI.Maid
             KeyPreview = true;
 
             //KeyListener non Global Hook
-            //this.KeyDown += new KeyEventHandler(this.hotkey);
+            this.KeyDown += new KeyEventHandler(this.hotkey);
             if (Player.IsLoggedIn) cmbGotoUsername.Text = Player.Username;
             cmbUltraBoss.SelectedIndex = 0;
             this.Text = $"Maid Remake";
 
-			Flash.FlashCall2 += AntiCounterHandler;
+            Flash.FlashCall2 += AntiCounterHandler;
 
-			ToolTip toolTip = new ToolTip();
+            ToolTip toolTip = new ToolTip();
             toolTip.SetToolTip(this.cbPartyCmd,
                 "[Auto accept any party invitation when checked]" +
                 "\n\nEnter /p party chat's to use the commands below" +
@@ -203,7 +203,7 @@ namespace Grimoire.UI.Maid
 
                                 if (cbBuffIfStop.Checked && tbBuffSkill.Text != String.Empty)
                                 {
-                                    useSkill(buffSkill[buffIndex]);
+                                    useSkill(buffSkill[buffIndex], true);
                                     //Player.UseSkill(buffSkill[buffIndex]);
                                     buffIndex++;
 
@@ -254,7 +254,7 @@ namespace Grimoire.UI.Maid
                                     await Task.Delay(1000);
                                     await Task.Delay(Player.SkillAvailable(skillAct));
                                     //Player.UseSkill(skillAct);
-                                    useSkill(skillAct);
+                                    useSkill(skillAct, true);
                                     forceSkill = false;
                                     await Task.Delay(500);
                                 }
@@ -315,10 +315,14 @@ namespace Grimoire.UI.Maid
                 stopMaid();
             }
         }
-
-        private void useSkill(string skillIndex)
+        private async Task waitSkill(string index)
         {
-            if (isUsingCSH())
+            await Task.Delay(Player.SkillAvailable(index));
+            useSkill(index, true);
+        }
+        private void useSkill(string skillIndex, bool force = false)
+        {
+            if (isUsingCSH() || force)
             {
                 Player.ForceUseSkill(skillIndex);
                 return;
@@ -400,14 +404,14 @@ namespace Grimoire.UI.Maid
             {
                 if (potion.Name.Contains("Potent") && Player.GetAuras(true, "Potent Honor Malice") == 0)
                 {
-                    await Task.Delay(Player.SkillAvailable("5"));
-                    useSkill("5");
+                    await waitSkill("5");
                     return;
                 }
                 if (potion.Name.Contains("Felicitous") && Player.GetAuras(true, "Felicitous Philtre") == 0)
                 {
-                    await Task.Delay(Player.SkillAvailable("5"));
-                    useSkill("5");
+                    await waitSkill("5");
+                    //await Task.Delay(Player.SkillAvailable("5"));
+                    //useSkill("5");
                     return;
                 }
             }
@@ -433,11 +437,13 @@ namespace Grimoire.UI.Maid
             {
                 if (Player.GetAuras(true, "Rounds Empty") == 1 || Player.Mana < 15)
                 {
-                    useSkill("4");
+                    await waitSkill("4");
+                    await waitSkill("1");
+                    /*useSkill("4");
                     await Task.Delay(Player.SkillAvailable("1"));
                     await Task.Delay(100);
                     useSkill("1");
-                    await Task.Delay(200);
+                    await Task.Delay(200);*/
                 }
             }
             else if (Player.EquippedClass == "ARCANA INVOKER")
@@ -446,7 +452,7 @@ namespace Grimoire.UI.Maid
                     Player.GetAuras(true, "End of the world") >= 13 ||
                     Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)
                 {
-                    useSkill("1");
+                    await waitSkill("1");
                     await Task.Delay(200);
                 }
             }
@@ -456,8 +462,7 @@ namespace Grimoire.UI.Maid
                     Player.GetAuras(true, "Corporeal Ascension") == 0 ||
                     Player.GetAuras(true, "Arcane Sigil") == 0)
                 {
-                    useSkill("4");
-                    await Task.Delay(200);
+                    await waitSkill("4");
                 }
             }
 
@@ -600,19 +605,20 @@ namespace Grimoire.UI.Maid
                                     int monId = 0;
 
                                     int.TryParse(anim?["tInf"]?.ToString()?.Split(':')[1], out monId);
-                                    
+
                                     // Store animation message for bot statement commands
                                     Configuration.LastAnimationMessage = msg;
                                     Configuration.AnimationTriggered = true;
-                                    
+
                                     string[] inputMsg = tbSpecialMsg.Text?.ToLower().Split(',');
                                     foreach (string m in inputMsg)
                                     {
                                         string specialMsg = m.Trim();
                                         if (!string.IsNullOrEmpty(specialMsg))
                                         {
-                                            if (msg.Contains(specialMsg) && ultraBossHandler(msg))
+                                            if (msg.Contains(specialMsg) && ultraBossHandler(msg, monId))
                                             {
+                                                LogForm.Instance.devDebug($"Forcing taunt into id:{monId}");
                                                 forceSkill = true;
                                                 return;
                                             }
@@ -920,7 +926,8 @@ namespace Grimoire.UI.Maid
 
         private void cbLockCell_CheckedChanged(object sender, EventArgs e)
         {
-            if (cbEnableGlobalHotkey.Checked == false) return;
+            if (cbEnableGlobalHotkey.Checked == false || !cbEnablePlugin.Checked) 
+                return;
             if (cbUnfollow.Checked)
             {
                 Proxy.Instance.UnregisterHandler(CJHandler);
@@ -1005,11 +1012,15 @@ namespace Grimoire.UI.Maid
                 {
                     case "Gramiel L1":
                     case "Gramiel L2":
+                        if (monId != 2)
+                            return false;
                         crystalCount++;
                         debug($"Defense shattering 'Left Crystal' count: {crystalCount}");
                         break;
                     case "Gramiel R1":
                     case "Gramiel R2":
+                        if (monId != 3)
+                            return false;
                         crystalCount++;
                         debug($"Defense shattering 'Right Crystal' count: {crystalCount}");
                         break;
@@ -1053,11 +1064,11 @@ namespace Grimoire.UI.Maid
                     break;
                 case "Gramiel L1":
                 case "Gramiel R1":
-                    act = crystalCount % 4 == 2 || !msg.Contains("shattering");
+                    act = crystalCount % 2 != 0 || !msg.Contains("shattering");
                     break;
                 case "Gramiel L2":
                 case "Gramiel R2":
-                    act = crystalCount % 4 == 0 || !msg.Contains("shattering");
+                    act = crystalCount % 2 == 0 || !msg.Contains("shattering");
                     break;
             }
             return act;

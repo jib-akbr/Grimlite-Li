@@ -138,10 +138,10 @@ namespace Grimoire.Botting.Commands.Combat
                 await Proxy.Instance.SendToServer($"%xt%zm%getMapItem%1%{mapitemid}%");
                 await Task.Delay(600);
 
-                if (itemCollected(Player.recentMapItem[mapitemid], sqty))
-                    break;
-                if (!Player.recentMapItem[mapitemid].Equals("blank"))
+                if (!Player.recentMapItem.TryGetValue(mapitemid, out string itemName) || itemName?.Equals("blank") == true)
                     continue;
+                if (itemCollected(itemName, sqty))
+                    break;
             }
         }
 
