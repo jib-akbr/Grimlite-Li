@@ -618,7 +618,7 @@ namespace Grimoire.UI.Maid
                                         {
                                             if (msg.Contains(specialMsg) && ultraBossHandler(msg, monId))
                                             {
-                                                LogForm.Instance.devDebug($"Forcing taunt into id:{monId}");
+                                                //LogForm.Instance.devDebug($"Forcing taunt into id:{monId}");
                                                 forceSkill = true;
                                                 return;
                                             }
@@ -926,7 +926,7 @@ namespace Grimoire.UI.Maid
 
         private void cbLockCell_CheckedChanged(object sender, EventArgs e)
         {
-            if (cbEnableGlobalHotkey.Checked == false || !cbEnablePlugin.Checked) 
+            if (!cbEnablePlugin.Checked) 
                 return;
             if (cbUnfollow.Checked)
             {

@@ -245,7 +245,7 @@ namespace Grimoire.Game.Data
                 int required = req.Quantity;
                 int possible = owned / required;
 
-                complete = Math.Min(complete, owned / req.Quantity);
+                complete = Math.Min(complete, possible);
             }
 			return complete;
         }

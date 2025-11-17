@@ -33,7 +33,7 @@ namespace Grimoire.Botting.Commands.Item
                 {
                     await Player.ExitCombat();
                     Shop.SellItem(_ItemName, _qty);
-                    await instance.WaitUntil(() => !Player.Inventory.ContainsItem(item.Name, item.Quantity.ToString()));
+                    await instance.WaitUntil(() => !Player.Inventory.ContainsItem(item.Name, item.Quantity.ToString()),timeout:3);
                 }
             }
         }
