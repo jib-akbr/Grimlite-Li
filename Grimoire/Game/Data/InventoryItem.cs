@@ -84,12 +84,26 @@ namespace Grimoire.Game.Data
             set;
         }
 
+        // Optional: Forge enhancement ID mapping (weapons/capes/helms).
         [JsonIgnore]
         public forgeID? ForgeEnhancement
         {
             get => Enum.IsDefined(typeof(forgeID), Enhancement) ? (forgeID?)Enhancement : null;
             set => Enhancement = value.HasValue ? (int)value.Value : 0;
         }
+
+        // Extended enhancement name mapping for special Luck patterns.
+        // These are the iEnh IDs for Luck variants of Awe Blast / Health Vamp /
+        // Mana Vamp / Powerword Die / Spiral Carve.
+        public static readonly System.Collections.Generic.Dictionary<int, string> EnhancementNames =
+            new System.Collections.Generic.Dictionary<int, string>
+            {
+                { 52368, "Luck Spiral Carve" },
+                { 52369, "Luck Awe Blast" },
+                { 52370, "Luck Health Vamp" },
+                { 52371, "Luck Mana Vamp" },
+                { 52372, "Luck Powerword Die" }
+            };
 
         [JsonProperty("iQty")]
         public int Quantity

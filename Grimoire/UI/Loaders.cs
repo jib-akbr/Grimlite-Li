@@ -35,13 +35,17 @@ namespace Grimoire.UI
 		private DarkTextBox txtLoaders;
 
 		private DarkComboBox cbLoad;
-
+		
 		private DarkButton btnLoad;
-
+		
 		private DarkComboBox cbGrab;
-
+		
+		private DarkTextBox txtSearchGrab;
+		
+		private DarkButton btnSearchGrab;
+		
 		private DarkButton btnGrab;
-
+		
 		private DarkButton btnSave;
 		private DarkButton btnForceAccept;
 		private DarkNumericUpDown numTQuests;
@@ -202,10 +206,18 @@ namespace Grimoire.UI
 			}
 		}
 
+		// Search state for treeGrabbed
+		private int _grabSearchIndex = 0;
+		private string _grabSearchKeyword = "";
+		private readonly List<TreeNode> _grabSearchResults = new List<TreeNode>();
+
 		private void btnGrab_Click(object sender, EventArgs e)
 		{
 			treeGrabbed.BeginUpdate();
 			treeGrabbed.Nodes.Clear();
+			_grabSearchResults.Clear();
+			_grabSearchKeyword = "";
+			_grabSearchIndex = 0;
 
 			Grabber.OrderBy orderBy = Grabber.OrderBy.Name;
 			switch (cbOrderBy.SelectedIndex)
@@ -263,6 +275,48 @@ namespace Grimoire.UI
 			}
 		}
 
+		private void btnSearchGrab_Click(object sender, EventArgs e)
+		{
+			string keyword = txtSearchGrab.Text;
+			if (string.IsNullOrWhiteSpace(keyword) || treeGrabbed.Nodes.Count == 0)
+				return;
+
+			// If keyword changed, rebuild result list
+			if (!string.Equals(keyword, _grabSearchKeyword, StringComparison.OrdinalIgnoreCase))
+			{
+				_grabSearchKeyword = keyword;
+				_grabSearchResults.Clear();
+				_grabSearchIndex = 0;
+				CollectGrabSearchNodes(treeGrabbed.Nodes, keyword);
+			}
+
+			if (_grabSearchResults.Count == 0)
+				return;
+
+			if (_grabSearchIndex >= _grabSearchResults.Count)
+				_grabSearchIndex = 0;
+
+			TreeNode node = _grabSearchResults[_grabSearchIndex];
+			treeGrabbed.SelectedNode = node;
+			node.EnsureVisible();
+			_grabSearchIndex++;
+		}
+
+		private void CollectGrabSearchNodes(TreeNodeCollection nodes, string keyword)
+		{
+			foreach (TreeNode node in nodes)
+			{
+				if (node.Text.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0)
+				{
+					_grabSearchResults.Add(node);
+				}
+				if (node.Nodes.Count > 0)
+				{
+					CollectGrabSearchNodes(node.Nodes, keyword);
+				}
+			}
+		}
+
 		protected override void Dispose(bool disposing)
 		{
 			if (disposing && components != null)
@@ -274,13 +328,15 @@ namespace Grimoire.UI
 
 		private void InitializeComponent()
 		{
-            this.txtLoaders = new DarkUI.Controls.DarkTextBox();
-            this.cbLoad = new DarkUI.Controls.DarkComboBox();
-            this.btnLoad = new DarkUI.Controls.DarkButton();
-            this.cbGrab = new DarkUI.Controls.DarkComboBox();
-            this.btnGrab = new DarkUI.Controls.DarkButton();
-            this.btnSave = new DarkUI.Controls.DarkButton();
-            this.treeGrabbed = new System.Windows.Forms.TreeView();
+			this.txtLoaders = new DarkUI.Controls.DarkTextBox();
+			this.cbLoad = new DarkUI.Controls.DarkComboBox();
+			this.btnLoad = new DarkUI.Controls.DarkButton();
+			this.cbGrab = new DarkUI.Controls.DarkComboBox();
+			this.txtSearchGrab = new DarkUI.Controls.DarkTextBox();
+			this.btnSearchGrab = new DarkUI.Controls.DarkButton();
+			this.btnGrab = new DarkUI.Controls.DarkButton();
+			this.btnSave = new DarkUI.Controls.DarkButton();
+			this.treeGrabbed = new System.Windows.Forms.TreeView();
             this.btnForceAccept = new DarkUI.Controls.DarkButton();
             this.numTQuests = new DarkUI.Controls.DarkNumericUpDown();
             this.cbOrderBy = new DarkUI.Controls.DarkComboBox();
@@ -318,24 +374,42 @@ namespace Grimoire.UI
             this.btnLoad.Text = "Load";
             this.btnLoad.Click += new System.EventHandler(this.btnLoad_Click);
             // 
-            // cbGrab
-            // 
-            this.cbGrab.FormattingEnabled = true;
-            this.cbGrab.Items.AddRange(new object[] {
-            "Shop items",
-            "Quest IDs",
-            "Quest items, drop rates",
-            "Inventory items",
-            "Temp inventory items",
-            "Bank items",
-            "Monsters",
-            "All Monsters"});
-            this.cbGrab.Location = new System.Drawing.Point(12, 332);
-            this.cbGrab.Name = "cbGrab";
-            this.cbGrab.Size = new System.Drawing.Size(174, 21);
-            this.cbGrab.TabIndex = 33;
-            this.cbGrab.SelectedIndexChanged += new System.EventHandler(this.cbGrab_SelectedIndexChanged);
-            // 
+			// cbGrab
+			// 
+			this.cbGrab.FormattingEnabled = true;
+			this.cbGrab.Items.AddRange(new object[] {
+			"Shop items",
+			"Quest IDs",
+			"Quest items, drop rates",
+			"Inventory items",
+			"Temp inventory items",
+			"Bank items",
+			"Monsters",
+			"All Monsters"});
+			this.cbGrab.Location = new System.Drawing.Point(12, 332);
+			this.cbGrab.Name = "cbGrab";
+			this.cbGrab.Size = new System.Drawing.Size(174, 21);
+			this.cbGrab.TabIndex = 33;
+			this.cbGrab.SelectedIndexChanged += new System.EventHandler(this.cbGrab_SelectedIndexChanged);
+			// 
+			// txtSearchGrab
+			// 
+			this.txtSearchGrab.Location = new System.Drawing.Point(12, 306);
+			this.txtSearchGrab.Name = "txtSearchGrab";
+			this.txtSearchGrab.Size = new System.Drawing.Size(174, 20);
+			this.txtSearchGrab.TabIndex = 32;
+			this.txtSearchGrab.Text = "Search";
+			// 
+			// btnSearchGrab
+			// 
+			this.btnSearchGrab.Checked = false;
+			this.btnSearchGrab.Location = new System.Drawing.Point(192, 304);
+			this.btnSearchGrab.Name = "btnSearchGrab";
+			this.btnSearchGrab.Size = new System.Drawing.Size(67, 23);
+			this.btnSearchGrab.TabIndex = 36;
+			this.btnSearchGrab.Text = "Search";
+			this.btnSearchGrab.Click += new System.EventHandler(this.btnSearchGrab_Click);
+			// 
             // btnGrab
             // 
             this.btnGrab.Checked = false;
@@ -366,7 +440,8 @@ namespace Grimoire.UI
             this.treeGrabbed.LabelEdit = true;
             this.treeGrabbed.Location = new System.Drawing.Point(12, 94);
             this.treeGrabbed.Name = "treeGrabbed";
-            this.treeGrabbed.Size = new System.Drawing.Size(247, 232);
+            // Reduce height a bit so the search bar is clearly visible below it.
+            this.treeGrabbed.Size = new System.Drawing.Size(247, 200);
             this.treeGrabbed.TabIndex = 38;
             // 
             // btnForceAccept
@@ -421,21 +496,23 @@ namespace Grimoire.UI
             this.cbOrderBy.Size = new System.Drawing.Size(67, 21);
             this.cbOrderBy.TabIndex = 169;
             // 
-            // Loaders
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(271, 393);
-            this.Controls.Add(this.btnSave);
-            this.Controls.Add(this.btnGrab);
-            this.Controls.Add(this.cbOrderBy);
-            this.Controls.Add(this.numTQuests);
-            this.Controls.Add(this.btnForceAccept);
-            this.Controls.Add(this.treeGrabbed);
-            this.Controls.Add(this.cbGrab);
-            this.Controls.Add(this.btnLoad);
-            this.Controls.Add(this.cbLoad);
-            this.Controls.Add(this.txtLoaders);
+			// Loaders
+			// 
+			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+			this.ClientSize = new System.Drawing.Size(271, 393);
+			this.Controls.Add(this.btnSave);
+			this.Controls.Add(this.btnGrab);
+			this.Controls.Add(this.cbOrderBy);
+			this.Controls.Add(this.numTQuests);
+			this.Controls.Add(this.btnForceAccept);
+			this.Controls.Add(this.treeGrabbed);
+			this.Controls.Add(this.btnSearchGrab);
+			this.Controls.Add(this.txtSearchGrab);
+			this.Controls.Add(this.cbGrab);
+			this.Controls.Add(this.btnLoad);
+			this.Controls.Add(this.cbLoad);
+			this.Controls.Add(this.txtLoaders);
             this.Icon = global::Properties.Resources.GrimoireIcon;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
