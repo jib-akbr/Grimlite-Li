@@ -27,7 +27,7 @@ public class TauntCycle : IDisposable
 
     public void StartTaunt(int cycle, string mon, int second, int count)
     {
-        // Cegah double-run
+        // Avoid double-run
         if (_runningTask != null && !_runningTask.IsCompleted)
             return;
 
@@ -40,12 +40,13 @@ public class TauntCycle : IDisposable
             count %= cycle;
 
         string prevTarget = "";
-
-        while (!_cts.IsCancellationRequested)
+        LogForm.Instance.devDebug($"Executing tauntcycle with Cycle = {cycle}, Every {second}s, initial taunt at {second / cycle * count}s");
+        while (!_cts.IsCancellationRequested && World.IsMonsterAvailable(mon))
         {
+            LogForm.Instance.devDebug(count >= 1 ? $"Count = {count}" : "Forcing to taunt");
             if (count <= 0)
             {
-                prevTarget = Player.GetTargetName();
+                prevTarget = Player.GetTargetName() ?? "*";
                 BotManager.Instance.ActiveBotEngine.paused = true;
 
                 Player.AttackMonster(mon);
@@ -73,7 +74,7 @@ public class TauntCycle : IDisposable
     {
         Stop();
         _cts.Dispose();
-        _cts = new CancellationTokenSource(); // siapkan CTS baru
+        _cts = new CancellationTokenSource();
         _runningTask = null;
     }
 

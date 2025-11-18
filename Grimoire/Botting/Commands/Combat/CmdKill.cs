@@ -143,7 +143,7 @@ namespace Grimoire.Botting.Commands.Combat
 						continue;
 					}
 
-					if (instance.Configuration.WaitForSkill || s.Type == Skill.SkillType.Wait)
+					if (instance.Configuration.WaitForSkill || s.waitCd)
 					{
 						BotManager.Instance.OnSkillIndexChanged(Index);
 						await Task.Delay(Player.SkillAvailable(s.Index));
@@ -170,7 +170,7 @@ namespace Grimoire.Botting.Commands.Combat
 					
 					Skill s = instance.Configuration.Skills[_skillIndex];
                     //LogForm.Instance.AppendDebug($"Trying to execute Skill-{s.Index} at index {_skillIndex}/{Count}");
-                    if (instance.Configuration.WaitForSkill)
+                    if (instance.Configuration.WaitForSkill || s.waitCd)
 					{
 						BotManager.Instance.OnSkillIndexChanged(Index);
 						await Task.Delay(Player.SkillAvailable(s.Index));

@@ -47,7 +47,7 @@ namespace Grimoire.Botting.Commands.Quest
 
         public override string ToString()
         {
-            return $"Accept quest: {Quest.Id}";
+            return (ghostAccept ? $"Ghost Accept: " : $"Accept Quest: ")+Quest.Id;
         }
     }
 }

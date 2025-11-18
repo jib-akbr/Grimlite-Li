@@ -34,8 +34,7 @@ namespace Grimoire.Game.Data
         {
             Normal,
             Safe,
-            Label,
-            Wait
+            Label
         }
 
         public enum SafeType
@@ -48,12 +47,6 @@ namespace Grimoire.Game.Data
         public void ExecuteSkill()
         {
             Skill s = this;
-            bool wait = false;
-            if (s.Type == Skill.SkillType.Wait || s.waitCd)
-            {
-                wait = true;
-            }
-
             if (s.Type == Skill.SkillType.Safe)
             {
                 if (s.IsSafeMp)
@@ -62,15 +55,15 @@ namespace Grimoire.Game.Data
                     {
                         case Skill.SafeType.LowerThan:
                             if ((double)Player.Mana / Player.ManaMax * 100 <= s.SafeValue)
-                                useSkill(s.Index, wait);
+                                useSkill(s.Index);
                             break;
                         case Skill.SafeType.GreaterThan:
                             if ((double)Player.Mana / Player.ManaMax * 100 >= s.SafeValue)
-                                useSkill(s.Index, wait);
+                                useSkill(s.Index);
                             break;
                         case Skill.SafeType.Equals:
                             if ((double)Player.Mana / Player.ManaMax * 100 == s.SafeValue)
-                                useSkill(s.Index, wait);
+                                useSkill(s.Index);
                             break;
                     }
                 }
@@ -80,32 +73,28 @@ namespace Grimoire.Game.Data
                     {
                         case Skill.SafeType.LowerThan:
                             if ((double)Player.Health / Player.HealthMax * 100 <= s.SafeValue)
-                                useSkill(s.Index, wait);
+                                useSkill(s.Index);
                             break;
                         case Skill.SafeType.GreaterThan:
                             if ((double)Player.Health / Player.HealthMax * 100 >= s.SafeValue)
-                                useSkill(s.Index, wait);
+                                useSkill(s.Index);
                             break;
                         case Skill.SafeType.Equals:
                             if ((double)Player.Health / Player.HealthMax * 100 == s.SafeValue)
-                                useSkill(s.Index, wait);
+                                useSkill(s.Index);
                             break;
                     }
                 }
             }
             else
             {
-                useSkill(s.Index, wait);
+                useSkill(s.Index);
                 //Player.UseSkill(s.Index);
             }
         }
 
-        private void useSkill(string Index, bool wait = false)
+        private void useSkill(string Index)
         {
-            if (wait)
-            {
-                Task.Delay(Player.SkillAvailable(Index));
-            }
             if (Player.EquippedClass.IndexOf("Chrono Shadow", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 Player.ForceUseSkill(Index);
@@ -126,7 +115,7 @@ namespace Grimoire.Game.Data
             string safeType = IsSafeMp ? "MP" : "HP";
             string safeTypeS = SType == SafeType.GreaterThan ? ">=" : "<=";
 
-            string skillText = "";
+            string skillText;
 
 
             if (Type == SkillType.Safe)
@@ -135,9 +124,7 @@ namespace Grimoire.Game.Data
                 skillText = $"{Text}";
             else //normal
                 skillText = $"{Index}: {skillName}";
-            if (Type == SkillType.Wait)
-                skillText.Insert(0, "[Wait]");
-            return skillText;
+            return waitCd ? $"[Wait] {skillText}":skillText;
         }
     }
 }

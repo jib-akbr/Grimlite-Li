@@ -877,7 +877,8 @@ namespace Grimoire.UI
             {
                 Text = Skill.GetSkillName(index),
                 Index = index,
-                Type = Skill.SkillType.Normal
+                Type = Skill.SkillType.Normal,
+                waitCd = (ModifierKeys & Keys.Alt) == Keys.Alt
             }, (ModifierKeys & Keys.Control) == Keys.Control);
         }
 
@@ -1213,16 +1214,16 @@ namespace Grimoire.UI
 
         private void btnQuestComplete_Click(object sender, EventArgs e)
         {
-            Quest q = new Quest();
-            CmdCompleteQuest cmd = new CmdCompleteQuest
-            {
-                CompleteTry = (int)numEnsureTries.Value,
-            };
-            q.Id = (int)numQuestID.Value;
+            bool altpressed = (ModifierKeys & Keys.Alt) == Keys.Alt;
+            Quest _quest = new Quest();
+            _quest.Id = (int)numQuestID.Value;
             if (chkQuestItem.Checked)
-                q.ItemId = numQuestItem.Value.ToString();
-            cmd.Quest = q;
-            this.AddCommand(cmd, (Control.ModifierKeys & Keys.Control) == Keys.Control);
+                _quest.ItemId = numQuestItem.Value.ToString();
+            AddCommand(new CmdCompleteQuest
+            {
+                CompleteTry = altpressed ? -1 : (int)numEnsureTries.Value,
+                Quest = _quest
+            }, (Control.ModifierKeys & Keys.Control) == Keys.Control);
         }
 
         private void btnQuestAccept_Click(object sender, EventArgs e)
@@ -1231,9 +1232,11 @@ namespace Grimoire.UI
             {
                 Id = (int)numQuestID.Value
             };
+            bool altpressed = (ModifierKeys & Keys.Alt) == Keys.Alt;
             AddCommand(new CmdAcceptQuest
             {
-                Quest = quest
+                Quest = quest,
+                ghostAccept = altpressed
             }, (ModifierKeys & Keys.Control) == Keys.Control);
         }
 
@@ -2296,11 +2299,11 @@ namespace Grimoire.UI
                 Index = index,
                 Type = Skill.SkillType.Normal,
             };
-
+            bool altpressed = (ModifierKeys & Keys.Alt) == Keys.Alt;
             AddCommand(new CmdUseSkill
             {
                 Index = skill.Index,
-                Wait = cbSkillCmdWait.Checked,
+                Wait = cbSkillCmdWait.Checked || altpressed,
                 Force = chkForceSkill.Checked,
                 Monster = target
             }, (ModifierKeys & Keys.Control) == Keys.Control);
@@ -2894,13 +2897,15 @@ namespace Grimoire.UI
 
         private void btnAllSkill_Click(object sender, EventArgs e)
         {
+
             for (int i = 1; i <= 4; i++)
             {
                 AddSkill(new Skill
                 {
                     Text = Skill.GetSkillName(i.ToString()),
                     Index = i.ToString(),
-                    Type = Skill.SkillType.Normal
+                    Type = Skill.SkillType.Normal,
+                    waitCd = (ModifierKeys & Keys.Alt) == Keys.Alt
                 }, (ModifierKeys & Keys.Control) == Keys.Control);
             }
         }
@@ -3527,9 +3532,9 @@ namespace Grimoire.UI
 
         private void Button_TcStart(object sender, EventArgs e)
         {
-            AddCommand(new CmdTauntcycle 
-            { 
-                type = CmdTauntcycle.option.start
+            AddCommand(new CmdTauntcycle
+            {
+                type = CmdTauntcycle.option.Start
             }, (ModifierKeys & Keys.Control) == Keys.Control);
         }
 
@@ -3537,7 +3542,7 @@ namespace Grimoire.UI
         {
             AddCommand(new CmdTauntcycle
             {
-                type = CmdTauntcycle.option.stop
+                type = CmdTauntcycle.option.Stop
             }, (ModifierKeys & Keys.Control) == Keys.Control);
         }
     }

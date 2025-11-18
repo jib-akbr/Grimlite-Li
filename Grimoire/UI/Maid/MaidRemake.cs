@@ -449,7 +449,7 @@ namespace Grimoire.UI.Maid
             else if (Player.EquippedClass == "ARCANA INVOKER")
             {
                 if (Player.GetAuras(true, "XX - Judgement") == 1 ||
-                    Player.GetAuras(true, "End of the world") >= 13 ||
+                    Player.GetAuras(true, "End of the world") >= 20 ||
                     Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)
                 {
                     await waitSkill("1");
@@ -543,7 +543,7 @@ namespace Grimoire.UI.Maid
             {
                 count %= cycle;
             }
-            debug($"Executing tauntcycle with Cycle = {cycle}, Every {second}s, initial taunt at {second / (count + 1)}s");
+            debug($"Executing tauntcycle with Cycle = {cycle}, Every {second}s, initial taunt at {second / cycle * count}s");
             while (World.IsMonsterAvailable(mon) && !cts.IsCancellationRequested)
             {
                 if (count <= 0)
@@ -868,7 +868,8 @@ namespace Grimoire.UI.Maid
 
         private void hotkey(object sender, KeyEventArgs e)
         {
-            if (cmbGotoUsername.Focused || tbAttPriority.Focused || tbSpecialMsg.Focused)
+            //if (cmbGotoUsername.Focused || tbAttPriority.Focused || tbSpecialMsg.Focused)
+            if (IsFocusedOnBox)
                 return;
 
             switch (e.KeyCode)
@@ -888,7 +889,8 @@ namespace Grimoire.UI.Maid
 
         private void globalHotkey(object sender, Keys e)
         {
-            if (cmbGotoUsername.Focused || tbAttPriority.Focused || tbSpecialMsg.Focused)
+            //if (cmbGotoUsername.Focused || tbAttPriority.Focused || tbSpecialMsg.Focused)
+            if (IsFocusedOnBox)
                 return;
 
             switch (e)
@@ -903,8 +905,8 @@ namespace Grimoire.UI.Maid
                     break;
             }
         }
-
         /* Other Control */
+        public bool IsFocusedOnBox => this.ActiveControl is TextBox || this.ActiveControl is ComboBox;
 
         public void pauseFollow()
         {
@@ -926,7 +928,7 @@ namespace Grimoire.UI.Maid
 
         private void cbLockCell_CheckedChanged(object sender, EventArgs e)
         {
-            if (!cbEnablePlugin.Checked) 
+            if (!cbEnablePlugin.Checked)
                 return;
             if (cbUnfollow.Checked)
             {

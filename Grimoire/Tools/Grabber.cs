@@ -468,10 +468,9 @@ namespace Grimoire.Tools
                 };
                 toolStripMenuItem5.Click += delegate (object S, EventArgs E)
                 {
-                    string longString;
-                    string name = $"\"ItemName\" : \"{string.Join(",", Items.Select(i => i.Name))}";
-                    string qty = $"\"Quantity\" : \"{string.Join(",", Items.Select(i => i.Quantity))}";
-                    longString = $"{name}\"\n{qty}\"";
+                    string longString = 
+                    $"\"ItemName\" : \"{string.Join(",", Items.Select(i => i.Name))}\",\n"+
+                    $"\"Quantity\" : \"{string.Join(",", Items.Select(i => i.Quantity))}\"";
                     Clipboard.SetText(longString);
                 };
                 contextMenuStrip.Items.Add(toolStripMenuItem5);

@@ -84,7 +84,7 @@ namespace Grimoire.Game.Data
                 qty += item.Quantity; // 0 = sell whole stack, -1 = Leave 1 stack
             if (qty > 0)
             {
-                Proxy.Instance.SendToServer($"%xt%zm%sellItem%{World.RoomId}%{item.Id}%{qty}%");
+                _ = Proxy.Instance.SendToServer($"%xt%zm%sellItem%{World.RoomId}%{item.Id}%{qty}%");
             }
         }
 

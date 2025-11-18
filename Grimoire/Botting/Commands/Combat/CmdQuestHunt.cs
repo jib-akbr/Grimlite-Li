@@ -9,6 +9,7 @@ using System.Web.UI;
 using System;
 using System.Linq;
 using Grimoire.Networking;
+using System.Text.RegularExpressions;
 
 namespace Grimoire.Botting.Commands.Combat
 {
@@ -154,9 +155,9 @@ namespace Grimoire.Botting.Commands.Combat
         {
             List<Monster> monMap = World.GetAllMonsters();
 
+            //1. Collect all monster, then ordered by most amount within a cell
             if (monsterName == "*")
             {
-                //Collect all monster, then filtered most within a cell
                 return monMap
                     .Where(m => !string.IsNullOrEmpty(m.cell))
                     .GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
@@ -164,10 +165,24 @@ namespace Grimoire.Botting.Commands.Combat
                     .Select(g => g.Key)
                     .ToList();
             }
+            // Logical OR filtering
+            Func<Monster, bool> finalPredicate = m => false;
 
-            //Collect all monster with that has the name
+            // Filtering with MonId
+            Match match = Regex.Match(monsterName, @"^id['.:-](?<Id>\d+)$", RegexOptions.IgnoreCase);
+            if (match.Success && int.TryParse(match.Groups["Id"].Value, out int targetId))
+            {
+                //filter with ID when matched with "id." format
+                finalPredicate = m => m.MonMapID == targetId;
+            }
+            else //otherwise filter with name contains 
+            {
+                finalPredicate = m => m.Name.IndexOf(monsterName, StringComparison.OrdinalIgnoreCase) >= 0;
+            }
+
+            //2. Collect monsters that contains its name
             List<string> targetCells = monMap
-                .Where(m => m.Name.IndexOf(monsterName, StringComparison.OrdinalIgnoreCase) >= 0) //&& m.IsAlive)
+                .Where(finalPredicate) //&& m.IsAlive)
                 .GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
                 .OrderByDescending(g => g.Count()) // cell with most monster 
                 .Select(g => g.Key)
@@ -204,7 +219,6 @@ namespace Grimoire.Botting.Commands.Combat
             string[] items = ItemName.Split(',');
             string[] quantities = Quantity.Split(',');
             string[] monsters = Monster.Split(',');
-            //string parts = "";
             List<string> _parts = new List<string>();
             if (QID != 0)
             {

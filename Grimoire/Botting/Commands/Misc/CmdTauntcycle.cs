@@ -7,25 +7,28 @@ namespace Grimoire.Botting.Commands.Misc
     {
         public enum option
         {
-            start,
-            stop
+            Start,
+            Stop
         }
         public option type { get; set; }
 
         public int cycle { get; set; } = 2;
         public string target { get; set; } = "*";
         public int second { get; set; } = 14;
-        //public int order { get; set; } = World.PlayersInMap?.IndexOf(Player.Username.ToLower())+1 ?? 1;
+        public int order { get; set; } = -1;
 
         public Task Execute(IBotEngine instance)
         {
-            int order = World.PlayersInMap?.IndexOf(Player.Username.ToLower()) + 1 ?? 1;
+            int _order = 0;
+            if (order <= 0)
+                _order = World.PlayersInMap?.IndexOf(Player.Username.ToLower()) + 1 ?? 1;
+
             switch (type)
             {
-                case option.start:
-                    TauntCycle.Instance.StartTaunt(cycle, target, second, order - 1);
+                case option.Start:
+                    TauntCycle.Instance.StartTaunt(cycle, target, second, _order - 1);
                     break;
-                case option.stop:
+                case option.Stop:
                     TauntCycle.Instance.Dispose();
                     break;
             }
@@ -34,8 +37,8 @@ namespace Grimoire.Botting.Commands.Misc
 
         public override string ToString()
         {
-            //string desc = type == option.start ? $"{type} Tauntcycle : {cycle}T [{target}] {second}" : "Stop Tauntcycle";
-            return type == option.start ? $"{type} Tauntcycle : {cycle}T [{target}] {second}" : $"{type} Tauntcycle";
+            string desc = order <= 0 ? "Dynamic" : order.ToString();
+            return type == option.Start ? $"{type} Tauntcycle : {cycle}T [{target}] every {second}s {desc}" : $"{type} Tauntcycle";
         }
     }
 }

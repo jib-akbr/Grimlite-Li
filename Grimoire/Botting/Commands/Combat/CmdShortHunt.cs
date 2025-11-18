@@ -77,7 +77,9 @@ namespace Grimoire.Botting.Commands.Combat
 
                     if (World.IsMonsterAvailable(Monster))
                     {
-                        await instance.WaitUntil(() => World.IsMonsterAvailable(Monster), interval: 200);
+                        // while monster is Alive within ur cell
+                        // checks every 100ms up to 15 times then back to top loop
+                        await instance.WaitUntil(() => !World.IsMonsterAvailable(Monster), interval: 100);
                         continue;
                     }
 
@@ -87,6 +89,8 @@ namespace Grimoire.Botting.Commands.Combat
                         LogForm.Instance.devDebug($"Cell : {_Cells[i]} [{i + 1}/{_Cells.Length}]");
                     }
 
+                    // This loop is needed to wait init monster loaded from clientside
+                    // Otherwise it will keep jumping nonstop
                     await instance.WaitUntil(() => World.IsMonsterAvailable(Monster), interval: 50);
                     if (++i >= _Cells.Length)
                         i = 0;

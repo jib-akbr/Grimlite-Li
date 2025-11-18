@@ -501,7 +501,6 @@
             // cbPartyCmd
             // 
             this.cbPartyCmd.AutoSize = true;
-            this.cbPartyCmd.Checked = true;
             this.cbPartyCmd.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbPartyCmd.Location = new System.Drawing.Point(83, 21);
             this.cbPartyCmd.Name = "cbPartyCmd";
@@ -509,6 +508,8 @@
             this.cbPartyCmd.TabIndex = 29;
             this.cbPartyCmd.Text = "PartyCmd";
             this.cbPartyCmd.CheckedChanged += new System.EventHandler(this.cbPartyCmd_CheckedChanged);
+            //reordered to auto enable the handler by default
+            this.cbPartyCmd.Checked = true;
             // 
             // timerStopAttack
             // 

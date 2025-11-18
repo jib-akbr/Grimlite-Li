@@ -1491,6 +1491,8 @@ namespace Grimoire.UI
                     await SpecialClassCombo();
                     if (listSkill.Count > 0)
                     {
+						if (listSkill[i].waitCd)
+							await Task.Delay(Player.SkillAvailable(listSkill[i].Index));
                         if (listSkill[i].Type != Skill.SkillType.Label && Player.HasTarget)
                             listSkill[i].ExecuteSkill();
                     }
