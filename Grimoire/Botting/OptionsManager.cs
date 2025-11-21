@@ -185,11 +185,11 @@ namespace Grimoire.Botting
             IsRunning = true;
             while (IsRunning && Player.IsLoggedIn)
             {
-                if (!Player.IsLoggedIn)
+                /*if (!Player.IsLoggedIn)
                 {
                     return;
-                }
-                bool flagprovoke = ProvokeMonsters && Player.IsAlive && BotData.BotState != BotData.State.Move && BotData.BotState != BotData.State.Rest && BotData.BotState != BotData.State.Transaction;
+                }*/ //Commented due to redundant
+                                bool flagprovoke = ProvokeMonsters && Player.IsAlive && BotData.BotState != BotData.State.Move && BotData.BotState != BotData.State.Rest && BotData.BotState != BotData.State.Transaction;
                 if (flagprovoke)
 					SetProvokeMonsters();
 				if (EnemyMagnet && Player.IsAlive)
@@ -201,6 +201,7 @@ namespace Grimoire.Botting
                 SetLagKiller();
                 await Task.Delay(millisecondsDelay: Timer);
             }
+            //IsRunning = false; //To ensure it can be started again after disconnected
         }
         
         private static IJsonMessageHandler HandlerDisableAnimations

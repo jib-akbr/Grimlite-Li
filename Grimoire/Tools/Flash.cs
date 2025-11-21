@@ -506,7 +506,8 @@ namespace Grimoire.Tools
                     {
                         Task.Run(async () =>
                         {
-                            await Task.Delay(1500);
+                            OptionsManager.Stop();
+                            await Task.Delay(5000);
                             OptionsManager.Start();
                         }
                         );
