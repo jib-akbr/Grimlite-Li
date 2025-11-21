@@ -46,7 +46,7 @@ public class TauntCycle : IDisposable
             LogForm.Instance.devDebug(count >= 1 ? $"Count = {count}" : "Forcing to taunt");
             if (count <= 0)
             {
-                prevTarget = Player.GetTargetName() ?? "*";
+                prevTarget = Player.GetTargetName ?? "*";
                 BotManager.Instance.ActiveBotEngine.paused = true;
 
                 Player.AttackMonster(mon);

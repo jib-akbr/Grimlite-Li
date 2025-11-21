@@ -343,7 +343,7 @@ namespace Grimoire.Game
         /// Gets Monstername.
         /// Returned as null if targeted into player/no target
         /// </summary>
-        public static string GetTargetName() => Flash.GetGameObject("world.myAvatar.target.objData.strMonName");
+        public static string GetTargetName => Flash.GetGameObject("world.myAvatar.target.objData.strMonName");
         public static string GetAccessLevel(string username) => Flash.Call<string>("GetAccessLevel", username);
 
         /// <summary>

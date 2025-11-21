@@ -123,7 +123,7 @@ namespace Grimoire.Botting
         public static bool InfiniteRange
         {
             get => _infRange;
-            set 
+            set
             {
                 _infRange = value;
                 if (_infRange)
@@ -189,10 +189,10 @@ namespace Grimoire.Botting
                 {
                     return;
                 }*/ //Commented due to redundant
-                                bool flagprovoke = ProvokeMonsters && Player.IsAlive && BotData.BotState != BotData.State.Move && BotData.BotState != BotData.State.Rest && BotData.BotState != BotData.State.Transaction;
+                bool flagprovoke = ProvokeMonsters && Player.IsAlive && BotData.BotState != BotData.State.Move && BotData.BotState != BotData.State.Rest && BotData.BotState != BotData.State.Transaction;
                 if (flagprovoke)
-					SetProvokeMonsters();
-				if (EnemyMagnet && Player.IsAlive)
+                    SetProvokeMonsters();
+                if (EnemyMagnet && Player.IsAlive)
                     SetEnemyMagnet();
                 if (SkipCutscenes)
                     SetSkipCutscenes();
@@ -203,7 +203,7 @@ namespace Grimoire.Botting
             }
             //IsRunning = false; //To ensure it can be started again after disconnected
         }
-        
+
         private static IJsonMessageHandler HandlerDisableAnimations
         {
             get;
@@ -214,8 +214,8 @@ namespace Grimoire.Botting
             get;
         } = new HandlerPlayers();
 
-        public static IJsonMessageHandler HandlerRange 
-        { 
+        public static IJsonMessageHandler HandlerRange
+        {
             get;
         } = new HandlerSkills();
 

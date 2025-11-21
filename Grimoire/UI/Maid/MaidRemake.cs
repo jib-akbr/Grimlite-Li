@@ -319,6 +319,8 @@ namespace Grimoire.UI.Maid
         {
             await Task.Delay(Player.SkillAvailable(index));
             useSkill(index, true);
+            await Task.Delay(500); //Ensure its going to cooldown
+			useSkill(index, true);
         }
         private void useSkill(string skillIndex, bool force = false)
         {
@@ -352,13 +354,13 @@ namespace Grimoire.UI.Maid
                     int order = -1;
 
                     if (parts.Length > 1 && !int.TryParse(parts[1], out cycle))
-                        throw new Exception("Cycle harus berupa angka!");
+                        throw new Exception("Cycle isn't a valid number!");
 
                     if (parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2]))
                         mon = parts[2];
 
                     if (parts.Length > 3 && !int.TryParse(parts[3], out second))
-                        throw new Exception("Second harus berupa angka!");
+                        throw new Exception("Seconds isn't a valid number!");
                     if (parts.Length > 4 && !int.TryParse(parts[4], out order))
                         order -= 1;
 
@@ -384,7 +386,7 @@ namespace Grimoire.UI.Maid
                     stopMaid();
                     Task.Delay(200);
                     Player.MoveToCell(Player.Cell, Player.Pad);
-                    tbSpecialMsg.Text = $"tc;2;*;14;<order 1-4>(optional)";
+                    tbSpecialMsg.Text = $"tc;2;*;12;<order 1-4>(optional)";
                 }
             }
         }
@@ -398,8 +400,10 @@ namespace Grimoire.UI.Maid
         string[] potionNames = { "Felicitous Philtre", "Potent Malice", "Potent Honor" };
         private async Task SpecialCombo()
         {
-            var potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i)
-                => i.IsEquipped && i.Quantity >= 1 && potionNames.Contains(i.Name));
+            var potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => 
+                i.IsEquipped && 
+                i.Quantity >= 1 && 
+                potionNames.Any(p => i.Name.IndexOf(p, StringComparison.OrdinalIgnoreCase) >= 0));
             if (potion != null)
             {
                 if (potion.Name.Contains("Potent") && Player.GetAuras(true, "Potent Honor Malice") == 0)
@@ -470,7 +474,7 @@ namespace Grimoire.UI.Maid
             if (Player.Map == "ultragramiel")
             {
                 // string target = Player.GetTargetName().ToLower();
-                if (Player.GetTargetName()?.IndexOf("grace crystal", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                if (Player.GetTargetName?.IndexOf("grace crystal", StringComparison.OrdinalIgnoreCase) >= 0 ||
                     World.IsMonsterAvailable("grace crystal"))
                 {
                     CheckCrystalHealthBalance();
@@ -501,7 +505,9 @@ namespace Grimoire.UI.Maid
                 return;
             }
 
+            //Gramiel crystal HP threshold
             const int threshold = 100;
+            //Get Current target MonId
             int.TryParse(Flash.GetGameObject("world.myAvatar.target.objData.MonMapID").Replace("\"", ""), out int currentId);
 
             if (currentId == 2 && L_crystal.Health <= threshold && R_crystal.Health > threshold)
@@ -715,7 +721,7 @@ namespace Grimoire.UI.Maid
             if (balance)
                 return;
 
-            string currentTarget = Player.GetTargetName();
+            string currentTarget = Player.GetTargetName;
             for (int i = 0; i < monsterList.Length; i++)
             {
                 //if (monsterList[i].Equals(Player.GetTargetName(), StringComparison.OrdinalIgnoreCase))

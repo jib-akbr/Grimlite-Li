@@ -509,7 +509,7 @@
             this.cbPartyCmd.Text = "PartyCmd";
             this.cbPartyCmd.CheckedChanged += new System.EventHandler(this.cbPartyCmd_CheckedChanged);
             //reordered to auto enable the handler by default
-            this.cbPartyCmd.Checked = true;
+            this.cbPartyCmd.Checked = false;
             // 
             // timerStopAttack
             // 
