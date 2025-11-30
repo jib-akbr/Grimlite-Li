@@ -33,11 +33,21 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                     break;
             }
             string RealString = Value2;
-            if (RealString.StartsWith("["))
+            if (RealString.Contains("["))
             {
                 RealVar = instance.ResolveVars(Value2);
                 RealString = RealVar;
             }
+            /*else if (RealString.Contains(".qty"))
+            {
+                RealString = RealString.Replace(".qty", "");
+                var tempitem = Player.TempInventory.Items.FirstOrDefault(i => i.Name.IndexOf(RealString, System.StringComparison.OrdinalIgnoreCase) >= 0);
+                if (tempitem != null)
+                    RealVar = tempitem.Quantity.ToString();
+                var invitem = Player.Inventory.Items.FirstOrDefault(i => i.Name.IndexOf(RealString,System.StringComparison.OrdinalIgnoreCase) >=0 );
+                if (invitem != null)
+                    RealVar = tempitem.Quantity.ToString();
+            }*/ //experimental changes for  getting certain item's qty according to its name
             if (!Configuration.Tempvariable.ContainsKey(Value1))
                 Configuration.Tempvariable.Add(Value1, RealString);
             else
