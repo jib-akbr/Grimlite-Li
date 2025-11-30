@@ -77,8 +77,13 @@ namespace Grimoire.UI.Maid
             cmbUltraBoss.SelectedIndex = 0;
             this.Text = $"Maid Remake";
 
-            Flash.FlashCall2 += AntiCounterHandler;
-
+            if (cbAntiCounter.Checked)
+                Flash.FlashCall2 += AntiCounterHandler;
+            if (cbPartyCmd.Checked)
+            {
+                Proxy.Instance.RegisterHandler(PartyInvitationHandler);
+                Proxy.Instance.RegisterHandler(PartyChatHandler);
+            }
             ToolTip toolTip = new ToolTip();
             toolTip.SetToolTip(this.cbPartyCmd,
                 "[Auto accept any party invitation when checked]" +
@@ -299,6 +304,7 @@ namespace Grimoire.UI.Maid
                             while (cbEnablePlugin.Checked && Player.IsLoggedIn && isPlayerInMyRoom && !isPlayerInMyCell)
                             {
                                 Player.GoToPlayer(targetUsername);
+                                debug("Attempt to chase");
                                 if (cbEnablePlugin.Checked && Player.IsLoggedIn && isPlayerInMyRoom && !isPlayerInMyCell)
                                     await Task.Delay(1000);
                                 else break;
@@ -317,10 +323,14 @@ namespace Grimoire.UI.Maid
         }
         private async Task waitSkill(string index)
         {
-            await Task.Delay(Player.SkillAvailable(index));
+            int cd = Player.SkillAvailable(index);
+            await Task.Delay(Math.Min(cd, 1500));
             useSkill(index, true);
-            await Task.Delay(500); //Ensure its going to cooldown
-			useSkill(index, true);
+            for (int i = 0; i < 10 && Player.SkillAvailable(index) == 0; i++)
+            {
+                await Task.Delay(100); //Ensure its going to cooldown
+            }
+            useSkill(index, true);
         }
         private void useSkill(string skillIndex, bool force = false)
         {
@@ -400,23 +410,21 @@ namespace Grimoire.UI.Maid
         string[] potionNames = { "Felicitous Philtre", "Potent Malice", "Potent Honor" };
         private async Task SpecialCombo()
         {
-            var potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => 
-                i.IsEquipped && 
-                i.Quantity >= 1 && 
-                potionNames.Any(p => i.Name.IndexOf(p, StringComparison.OrdinalIgnoreCase) >= 0));
+            var potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i) =>
+                i.IsEquipped &&
+                i.Quantity >= 1 &&
+                potionNames.Any(pots => i.Name.IndexOf(pots, StringComparison.OrdinalIgnoreCase) >= 0));
             if (potion != null)
             {
                 if (potion.Name.Contains("Potent") && Player.GetAuras(true, "Potent Honor Malice") == 0)
                 {
                     await waitSkill("5");
-                    return;
                 }
-                if (potion.Name.Contains("Felicitous") && Player.GetAuras(true, "Felicitous Philtre") == 0)
+                else if (potion.Name.Contains("Felicitous") && Player.GetAuras(true, "Felicitous Philtre") == 0)
                 {
                     await waitSkill("5");
                     //await Task.Delay(Player.SkillAvailable("5"));
                     //useSkill("5");
-                    return;
                 }
             }
 
@@ -452,9 +460,10 @@ namespace Grimoire.UI.Maid
             }
             else if (Player.EquippedClass == "ARCANA INVOKER")
             {
-                if (Player.GetAuras(true, "XX - Judgement") == 1 ||
-                    Player.GetAuras(true, "End of the world") >= 20 ||
-                    Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)
+                if ((Player.GetAuras(true, "0 - The Fool") == 0 &&
+                    Player.GetAuras(true, "XXI - The World") == 0) || 
+					Player.GetAuras(true, "XX - Judgement") == 1 ||
+                    Player.GetAuras(true, "End of the world") >= 20 )
                 {
                     await waitSkill("1");
                     await Task.Delay(200);
@@ -678,7 +687,10 @@ namespace Grimoire.UI.Maid
                         JArray a = (JArray)jsonMessage.DataObject?["a"];
                         if (a != null)
                         {
-                            cbStopAttack.Checked = Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack;
+                            if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
+								cbStopAttack.Checked = true; //changed to avoid force uncheck 
+                            else if (Player.Map == "ascendedeclipse")
+                                cbStopAttack.Checked = false;
                             foreach (JObject aura in a)
                             {
                                 JObject aura2 = (JObject)aura["aura"];
@@ -950,7 +962,7 @@ namespace Grimoire.UI.Maid
 
         private void cbStopAttack_CheckedChanged(object sender, EventArgs e)
         {
-            if (cbEnableGlobalHotkey.Checked == false) return;
+            // if (cbEnableGlobalHotkey.Checked == false) return;
             if (cbStopAttack.Checked)
             {
                 lbStopAttackBg.BackColor = System.Drawing.Color.DeepPink;
@@ -1228,10 +1240,15 @@ namespace Grimoire.UI.Maid
                 AntiCounter = cbAntiCounter.Checked,
                 UltraBossExtra = cmbUltraBoss.SelectedIndex,
             };
+
+            string configFolder = Path.Combine(Application.StartupPath, "Config");
+            if (!Directory.Exists(configFolder))
+                Directory.CreateDirectory(configFolder);
+
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
                 saveFileDialog.Title = "Save config";
-                saveFileDialog.InitialDirectory = Path.Combine(Application.StartupPath, "Config");
+                saveFileDialog.InitialDirectory = configFolder;
                 saveFileDialog.Filter = "Maid config|*.json";
                 saveFileDialog.DefaultExt = ".json";
                 saveFileDialog.CheckFileExists = false;
@@ -1253,10 +1270,14 @@ namespace Grimoire.UI.Maid
 
         private void btnLoad_Click(object sender, EventArgs e)
         {
+            string configFolder = Path.Combine(Application.StartupPath, "Config");
+            if (!Directory.Exists(configFolder))
+                Directory.CreateDirectory(configFolder);
+
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.Title = "Load config";
-                openFileDialog.InitialDirectory = Path.Combine(Application.StartupPath, "Config");
+                openFileDialog.InitialDirectory = configFolder;
                 openFileDialog.Filter = "Maid config|*.json";
                 openFileDialog.DefaultExt = ".json";
                 if (openFileDialog.ShowDialog() == DialogResult.OK &&
@@ -1288,6 +1309,9 @@ namespace Grimoire.UI.Maid
                     cbAntiCounter.Checked = config.AntiCounter;
                 }
             }
+            if (cbEnableGlobalHotkey.Checked)
+                this.KeyDown -= hotkey; //Global hotkey will disable instance hotkey
+            
         }
 
         private bool TryDeserialize(string json, out MaidConfig config)
