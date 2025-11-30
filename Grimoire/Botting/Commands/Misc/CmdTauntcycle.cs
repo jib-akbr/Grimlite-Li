@@ -19,7 +19,7 @@ namespace Grimoire.Botting.Commands.Misc
 
         public Task Execute(IBotEngine instance)
         {
-            int _order = 0;
+            int _order = order;
             if (order <= 0)
                 _order = World.PlayersInMap?.IndexOf(Player.Username.ToLower()) + 1 ?? 1;
 
