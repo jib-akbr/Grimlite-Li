@@ -303,6 +303,7 @@ namespace Grimoire.UI
                 DisableAnimations = chkDisableAnims.Checked,
                 FollowCheck = chkFollowOnly.Checked,
                 FollowName = tbFollowPlayer2.Text,
+                keepLagKiller = false,
                 AutoZone = cmbSpecials.SelectedItem != null ? cmbSpecials.SelectedItem.ToString() : string.Empty,
             };
         }
@@ -970,13 +971,21 @@ namespace Grimoire.UI
         {
             string cell = string.IsNullOrEmpty(txtCell.Text) ? "Enter" : txtCell.Text;
             string pad = string.IsNullOrEmpty(txtPad.Text) ? "Spawn" : txtPad.Text;
-            AddCommand(new CmdMoveToCell
-            {
-                Cell = cell,
-                Pad = pad
-            }, (ModifierKeys & Keys.Control) == Keys.Control);
+            if (altpressed)
+                AddCommand(new CmdMoveToCell2
+                {
+                    Cell = cell,
+                    Pad = pad
+                }, ctrlpressed);
+            else
+                AddCommand(new CmdMoveToCell
+                {
+                    Cell = cell,
+                    Pad = pad
+                }, ctrlpressed);
         }
-
+        private bool altpressed => (ModifierKeys & Keys.Alt) == Keys.Alt;
+        private bool ctrlpressed => (ModifierKeys & Keys.Control) == Keys.Control;
         private void btnWalk_Click(object sender, EventArgs e)
         {
             string x = numWalkX.Value.ToString();
@@ -1214,7 +1223,6 @@ namespace Grimoire.UI
 
         private void btnQuestComplete_Click(object sender, EventArgs e)
         {
-            bool altpressed = (ModifierKeys & Keys.Alt) == Keys.Alt;
             Quest _quest = new Quest();
             _quest.Id = (int)numQuestID.Value;
             if (chkQuestItem.Checked)
@@ -1232,7 +1240,6 @@ namespace Grimoire.UI
             {
                 Id = (int)numQuestID.Value
             };
-            bool altpressed = (ModifierKeys & Keys.Alt) == Keys.Alt;
             AddCommand(new CmdAcceptQuest
             {
                 Quest = quest,
@@ -1935,8 +1942,8 @@ namespace Grimoire.UI
 
             chkEnable.Enabled = false;
             Root.Instance.chkStartBot.Enabled = false;
-
-            if (chkEnable.Checked)
+			try {
+			if (chkEnable.Checked)
             {
                 if (cmbSpecials.SelectedIndex != -1 && !chkSpecial.Checked)
                 {
@@ -1955,6 +1962,7 @@ namespace Grimoire.UI
                 BotStateChanged(IsRunning: true);
                 Root.Instance.BotStateChanged(IsRunning: true);
                 Root.Instance.chkStartBot.Checked = true;
+                //Configuration.Instance.keepLagKiller = false;
                 if (chkAntiMod.Checked)
                 {
                     chkHidePlayers.Enabled = false;
@@ -1972,7 +1980,7 @@ namespace Grimoire.UI
             }
             else
             {
-                ActiveBotEngine.Stop();
+				ActiveBotEngine.Stop();
                 selectionMode(SelectionMode.MultiExtended);
                 BotStateChanged(IsRunning: false);
                 Root.Instance.BotStateChanged(IsRunning: false);
@@ -2005,6 +2013,11 @@ namespace Grimoire.UI
                     chkSpecial.Enabled = true;
                 }
             }
+			}
+			catch (Exception ex) {
+                MessageBox.Show("Failed to start bot : " + ex.Message, "Grimoire", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+				
+			}
             toggleAntiMod(chkAntiMod.Checked && chkEnable.Checked);
 
             chkEnable.Enabled = true;
@@ -2299,7 +2312,6 @@ namespace Grimoire.UI
                 Index = index,
                 Type = Skill.SkillType.Normal,
             };
-            bool altpressed = (ModifierKeys & Keys.Alt) == Keys.Alt;
             AddCommand(new CmdUseSkill
             {
                 Index = skill.Index,

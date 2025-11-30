@@ -184,6 +184,12 @@ namespace Grimoire.Botting
             set;
         }
 
+        public bool keepLagKiller
+        {
+            get;
+            set;
+        }
+
         public bool DisableAnimations
         {
             get;

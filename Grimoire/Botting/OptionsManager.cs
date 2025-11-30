@@ -159,7 +159,7 @@ namespace Grimoire.Botting
 
         private static void SetEnemyMagnet() => Flash.Call("SetEnemyMagnet", empty);
 
-        public static void SetLagKiller() => Flash.Call("SetLagKiller", LagKiller ? bool.TrueString : bool.FalseString);
+        public static void SetLagKiller(bool lagkiller) => Flash.Call("SetLagKiller", lagkiller ? bool.TrueString : bool.FalseString);
 
         public static void DestroyPlayers() => Flash.Call("DestroyPlayers", empty);
 
@@ -178,6 +178,7 @@ namespace Grimoire.Botting
         public static void Stop()
         {
             IsRunning = false;
+			//SetLagKiller(false);
         }
 
         private static async Task ApplySettings()
@@ -198,7 +199,7 @@ namespace Grimoire.Botting
                     SetSkipCutscenes();
                 if (HidePlayers)
                     DestroyPlayers();
-                SetLagKiller();
+                SetLagKiller(LagKiller);
                 await Task.Delay(millisecondsDelay: Timer);
             }
             //IsRunning = false; //To ensure it can be started again after disconnected

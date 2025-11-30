@@ -1163,7 +1163,7 @@ namespace Grimoire.UI
         {
             bool check = lagKillerToolStripMenuItem.Checked;
             OptionsManager.LagKiller = check;
-            OptionsManager.SetLagKiller();
+            OptionsManager.SetLagKiller(check);
             botManager.chkLag.Checked = check;
         }
 
@@ -1503,7 +1503,7 @@ namespace Grimoire.UI
                 }
                 else
                 {
-                    await Task.Delay(8000);
+                    await Task.Delay(5000);
                     BotData.BotState = BotData.State.Combat;
                 }
             }
@@ -1525,7 +1525,7 @@ namespace Grimoire.UI
             else if (playerClass.Equals("arcana invoker"))
             {
                 if (Player.GetAuras(true, "XX - Judgement") == 1 ||
-                    Player.GetAuras(true, "End of the world") >= 13 ||
+                    Player.GetAuras(true, "End of the world") >= 18 ||
                     Player.GetAuras(true, "XXI - The World") == 0 && 
                     Player.GetAuras(true, "0 - The Fool") == 0 ||
                     Player.AuraDuration(true, "0 - The Fool",75))

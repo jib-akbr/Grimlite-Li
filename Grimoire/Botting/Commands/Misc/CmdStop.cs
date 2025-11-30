@@ -1,6 +1,4 @@
 using System.Threading.Tasks;
-using Grimoire.Botting;
-using Grimoire;
 using Grimoire.Game;
 using Grimoire.UI;
 using Grimoire.Game.Data;
@@ -8,6 +6,7 @@ namespace Grimoire.Botting.Commands.Misc
 {
     public class CmdStop : IBotCommand
     {
+        public bool KeepLagkiller { get; set; } = false;
         public Task Execute(IBotEngine instance)
         {
             if (Configuration.Instance.BankOnStop)
@@ -23,6 +22,8 @@ namespace Grimoire.Botting.Commands.Misc
                 }
                 LogForm.Instance.AppendDebug("Banked all AC Items in Items list");
             }
+            Configuration.Instance.keepLagKiller = KeepLagkiller;
+            //LogForm.Instance.AppendDebug($"Keep lag killer : {KeepLagkiller}");
             Task.Delay(2000);
             instance.Stop();
             return Task.FromResult<object>(null);
