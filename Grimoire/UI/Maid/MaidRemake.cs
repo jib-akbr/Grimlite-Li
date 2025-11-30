@@ -1309,9 +1309,7 @@ namespace Grimoire.UI.Maid
                     cbAntiCounter.Checked = config.AntiCounter;
                 }
             }
-            if (cbEnableGlobalHotkey.Checked)
-                this.KeyDown -= hotkey; //Global hotkey will disable instance hotkey
-            
+            //cbEnableGlobalHotkey_CheckedChanged(cbEnableGlobalHotkey, EventArgs.Empty);
         }
 
         private bool TryDeserialize(string json, out MaidConfig config)
