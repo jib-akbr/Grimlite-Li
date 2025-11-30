@@ -27,6 +27,7 @@ namespace Grimoire.Botting.Commands.Combat
             string _Qty = instance.ResolveVars(Quantity);
             string _Map = instance.ResolveVars(Map.ToLower());
             string[] _Cells = instance.ResolveVars(Cell).Split(',');
+            string[] _pad = instance.ResolveVars(Pad).Split(',');
 
             if (ItemType == ItemType.Items)
                 if (Player.Inventory.ContainsItem(_Items, _Qty)) return;
@@ -37,7 +38,7 @@ namespace Grimoire.Botting.Commands.Combat
             {
                 Map = _Map,
                 Cell = _Cells[0],
-                Pad = Pad
+                Pad = _pad[0]
             };
             while (!Player.Map.Equals(_Map.Split('-')[0]) && instance.IsRunning)
             {
@@ -79,13 +80,14 @@ namespace Grimoire.Botting.Commands.Combat
                     {
                         // while monster is Alive within ur cell
                         // checks every 100ms up to 15 times then back to top loop
-                        await instance.WaitUntil(() => !World.IsMonsterAvailable(Monster), interval: 100);
+                        await instance.WaitUntil(() => !World.IsMonsterAvailable(Monster), interval: 50);
                         continue;
                     }
 
                     if (Player.Cell != _Cells[i])
                     {
-                        Player.MoveToCell(_Cells[i], "Left");
+                        string pad = (i < _pad.Length) ? _pad[i] : "Left";
+                        Player.MoveToCell(_Cells[i], pad);
                         LogForm.Instance.devDebug($"Cell : {_Cells[i]} [{i + 1}/{_Cells.Length}]");
                     }
 

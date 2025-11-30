@@ -42,7 +42,9 @@ namespace Grimoire.Botting.Commands.Combat
                 Game.Data.Quest quest = Player.Quests.Quest(QID);
                 int progress = Player.Quests.progress(quest.Id);
                 //int.Parse(Flash.CallGameFunction2("world.getQuestValue", quest.ISlot));
-                if (progress >= quest.IValue)
+                
+                //Checks if the quest require questchains
+                if (progress >= quest.IValue && quest.ISlot > 0) 
                     return;
                 if (!quest.IsInProgress)
                 {
@@ -65,6 +67,7 @@ namespace Grimoire.Botting.Commands.Combat
                     LogForm.Instance.devDebug($"Name = {name} | Qty = {qty}");
                     if (!Player.Map.Equals(Map.Split('-')[0].ToLower()))
                         await joinmap(Map, instance);
+
                     if (int.TryParse(items[i], out int mapitemid))
                         await getMap(mapitemid, qty);
                     else
@@ -165,6 +168,7 @@ namespace Grimoire.Botting.Commands.Combat
                     .Select(g => g.Key)
                     .ToList();
             }
+
             // Logical OR filtering
             Func<Monster, bool> finalPredicate = m => false;
 
@@ -182,7 +186,7 @@ namespace Grimoire.Botting.Commands.Combat
 
             //2. Collect monsters that contains its name
             List<string> targetCells = monMap
-                .Where(finalPredicate) //&& m.IsAlive)
+                .Where(finalPredicate) 
                 .GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
                 .OrderByDescending(g => g.Count()) // cell with most monster 
                 .Select(g => g.Key)
