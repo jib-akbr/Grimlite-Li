@@ -43,7 +43,7 @@ namespace Grimoire.Botting.Commands.Item
                     instance.Configuration.EnablePickup = true;
                     break;
                 case State.Off:
-                    instance.Configuration.EnablePickup = true;
+                    instance.Configuration.EnablePickup = false;
                     break;
                 case State.Toggle:
                     instance.Configuration.EnablePickup = !instance.Configuration.EnablePickup;

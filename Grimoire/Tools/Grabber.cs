@@ -240,6 +240,15 @@ namespace Grimoire.Tools
             {
                 list = (from x in World.AvailableMonsters?.GroupBy((Monster m) => m.MonMapID)
                         select x.First()).ToList();
+                switch (Loaders.order)
+                {
+                    case OrderBy.Name:
+                        list = list.OrderBy(m => m.Name).ToList();
+                        break;
+                    case OrderBy.Id:
+                        list = list.OrderBy(m => m.MonMapID).ToList();
+                        break;
+                }
             }
             catch (Exception ex)
             {
@@ -269,6 +278,15 @@ namespace Grimoire.Tools
         public static void GrabAllMonsters(TreeView tree)
         {
             List<Monster> list = World.GetAllMonsters();
+			switch (Loaders.order)
+            {
+                case OrderBy.Name:
+                    list = list.OrderBy(m => m.Name).ToList();
+                    break;
+                case OrderBy.Id:
+                    list = list.OrderBy(m => m.MonMapID).ToList();
+                    break;
+            }
             //    (from x in World.AvailableMonsters?.GroupBy((Monster m) => m.MonMapID)
             //                      select x.First()).ToList();
             if (list != null && list.Count > 0)
@@ -468,10 +486,9 @@ namespace Grimoire.Tools
                 };
                 toolStripMenuItem5.Click += delegate (object S, EventArgs E)
                 {
-                    string longString;
-                    string name = $"\"ItemName\" : \"{string.Join(",", Items.Select(i => i.Name))}";
-                    string qty = $"\"Quantity\" : \"{string.Join(",", Items.Select(i => i.Quantity))}";
-                    longString = $"{name}\"\n{qty}\"";
+                    string longString = 
+                    $"\"ItemName\" : \"{string.Join(",", Items.Select(i => i.Name))}\",\n"+
+                    $"\"Quantity\" : \"{string.Join(",", Items.Select(i => i.Quantity))}\"";
                     Clipboard.SetText(longString);
                 };
                 contextMenuStrip.Items.Add(toolStripMenuItem5);

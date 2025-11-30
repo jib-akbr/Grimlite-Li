@@ -69,7 +69,9 @@ namespace Grimoire.Game
         {
             Flash.Call("LoadMap", mapSwf);
         }
-
+        /// <summary>
+        /// Checks if map already loaded, True = finished loading | False = load on progress
+        /// </summary>
         public static bool IsMapLoading => !Flash.Call<bool>("MapLoadComplete", new string[0]);
 
         public static List<string> PlayersInMap => Flash.Call<List<string>>("PlayersInMap", new string[0]);

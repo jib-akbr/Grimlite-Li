@@ -9,6 +9,7 @@ using System.Web.UI;
 using System;
 using System.Linq;
 using Grimoire.Networking;
+using System.Text.RegularExpressions;
 
 namespace Grimoire.Botting.Commands.Combat
 {
@@ -41,7 +42,9 @@ namespace Grimoire.Botting.Commands.Combat
                 Game.Data.Quest quest = Player.Quests.Quest(QID);
                 int progress = Player.Quests.progress(quest.Id);
                 //int.Parse(Flash.CallGameFunction2("world.getQuestValue", quest.ISlot));
-                if (progress >= quest.IValue)
+                
+                //Checks if the quest require questchains
+                if (progress >= quest.IValue && quest.ISlot > 0) 
                     return;
                 if (!quest.IsInProgress)
                 {
@@ -64,6 +67,7 @@ namespace Grimoire.Botting.Commands.Combat
                     LogForm.Instance.devDebug($"Name = {name} | Qty = {qty}");
                     if (!Player.Map.Equals(Map.Split('-')[0].ToLower()))
                         await joinmap(Map, instance);
+
                     if (int.TryParse(items[i], out int mapitemid))
                         await getMap(mapitemid, qty);
                     else
@@ -138,10 +142,10 @@ namespace Grimoire.Botting.Commands.Combat
                 await Proxy.Instance.SendToServer($"%xt%zm%getMapItem%1%{mapitemid}%");
                 await Task.Delay(600);
 
-                if (itemCollected(Player.recentMapItem[mapitemid], sqty))
-                    break;
-                if (!Player.recentMapItem[mapitemid].Equals("blank"))
+                if (!Player.recentMapItem.TryGetValue(mapitemid, out string itemName) || itemName?.Equals("blank") == true)
                     continue;
+                if (itemCollected(itemName, sqty))
+                    break;
             }
         }
 
@@ -154,9 +158,9 @@ namespace Grimoire.Botting.Commands.Combat
         {
             List<Monster> monMap = World.GetAllMonsters();
 
+            //1. Collect all monster, then ordered by most amount within a cell
             if (monsterName == "*")
             {
-                //Collect all monster, then filtered most within a cell
                 return monMap
                     .Where(m => !string.IsNullOrEmpty(m.cell))
                     .GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
@@ -165,9 +169,24 @@ namespace Grimoire.Botting.Commands.Combat
                     .ToList();
             }
 
-            //Collect all monster with that has the name
+            // Logical OR filtering
+            Func<Monster, bool> finalPredicate = m => false;
+
+            // Filtering with MonId
+            Match match = Regex.Match(monsterName, @"^id['.:-](?<Id>\d+)$", RegexOptions.IgnoreCase);
+            if (match.Success && int.TryParse(match.Groups["Id"].Value, out int targetId))
+            {
+                //filter with ID when matched with "id." format
+                finalPredicate = m => m.MonMapID == targetId;
+            }
+            else //otherwise filter with name contains 
+            {
+                finalPredicate = m => m.Name.IndexOf(monsterName, StringComparison.OrdinalIgnoreCase) >= 0;
+            }
+
+            //2. Collect monsters that contains its name
             List<string> targetCells = monMap
-                .Where(m => m.Name.IndexOf(monsterName, StringComparison.OrdinalIgnoreCase) >= 0) //&& m.IsAlive)
+                .Where(finalPredicate) 
                 .GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
                 .OrderByDescending(g => g.Count()) // cell with most monster 
                 .Select(g => g.Key)
@@ -204,7 +223,6 @@ namespace Grimoire.Botting.Commands.Combat
             string[] items = ItemName.Split(',');
             string[] quantities = Quantity.Split(',');
             string[] monsters = Monster.Split(',');
-            //string parts = "";
             List<string> _parts = new List<string>();
             if (QID != 0)
             {

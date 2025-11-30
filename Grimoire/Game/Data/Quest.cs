@@ -207,7 +207,7 @@ namespace Grimoire.Game.Data
 
         public void GhostAccept()
         {
-			Proxy.Instance.SendToServer($"%xt%zm%acceptQuest%1%{Id}");
+			_ = Proxy.Instance.SendToServer($"%xt%zm%acceptQuest%1%{Id}%");
         }
 
         public void Complete(int qty = 1, bool max = false)
@@ -245,7 +245,7 @@ namespace Grimoire.Game.Data
                 int required = req.Quantity;
                 int possible = owned / required;
 
-                complete = Math.Min(complete, owned / req.Quantity);
+                complete = Math.Min(complete, possible);
             }
 			return complete;
         }

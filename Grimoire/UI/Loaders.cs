@@ -46,6 +46,7 @@ namespace Grimoire.UI
         private DarkButton btnForceAccept;
         private DarkNumericUpDown numTQuests;
         private DarkComboBox cbOrderBy;
+        private DarkCheckBox cbGhost;
         private TreeView treeGrabbed;
 
         public static Loaders Instance
@@ -205,19 +206,19 @@ namespace Grimoire.UI
             }
         }
 
+        public static Grabber.OrderBy order = Grabber.OrderBy.Name;
         private void btnGrab_Click(object sender, EventArgs e)
         {
             treeGrabbed.BeginUpdate();
             treeGrabbed.Nodes.Clear();
 
-            Grabber.OrderBy orderBy = Grabber.OrderBy.Name;
             switch (cbOrderBy.SelectedIndex)
             {
                 case 0:
-                    orderBy = Grabber.OrderBy.Name;
+                    order = Grabber.OrderBy.Name;
                     break;
                 case 1:
-                    orderBy = Grabber.OrderBy.Id;
+                    order = Grabber.OrderBy.Id;
                     break;
             }
 
@@ -228,11 +229,11 @@ namespace Grimoire.UI
                     break;
 
                 case 1:
-                    Grabber.GrabQuestIds(treeGrabbed, orderBy);
+                    Grabber.GrabQuestIds(treeGrabbed, order);
                     break;
 
                 case 2:
-                    Grabber.GrabQuests(treeGrabbed, orderBy);
+                    Grabber.GrabQuests(treeGrabbed, order);
                     break;
 
                 case 3:
@@ -287,6 +288,7 @@ namespace Grimoire.UI
             this.btnForceAccept = new DarkUI.Controls.DarkButton();
             this.numTQuests = new DarkUI.Controls.DarkNumericUpDown();
             this.cbOrderBy = new DarkUI.Controls.DarkComboBox();
+            this.cbGhost = new DarkUI.Controls.DarkCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.numTQuests)).BeginInit();
             this.SuspendLayout();
             // 
@@ -361,7 +363,7 @@ namespace Grimoire.UI
             // 
             // treeGrabbed
             // 
-            this.treeGrabbed.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.treeGrabbed.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.treeGrabbed.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(46)))), ((int)(((byte)(56)))));
             this.treeGrabbed.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -424,11 +426,23 @@ namespace Grimoire.UI
             this.cbOrderBy.Size = new System.Drawing.Size(67, 21);
             this.cbOrderBy.TabIndex = 169;
             // 
+            // cbGhost
+            // 
+            this.cbGhost.AutoSize = true;
+            this.cbGhost.Checked = true;
+            this.cbGhost.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbGhost.Location = new System.Drawing.Point(192, 67);
+            this.cbGhost.Name = "cbGhost";
+            this.cbGhost.Size = new System.Drawing.Size(54, 17);
+            this.cbGhost.TabIndex = 170;
+            this.cbGhost.Text = "Ghost";
+            // 
             // Loaders
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(271, 393);
+            this.Controls.Add(this.cbGhost);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnGrab);
             this.Controls.Add(this.cbOrderBy);
@@ -473,8 +487,11 @@ namespace Grimoire.UI
 
         private void cbGrab_SelectedIndexChanged(object sender, EventArgs e)
         {
-            cbOrderBy.Enabled = cbGrab.SelectedIndex == 1 || cbGrab.SelectedIndex == 2;
+            string boxValue = cbGrab.SelectedItem.ToString();
+            cbOrderBy.Enabled = enableGrabOn.Any(filter => boxValue.IndexOf(filter,StringComparison.OrdinalIgnoreCase) >= 0); 
+            //cbGrab.SelectedIndex == 1 || cbGrab.SelectedIndex == 2 || cbGrab.SelectedIndex == 6;
         }
+        string[] enableGrabOn = {"Monster","Quest"};
 
         private void btnForceAccept_Click(object sender, EventArgs e)
         {
@@ -496,11 +513,11 @@ namespace Grimoire.UI
                 listQuests.Add(questId);
                 questId++;
             }
-            await acceptBatchAsync(listQuests);
+            await acceptBatchAsync(listQuests,cbGhost.Checked);
             btnForceAccept.Enabled = true;
         }
 
-        private async Task acceptBatchAsync(List<int> listQuest)
+        private async Task acceptBatchAsync(List<int> listQuest, bool ghost)
         {
             Player.Quests.Get(listQuest);
             await Task.Delay(1000);
@@ -510,7 +527,13 @@ namespace Grimoire.UI
                 {
                     if (Player.Quests.Quest(listQuest[i]) != null)
                     {
-                        Player.Quests.Accept(listQuest[i].ToString());
+                        if (ghost)
+                            Player.Quests.Accept(listQuest[i].ToString());
+                        else
+                        {
+                            Player.Quests.Accept(listQuest[i]);
+                            await Task.Delay(400);
+                        }
                     }
                     await Task.Delay(600);
                 }

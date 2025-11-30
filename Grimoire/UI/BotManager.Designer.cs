@@ -197,6 +197,9 @@ namespace Grimoire.UI
 		private DarkTextBox txtSearchCmd;
 		private TabPage tabMisc2;
 		private DarkGroupBox groupBox1;
+		private DarkButton btnSpecialStart;
+		private DarkButton btnSpecialStop;
+		private DarkButton btnSpecialSwitch;
 		private DarkButton btnAddInfoMsg;
 		private DarkButton btnAddWarnMsg;
 		private DarkTextBox inputMsgClient;
@@ -451,6 +454,9 @@ namespace Grimoire.UI
             this.btnQuestAccept = new DarkUI.Controls.DarkButton();
             this.numEnsureTries = new DarkUI.Controls.DarkNumericUpDown();
             this.tabMisc = new System.Windows.Forms.TabPage();
+            this.darkGroupBox28 = new DarkUI.Controls.DarkGroupBox();
+            this.ButtonTC_Start = new DarkUI.Controls.DarkButton();
+            this.ButtonTC_Stop = new DarkUI.Controls.DarkButton();
             this.darkGroupBox15 = new DarkUI.Controls.DarkGroupBox();
             this.btnFollowCmd = new DarkUI.Controls.DarkButton();
             this.tbFollowPlayer = new DarkUI.Controls.DarkTextBox();
@@ -498,6 +504,9 @@ namespace Grimoire.UI
             this.btnLoadCmd = new DarkUI.Controls.DarkButton();
             this.tabMisc2 = new System.Windows.Forms.TabPage();
             this.darkGroupBox21 = new DarkUI.Controls.DarkGroupBox();
+            this.btnSpecialSwitch = new DarkUI.Controls.DarkButton();
+            this.btnSpecialStop = new DarkUI.Controls.DarkButton();
+            this.btnSpecialStart = new DarkUI.Controls.DarkButton();
             this.chkSpecial = new DarkUI.Controls.DarkCheckBox();
             this.cmbSpecials = new DarkUI.Controls.DarkComboBox();
             this.darkGroupBox13 = new DarkUI.Controls.DarkGroupBox();
@@ -696,6 +705,7 @@ namespace Grimoire.UI
             ((System.ComponentModel.ISupportInitialize)(this.numQuestItem)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numEnsureTries)).BeginInit();
             this.tabMisc.SuspendLayout();
+            this.darkGroupBox28.SuspendLayout();
             this.darkGroupBox15.SuspendLayout();
             this.darkGroupBox11.SuspendLayout();
             this.darkGroupBox10.SuspendLayout();
@@ -2745,6 +2755,7 @@ namespace Grimoire.UI
             // tabMisc
             // 
             this.tabMisc.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(36)))), ((int)(((byte)(36)))), ((int)(((byte)(46)))));
+            this.tabMisc.Controls.Add(this.darkGroupBox28);
             this.tabMisc.Controls.Add(this.darkGroupBox15);
             this.tabMisc.Controls.Add(this.darkGroupBox11);
             this.tabMisc.Controls.Add(this.darkGroupBox10);
@@ -2780,6 +2791,37 @@ namespace Grimoire.UI
             this.tabMisc.Size = new System.Drawing.Size(192, 70);
             this.tabMisc.TabIndex = 4;
             this.tabMisc.Text = "Misc";
+            // 
+            // darkGroupBox28
+            // 
+            this.darkGroupBox28.Controls.Add(this.ButtonTC_Start);
+            this.darkGroupBox28.Controls.Add(this.ButtonTC_Stop);
+            this.darkGroupBox28.Location = new System.Drawing.Point(463, 178);
+            this.darkGroupBox28.Name = "darkGroupBox28";
+            this.darkGroupBox28.Size = new System.Drawing.Size(69, 89);
+            this.darkGroupBox28.TabIndex = 163;
+            this.darkGroupBox28.TabStop = false;
+            this.darkGroupBox28.Text = "Tauntcycle";
+            // 
+            // ButtonTC_Start
+            // 
+            this.ButtonTC_Start.Checked = false;
+            this.ButtonTC_Start.Location = new System.Drawing.Point(6, 19);
+            this.ButtonTC_Start.Name = "ButtonTC_Start";
+            this.ButtonTC_Start.Size = new System.Drawing.Size(57, 30);
+            this.ButtonTC_Start.TabIndex = 153;
+            this.ButtonTC_Start.Text = "Start";
+            this.ButtonTC_Start.Click += new System.EventHandler(this.Button_TcStart);
+            // 
+            // ButtonTC_Stop
+            // 
+            this.ButtonTC_Stop.Checked = false;
+            this.ButtonTC_Stop.Location = new System.Drawing.Point(6, 53);
+            this.ButtonTC_Stop.Name = "ButtonTC_Stop";
+            this.ButtonTC_Stop.Size = new System.Drawing.Size(57, 30);
+            this.ButtonTC_Stop.TabIndex = 153;
+            this.ButtonTC_Stop.Text = "Stop";
+            this.ButtonTC_Stop.Click += new System.EventHandler(this.Button_TcStop);
             // 
             // darkGroupBox15
             // 
@@ -2929,7 +2971,7 @@ namespace Grimoire.UI
             // 
             this.darkGroupBox14.Controls.Add(this.txtPlayer);
             this.darkGroupBox14.Controls.Add(this.btnGoto);
-            this.darkGroupBox14.Location = new System.Drawing.Point(321, 177);
+            this.darkGroupBox14.Location = new System.Drawing.Point(322, 178);
             this.darkGroupBox14.Name = "darkGroupBox14";
             this.darkGroupBox14.Size = new System.Drawing.Size(135, 45);
             this.darkGroupBox14.TabIndex = 166;
@@ -3342,19 +3384,52 @@ namespace Grimoire.UI
             // 
             // darkGroupBox21
             // 
+            this.darkGroupBox21.Controls.Add(this.btnSpecialSwitch);
+            this.darkGroupBox21.Controls.Add(this.btnSpecialStop);
+            this.darkGroupBox21.Controls.Add(this.btnSpecialStart);
             this.darkGroupBox21.Controls.Add(this.chkSpecial);
             this.darkGroupBox21.Controls.Add(this.cmbSpecials);
-            this.darkGroupBox21.Location = new System.Drawing.Point(6, 117);
+            this.darkGroupBox21.Location = new System.Drawing.Point(6, 118);
             this.darkGroupBox21.Name = "darkGroupBox21";
-            this.darkGroupBox21.Size = new System.Drawing.Size(234, 46);
+            this.darkGroupBox21.Size = new System.Drawing.Size(234, 65);
             this.darkGroupBox21.TabIndex = 171;
             this.darkGroupBox21.TabStop = false;
             this.darkGroupBox21.Text = "Special handlers";
             // 
+            // btnSpecialSwitch
+            // 
+            this.btnSpecialSwitch.Checked = false;
+            this.btnSpecialSwitch.Location = new System.Drawing.Point(169, 40);
+            this.btnSpecialSwitch.Name = "btnSpecialSwitch";
+            this.btnSpecialSwitch.Size = new System.Drawing.Size(60, 20);
+            this.btnSpecialSwitch.TabIndex = 176;
+            this.btnSpecialSwitch.Text = "Switch";
+            this.btnSpecialSwitch.Click += new System.EventHandler(this.btnSpecialSwitch_Click);
+            // 
+            // btnSpecialStop
+            // 
+            this.btnSpecialStop.Checked = false;
+            this.btnSpecialStop.Location = new System.Drawing.Point(99, 40);
+            this.btnSpecialStop.Name = "btnSpecialStop";
+            this.btnSpecialStop.Size = new System.Drawing.Size(60, 20);
+            this.btnSpecialStop.TabIndex = 175;
+            this.btnSpecialStop.Text = "Stop";
+            this.btnSpecialStop.Click += new System.EventHandler(this.btnSpecialStop_Click);
+            // 
+            // btnSpecialStart
+            // 
+            this.btnSpecialStart.Checked = false;
+            this.btnSpecialStart.Location = new System.Drawing.Point(29, 40);
+            this.btnSpecialStart.Name = "btnSpecialStart";
+            this.btnSpecialStart.Size = new System.Drawing.Size(60, 20);
+            this.btnSpecialStart.TabIndex = 174;
+            this.btnSpecialStart.Text = "Start";
+            this.btnSpecialStart.Click += new System.EventHandler(this.btnSpecialStart_Click);
+            // 
             // chkSpecial
             // 
             this.chkSpecial.AutoSize = true;
-            this.chkSpecial.Location = new System.Drawing.Point(7, 21);
+            this.chkSpecial.Location = new System.Drawing.Point(10, 17);
             this.chkSpecial.Name = "chkSpecial";
             this.chkSpecial.Size = new System.Drawing.Size(15, 14);
             this.chkSpecial.TabIndex = 173;
@@ -3368,11 +3443,15 @@ namespace Grimoire.UI
             "Auto Zone - Dark Carnax",
             "Auto Zone - Astral Empyrean",
             "Auto Zone - Queen Iona",
-            "Auto Zone - Colossal Vordred"});
-            this.cmbSpecials.Location = new System.Drawing.Point(29, 18);
+            "Auto Zone - Colossal Vordred",
+            "Gramiel P1",
+            "Gramiel P2",
+            "Gramiel P3",
+            "Gramiel P4"});
+            this.cmbSpecials.Location = new System.Drawing.Point(29, 14);
             this.cmbSpecials.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmbSpecials.Name = "cmbSpecials";
-            this.cmbSpecials.Size = new System.Drawing.Size(198, 21);
+            this.cmbSpecials.Size = new System.Drawing.Size(200, 21);
             this.cmbSpecials.TabIndex = 172;
             // 
             // darkGroupBox13
@@ -3384,7 +3463,7 @@ namespace Grimoire.UI
             this.darkGroupBox13.Controls.Add(this.btnBotDelay);
             this.darkGroupBox13.Controls.Add(this.numBotDelay);
             this.darkGroupBox13.Controls.Add(this.chkRestartDeath);
-            this.darkGroupBox13.Location = new System.Drawing.Point(9, 181);
+            this.darkGroupBox13.Location = new System.Drawing.Point(9, 186);
             this.darkGroupBox13.Name = "darkGroupBox13";
             this.darkGroupBox13.Size = new System.Drawing.Size(231, 111);
             this.darkGroupBox13.TabIndex = 161;
@@ -3482,7 +3561,7 @@ namespace Grimoire.UI
             this.darkGroupBox9.Controls.Add(this.txtDescription);
             this.darkGroupBox9.Location = new System.Drawing.Point(246, 6);
             this.darkGroupBox9.Name = "darkGroupBox9";
-            this.darkGroupBox9.Size = new System.Drawing.Size(289, 286);
+            this.darkGroupBox9.Size = new System.Drawing.Size(292, 291);
             this.darkGroupBox9.TabIndex = 116;
             this.darkGroupBox9.TabStop = false;
             this.darkGroupBox9.Text = "Save/Load";
@@ -3494,7 +3573,7 @@ namespace Grimoire.UI
             this.txtAuthor.Location = new System.Drawing.Point(7, 45);
             this.txtAuthor.Multiline = true;
             this.txtAuthor.Name = "txtAuthor";
-            this.txtAuthor.Size = new System.Drawing.Size(283, 20);
+            this.txtAuthor.Size = new System.Drawing.Size(278, 20);
             this.txtAuthor.TabIndex = 119;
             this.txtAuthor.Text = "Author";
             // 
@@ -3513,8 +3592,8 @@ namespace Grimoire.UI
             // splitContainer3.Panel2
             // 
             this.splitContainer3.Panel2.Controls.Add(this.btnLoad);
-            this.splitContainer3.Size = new System.Drawing.Size(276, 22);
-            this.splitContainer3.SplitterDistance = 136;
+            this.splitContainer3.Size = new System.Drawing.Size(278, 22);
+            this.splitContainer3.SplitterDistance = 138;
             this.splitContainer3.TabIndex = 118;
             // 
             // btnSave
@@ -3523,7 +3602,7 @@ namespace Grimoire.UI
             this.btnSave.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSave.Location = new System.Drawing.Point(0, 0);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(136, 22);
+            this.btnSave.Size = new System.Drawing.Size(138, 22);
             this.btnSave.TabIndex = 75;
             this.btnSave.Text = "Save bot";
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
@@ -3548,7 +3627,7 @@ namespace Grimoire.UI
             this.txtDescription.MaxLength = 2147483647;
             this.txtDescription.Multiline = true;
             this.txtDescription.Name = "txtDescription";
-            this.txtDescription.Size = new System.Drawing.Size(276, 212);
+            this.txtDescription.Size = new System.Drawing.Size(278, 221);
             this.txtDescription.TabIndex = 109;
             this.txtDescription.Text = "Description (Write in RTF)";
             this.txtDescription.Enter += new System.EventHandler(this.TextboxEnter);
@@ -5434,6 +5513,7 @@ namespace Grimoire.UI
             ((System.ComponentModel.ISupportInitialize)(this.numEnsureTries)).EndInit();
             this.tabMisc.ResumeLayout(false);
             this.tabMisc.PerformLayout();
+            this.darkGroupBox28.ResumeLayout(false);
             this.darkGroupBox15.ResumeLayout(false);
             this.darkGroupBox15.PerformLayout();
             this.darkGroupBox11.ResumeLayout(false);
@@ -5587,5 +5667,8 @@ namespace Grimoire.UI
 		private DarkCheckBox cbJoinMapSwf;
 		private DarkTextBox tbJoinMapSwf;
 		private DarkButton btnMapItemExe;
-	}
+        private DarkGroupBox darkGroupBox28;
+        private DarkButton ButtonTC_Start;
+        private DarkButton ButtonTC_Stop;
+    }
 }

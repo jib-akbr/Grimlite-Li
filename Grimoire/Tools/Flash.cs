@@ -478,9 +478,13 @@ namespace Grimoire.Tools
 						Player.Logout();
 					}
 					break;*/
+                case "resPlayerTimed":
+					Flash.Call("ResetAura", new string[0]);
+					break;
+					
                 case "getMapItem":
                     int itemId = int.Parse(packet.Split('%')[5]);
-                    if (Player.recentMapItem.ContainsKey(itemId))
+                    if (Player.recentMapItem.TryGetValue(itemId, out var itemName) && itemName?.Equals("blank") == false)
                         break;
 
                     Task.Run(async () =>
@@ -506,7 +510,8 @@ namespace Grimoire.Tools
                     {
                         Task.Run(async () =>
                         {
-                            await Task.Delay(1500);
+                            OptionsManager.Stop();
+                            await Task.Delay(5000);
                             OptionsManager.Start();
                         }
                         );
@@ -534,9 +539,9 @@ namespace Grimoire.Tools
                     {
 
                         if ((bool)action["auras"][0]["isNew"]) { }
-                            //desc += "Aura added:";
+                        //desc += "Aura added:";
                         else { }
-                            //desc += "Aura refreshed:";
+                        //desc += "Aura refreshed:";
                     }
                 }
             }

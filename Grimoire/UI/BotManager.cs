@@ -36,7 +36,6 @@ using System.Text;
 using Grimoire.Networking.Handlers;
 using Grimoire.Utils;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
-using System.Threading;
 
 namespace Grimoire.UI
 {
@@ -48,9 +47,12 @@ namespace Grimoire.UI
 
         private Dictionary<string, string> _defaultControlText;
 
+        // Global handlers used while the bot is running
         public IJsonMessageHandler SpecialJsonHandler;
-
         public IXtMessageHandler SpecialXtHandler;
+
+        // Always-on handler to feed animation messages to Misc "Special Anims" statements
+        private readonly IJsonMessageHandler _specialAnimsHandler = new HandlerSpecialAnims();
 
         private readonly JsonSerializerSettings _serializerSettings = new JsonSerializerSettings
         {
@@ -301,6 +303,7 @@ namespace Grimoire.UI
                 DisableAnimations = chkDisableAnims.Checked,
                 FollowCheck = chkFollowOnly.Checked,
                 FollowName = tbFollowPlayer2.Text,
+                keepLagKiller = false,
                 AutoZone = cmbSpecials.SelectedItem != null ? cmbSpecials.SelectedItem.ToString() : string.Empty,
             };
         }
@@ -871,12 +874,12 @@ namespace Grimoire.UI
         private void btnAddSkill_Click(object sender, EventArgs e)
         {
             string index = numSkill.Text;
-            bool altPressed = (ModifierKeys & Keys.Alt) == Keys.Alt;
             AddSkill(new Skill
             {
                 Text = Skill.GetSkillName(index),
                 Index = index,
-                Type = altPressed ? Skill.SkillType.Wait : Skill.SkillType.Normal
+                Type = Skill.SkillType.Normal,
+                waitCd = (ModifierKeys & Keys.Alt) == Keys.Alt
             }, (ModifierKeys & Keys.Control) == Keys.Control);
         }
 
@@ -968,13 +971,21 @@ namespace Grimoire.UI
         {
             string cell = string.IsNullOrEmpty(txtCell.Text) ? "Enter" : txtCell.Text;
             string pad = string.IsNullOrEmpty(txtPad.Text) ? "Spawn" : txtPad.Text;
-            AddCommand(new CmdMoveToCell
-            {
-                Cell = cell,
-                Pad = pad
-            }, (ModifierKeys & Keys.Control) == Keys.Control);
+            if (altpressed)
+                AddCommand(new CmdMoveToCell2
+                {
+                    Cell = cell,
+                    Pad = pad
+                }, ctrlpressed);
+            else
+                AddCommand(new CmdMoveToCell
+                {
+                    Cell = cell,
+                    Pad = pad
+                }, ctrlpressed);
         }
-
+        private bool altpressed => (ModifierKeys & Keys.Alt) == Keys.Alt;
+        private bool ctrlpressed => (ModifierKeys & Keys.Control) == Keys.Control;
         private void btnWalk_Click(object sender, EventArgs e)
         {
             string x = numWalkX.Value.ToString();
@@ -1212,16 +1223,15 @@ namespace Grimoire.UI
 
         private void btnQuestComplete_Click(object sender, EventArgs e)
         {
-            Quest q = new Quest();
-            CmdCompleteQuest cmd = new CmdCompleteQuest
-            {
-                CompleteTry = (int)numEnsureTries.Value,
-            };
-            q.Id = (int)numQuestID.Value;
+            Quest _quest = new Quest();
+            _quest.Id = (int)numQuestID.Value;
             if (chkQuestItem.Checked)
-                q.ItemId = numQuestItem.Value.ToString();
-            cmd.Quest = q;
-            this.AddCommand(cmd, (Control.ModifierKeys & Keys.Control) == Keys.Control);
+                _quest.ItemId = numQuestItem.Value.ToString();
+            AddCommand(new CmdCompleteQuest
+            {
+                CompleteTry = altpressed ? -1 : (int)numEnsureTries.Value,
+                Quest = _quest
+            }, (Control.ModifierKeys & Keys.Control) == Keys.Control);
         }
 
         private void btnQuestAccept_Click(object sender, EventArgs e)
@@ -1232,7 +1242,8 @@ namespace Grimoire.UI
             };
             AddCommand(new CmdAcceptQuest
             {
-                Quest = quest
+                Quest = quest,
+                ghostAccept = altpressed
             }, (ModifierKeys & Keys.Control) == Keys.Control);
         }
 
@@ -1931,8 +1942,8 @@ namespace Grimoire.UI
 
             chkEnable.Enabled = false;
             Root.Instance.chkStartBot.Enabled = false;
-
-            if (chkEnable.Checked)
+			try {
+			if (chkEnable.Checked)
             {
                 if (cmbSpecials.SelectedIndex != -1 && !chkSpecial.Checked)
                 {
@@ -1951,20 +1962,25 @@ namespace Grimoire.UI
                 BotStateChanged(IsRunning: true);
                 Root.Instance.BotStateChanged(IsRunning: true);
                 Root.Instance.chkStartBot.Checked = true;
+                //Configuration.Instance.keepLagKiller = false;
                 if (chkAntiMod.Checked)
                 {
                     chkHidePlayers.Enabled = false;
                     chkHidePlayers.Checked = false;
                 }
 
+                // Register any user-selected special handlers
                 if (SpecialJsonHandler != null)
                     Proxy.Instance.RegisterHandler(SpecialJsonHandler);
                 if (SpecialXtHandler != null)
                     Proxy.Instance.RegisterHandler(SpecialXtHandler);
+
+                // Always register the Special Anims handler so Misc "Special Anims" works
+                Proxy.Instance.RegisterHandler(_specialAnimsHandler);
             }
             else
             {
-                ActiveBotEngine.Stop();
+				ActiveBotEngine.Stop();
                 selectionMode(SelectionMode.MultiExtended);
                 BotStateChanged(IsRunning: false);
                 Root.Instance.BotStateChanged(IsRunning: false);
@@ -1988,12 +2004,20 @@ namespace Grimoire.UI
                 if (SpecialXtHandler != null)
                     Proxy.Instance.UnregisterHandler(SpecialXtHandler);
 
+                // Unregister the always-on Special Anims handler
+                Proxy.Instance.UnregisterHandler(_specialAnimsHandler);
+
                 if (cmbSpecials.SelectedIndex != -1 && chkSpecial.Enabled)
                 {
                     chkSpecial.Checked = false;
                     chkSpecial.Enabled = true;
                 }
             }
+			}
+			catch (Exception ex) {
+                MessageBox.Show("Failed to start bot : " + ex.Message, "Grimoire", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+				
+			}
             toggleAntiMod(chkAntiMod.Checked && chkEnable.Checked);
 
             chkEnable.Enabled = true;
@@ -2288,11 +2312,10 @@ namespace Grimoire.UI
                 Index = index,
                 Type = Skill.SkillType.Normal,
             };
-
             AddCommand(new CmdUseSkill
             {
                 Index = skill.Index,
-                Wait = cbSkillCmdWait.Checked,
+                Wait = cbSkillCmdWait.Checked || altpressed,
                 Force = chkForceSkill.Checked,
                 Monster = target
             }, (ModifierKeys & Keys.Control) == Keys.Control);
@@ -2444,9 +2467,7 @@ namespace Grimoire.UI
         private bool GetBoolCentered(string name)
         {
             Config c = Config.Load(Application.StartupPath + "\\config.cfg");
-            bool.TryParse(c.Get(name + "Centered"), out bool result);
-            //Console.WriteLine($"{name} : {result}");
-            return result;
+            return bool.Parse(c.Get(name + "Centered") ?? "false");
         }
 
         private void lstCommands_DrawItem(object sender, DrawItemEventArgs e)
@@ -2588,7 +2609,7 @@ namespace Grimoire.UI
             if (cmdText.Contains(':'))
             {
                 toDraw = lstCommands.Items[e.Index].ToString().Split(':');
-                Region second = DrawString(e.Graphics, toDraw[0] + ":", font, color, region, GetCurrentBoolCentered(scmd) ? centered : StringFormat.GenericDefault);
+                Region second = DrawString(e.Graphics, toDraw[0] + ": ", font, color, region, GetCurrentBoolCentered(scmd) ? centered : StringFormat.GenericDefault);
                 region = new RectangleF(region.X + second.GetBounds(e.Graphics).Width + 3, region.Y, region.Width, region.Height);
                 if (toDraw[1].Contains(","))
                 {
@@ -2610,10 +2631,8 @@ namespace Grimoire.UI
 
         private Region DrawString(Graphics g, string s, Font font, Brush brush, RectangleF layoutRectangle, StringFormat format)
         {
-            if (string.IsNullOrEmpty(s))
-                s = "<Blank must be filled>";
             format.SetMeasurableCharacterRanges(new[] { new CharacterRange(0, s.Length) });
-            format.Alignment = StringAlignment.Near;  //THIS SHIT MADE EVERYTHING CAN'T BE CENTERED
+            format.Alignment = StringAlignment.Near;
             g.DrawString(s, font, brush, layoutRectangle, format);
             return g.MeasureCharacterRanges(s, font, layoutRectangle, format)[0];
         }
@@ -2890,14 +2909,15 @@ namespace Grimoire.UI
 
         private void btnAllSkill_Click(object sender, EventArgs e)
         {
-            bool altPressed = (ModifierKeys & Keys.Alt) == Keys.Alt;
+
             for (int i = 1; i <= 4; i++)
             {
                 AddSkill(new Skill
                 {
                     Text = Skill.GetSkillName(i.ToString()),
                     Index = i.ToString(),
-                    Type = altPressed ? Skill.SkillType.Wait : Skill.SkillType.Normal
+                    Type = Skill.SkillType.Normal,
+                    waitCd = (ModifierKeys & Keys.Alt) == Keys.Alt
                 }, (ModifierKeys & Keys.Control) == Keys.Control);
             }
         }
@@ -3187,6 +3207,110 @@ namespace Grimoire.UI
         }
 
         private HandlerFollow HandlerFollow = new HandlerFollow();
+
+        private void UpdateSpecialHandler()
+        {
+            // Handle enabling/disabling and switching of special auto-zone handlers at runtime
+            if (!chkSpecial.Checked || cmbSpecials.SelectedIndex == -1)
+            {
+                // Turn off current handler if any (even if bot is currently stopped)
+                if (SpecialJsonHandler != null)
+                {
+                    Proxy.Instance.UnregisterHandler(SpecialJsonHandler);
+                    if (SpecialJsonHandler is IDisposable disposableOld)
+                        disposableOld.Dispose();
+                }
+                SpecialJsonHandler = null;
+                SpecialXtHandler = null;
+                return;
+            }
+
+            // Switching or enabling: always unregister old handler first
+            if (SpecialJsonHandler != null)
+            {
+                Proxy.Instance.UnregisterHandler(SpecialJsonHandler);
+                if (SpecialJsonHandler is IDisposable disposable)
+                    disposable.Dispose();
+            }
+
+            switch (cmbSpecials.SelectedItem.ToString())
+            {
+                case "Auto Zone - Ultradage":
+                    SpecialJsonHandler = new HandlerAutoZoneUltraDage();
+                    break;
+                case "Auto Zone - Dark Carnax":
+                    SpecialJsonHandler = new HandlerAutoZoneDarkCarnax();
+                    break;
+                case "Auto Zone - Astral Empyrean":
+                    SpecialJsonHandler = new HandlerAutoZoneAstralEmpyrean();
+                    break;
+                case "Auto Zone - Queen Iona":
+                    SpecialJsonHandler = new HandlerAutoZoneQueenIona();
+                    break;
+                case "Auto Zone - Colossal Vordred":
+                    SpecialJsonHandler = new HandlerAutoZoneVordred();
+                    break;
+                case "Gramiel P1":
+                    SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P1);
+                    break;
+                case "Gramiel P2":
+                    SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P2);
+                    break;
+                case "Gramiel P3":
+                    SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P3);
+                    break;
+                case "Gramiel P4":
+                    SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P4);
+                    break;
+                default:
+                    SpecialJsonHandler = null;
+                    break;
+            }
+
+            // Register new handler immediately if bot is already running
+            if (SpecialJsonHandler != null && ActiveBotEngine.IsRunning)
+            {
+                Proxy.Instance.RegisterHandler(SpecialJsonHandler);
+            }
+        }
+
+        /// <summary>
+        /// Helper used by script commands (CmdSpecialHandler) to control the special handler
+        /// using the same UI-backed logic as the Misc 2 panel.
+        /// </summary>
+        /// <param name="zone">Display name of the zone (must match an item in cmbSpecials).</param>
+        /// <param name="enabled">
+        /// true  = enable handler for the zone,
+        /// false = disable handler,
+        /// null  = keep current on/off state, just switch zone.
+        /// </param>
+        public static void SetSpecialHandlerFromScript(string zone, bool? enabled)
+        {
+            BotManager bm = Instance;
+            if (bm == null)
+                return;
+
+            void Apply()
+            {
+                if (!string.IsNullOrEmpty(zone))
+                {
+                    int index = bm.cmbSpecials.FindStringExact(zone);
+                    if (index >= 0)
+                        bm.cmbSpecials.SelectedIndex = index;
+                }
+
+                if (enabled.HasValue)
+                    bm.chkSpecial.Checked = enabled.Value;
+
+                bm.UpdateSpecialHandler();
+            }
+
+            if (bm.InvokeRequired)
+                bm.Invoke((Action)Apply);
+            else
+                Apply();
+        }
+
         private async Task setFollowHandler()
         {
             if (chkFollowOnly.Checked && chkEnableSettings.Checked)
@@ -3232,6 +3356,50 @@ namespace Grimoire.UI
             tooltip.SetToolTip(this.chkAntiMod, "Use skill when player has target only.");
         }
 
+        private void cmbSpecials_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // If you want automatic switching on dropdown change, uncomment the next line.
+            //UpdateSpecialHandler();
+        }
+
+        // These handlers are wired to buttons in the Misc 2 "Special handlers" groupbox.
+        // They insert script commands so the actions become part of the bot script.
+        private void btnSpecialStart_Click(object sender, EventArgs e)
+        {
+            if (cmbSpecials.SelectedItem == null)
+                return;
+
+            AddCommand(new CmdSpecialHandler
+            {
+                Zone = cmbSpecials.SelectedItem.ToString(),
+                Mode = CmdSpecialHandler.SpecialMode.Start
+            }, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void btnSpecialStop_Click(object sender, EventArgs e)
+        {
+            if (cmbSpecials.SelectedItem == null)
+                return;
+
+            AddCommand(new CmdSpecialHandler
+            {
+                Zone = cmbSpecials.SelectedItem.ToString(),
+                Mode = CmdSpecialHandler.SpecialMode.Stop
+            }, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void btnSpecialSwitch_Click(object sender, EventArgs e)
+        {
+            if (cmbSpecials.SelectedItem == null)
+                return;
+
+            AddCommand(new CmdSpecialHandler
+            {
+                Zone = cmbSpecials.SelectedItem.ToString(),
+                Mode = CmdSpecialHandler.SpecialMode.Switch
+            }, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
         private void btnAddSkillSet_Click(object sender, EventArgs e)
         {
             if (txtSkillSet.TextLength > 0)
@@ -3265,7 +3433,7 @@ namespace Grimoire.UI
         {
             World.ReloadMap();
         }
-        private CancellationTokenSource specialCts;
+
         private void chkSpecial_CheckedChanged(object sender, EventArgs e)
         {
             if (!Player.IsLoggedIn)
@@ -3274,42 +3442,7 @@ namespace Grimoire.UI
                 return;
             }
             cmbSpecials.Enabled = !chkSpecial.Checked;
-            if (chkSpecial.Checked)
-            {
-                switch (cmbSpecials.SelectedItem.ToString())
-                {
-                    case "Auto Zone - Ultradage":
-                        SpecialJsonHandler = new HandlerAutoZoneUltraDage();
-                        break;
-                    case "Auto Zone - Dark Carnax":
-                        SpecialJsonHandler = new HandlerAutoZoneDarkCarnax();
-                        break;
-                    case "Auto Zone - Astral Empyrean":
-                        SpecialJsonHandler = new HandlerAutoZoneAstralEmpyrean();
-                        break;
-                    case "Auto Zone - Queen Iona":
-                        SpecialJsonHandler = new HandlerAutoZoneQueenIona();
-                        break;
-                    case "Auto Zone - Colossal Vordred":
-                        SpecialJsonHandler = new HandlerAutoZoneVordred();
-                        break;
-                    case "Taunt Cycle":
-                        _ = new HandlerSpecial(specialCts);
-                        return;
-                }
-                if (!Proxy.Instance.IsHandlerRegistered(SpecialJsonHandler))
-                    Proxy.Instance.RegisterHandler(SpecialJsonHandler);
-            }
-            else
-            {
-                SpecialJsonHandler = null;
-                SpecialXtHandler = null;
-                specialCts?.Cancel();
-                specialCts?.Dispose();
-                Proxy.Instance.UnregisterHandler(SpecialJsonHandler);
-                //LogForm.Instance.devDebug($"Special off");
-
-            }
+            UpdateSpecialHandler();
         }
 
         private async void chkGender_CheckedChanged(object sender, EventArgs e)
@@ -3407,6 +3540,22 @@ namespace Grimoire.UI
             World.LoadMap(tbLoadMap.Text);
             await Task.Delay(1000);
             btnLoadMap.Enabled = true;
+        }
+
+        private void Button_TcStart(object sender, EventArgs e)
+        {
+            AddCommand(new CmdTauntcycle
+            {
+                type = CmdTauntcycle.option.Start
+            }, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void Button_TcStop(object sender, EventArgs e)
+        {
+            AddCommand(new CmdTauntcycle
+            {
+                type = CmdTauntcycle.option.Stop
+            }, (ModifierKeys & Keys.Control) == Keys.Control);
         }
     }
 }

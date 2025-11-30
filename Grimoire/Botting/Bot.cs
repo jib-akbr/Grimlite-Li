@@ -185,10 +185,12 @@ namespace Grimoire.Botting
             OptionsManager.Stop();
             StopBackGroundSpammer();
             IsRunning = false;
-			_onCompletingQuest = false;
+            _onCompletingQuest = false;
             paused = false;
             BotData.BotState = BotData.State.Others;
             this.StopCommands();
+            TauntCycle.Reset();
+            OptionsManager.SetLagKiller(Configuration.Instance.keepLagKiller);
         }
         public bool paused
         {
@@ -204,6 +206,7 @@ namespace Grimoire.Botting
             {
                 if (Player.IsLoggedIn && !Player.IsAlive)
                 {
+					//Death handling system
                     World.SetSpawnPoint();
                     await this.WaitUntil(() => Player.IsAlive, () => IsRunning && Player.IsLoggedIn, -1);
                     await Task.Delay(1000);
@@ -212,6 +215,7 @@ namespace Grimoire.Botting
 
                 if (!Player.IsLoggedIn)
                 {
+					//Relogin system
                     LogForm.Instance.AppendDebug($"[{DateTime.Now:HH:mm:ss}] Disconnected. Last cmd: [{Index}]{lastCommand}");
                     StopQuestList();
                     StopBackGroundSpammer();
@@ -304,10 +308,7 @@ namespace Grimoire.Botting
         public async void StartQuestList()
         {
             if (_ctsQuestList != null && !_ctsQuestList.IsCancellationRequested)
-            {
-                LogForm.Instance.devDebug($"QuestList Restarted");
-                StopQuestList();
-            }
+                StopQuestList(); //Ensure restarting QuestList
 
             _ctsQuestList = new CancellationTokenSource();
             var token = _ctsQuestList.Token;
@@ -317,6 +318,7 @@ namespace Grimoire.Botting
             if (Configuration.Quests.Count == 0)
                 return;
 
+            LogForm.Instance.devDebug($"QuestList Started");
             qFailures.Clear();
             foreach (var quest in Configuration.Quests)
             {
@@ -372,7 +374,7 @@ namespace Grimoire.Botting
 
         public void StopQuestList()
         {
-			_onCompletingQuest = false;
+            _onCompletingQuest = false;
             _ctsQuestList?.Cancel();
             _ctsQuestList?.Dispose();
         }
@@ -509,7 +511,7 @@ namespace Grimoire.Botting
                     paused = true;
                     if (!qs[i].IsInProgress)
                     {
-                        LogForm.Instance.devDebug($"Accepting Quest : {qs[i]} [{i}/{qs.Count}]");
+                        LogForm.Instance.devDebug($"Accepting Quest : {qs[i]} [{i + 1}/{qs.Count}]");
                         qs[i].Accept();
                         await Task.Delay(1000);
                     }

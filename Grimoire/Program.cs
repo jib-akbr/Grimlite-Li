@@ -11,24 +11,35 @@ namespace Grimoire
 {
 	internal static class Program
 	{
-		public static readonly string Version = "Li 1.8";
-		public static readonly string ReleaseDate = "14-11-2025";
+		public static readonly string Version = "Li 1.9";
+		public static readonly string ReleaseDate = "30-11-2025";
 		public static string PluginsPath { get; private set; }
 		public static Tools.Plugins.PluginManager PluginsManager { get; private set; }
 
 		[STAThread]
 		private static void Main()
 		{
-			Program.TryCreateDirectory(Program.PluginsPath = Path.Combine(Application.StartupPath, "Plugins"));
-			if (FindAvailablePort(out int port))
+			try
 			{
-				Proxy.Instance.ListenerPort = port;
-				PluginsManager = new Tools.Plugins.PluginManager();
-				Application.EnableVisualStyles();
-				Application.SetCompatibleTextRenderingDefault(defaultValue: false);
-				Application.Run(new Root());
-				Program.PluginsManager.UnloadAll();
-				Proxy.Instance.Stop(appClosing: false);
+				Program.TryCreateDirectory(Program.PluginsPath = Path.Combine(Application.StartupPath, "Plugins"));
+				if (FindAvailablePort(out int port))
+				{
+					Proxy.Instance.ListenerPort = port;
+					PluginsManager = new Tools.Plugins.PluginManager();
+					Application.EnableVisualStyles();
+					Application.SetCompatibleTextRenderingDefault(defaultValue: false);
+					Application.Run(new Root());
+					Program.PluginsManager.UnloadAll();
+					Proxy.Instance.Stop(appClosing: false);
+				}
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(
+					"A fatal error occurred while starting Grimlite Li:\n\n" + ex,
+					"Grimlite Li",
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Error);
 			}
 		}
 
@@ -65,8 +76,10 @@ namespace Grimoire
 			}
 			catch (NetworkInformationException)
 			{
-				port = 0;
-				return false;
+				// On some systems, querying active TCP connections/listeners can fail.
+				// Instead of aborting startup, fall back to a random port and continue.
+				port = random.Next(1001, 65535);
+				return true;
 			}
 			int randPort;
 			TcpConnectionInformation tcpConnectionInformation;

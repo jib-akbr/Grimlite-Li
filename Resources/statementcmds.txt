@@ -523,5 +523,12 @@
       "Description1": "Aura name",
       "Description2": "Aura value"
     },
+    {
+      "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdSpecialAnims, Grimoire",
+      "Tag": "Monster",
+      "Text": "Special Anims",
+      "Description1": "Animation message",
+      "Description2": "Skill to use"
+    },
   ]
 }

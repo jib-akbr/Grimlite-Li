@@ -237,7 +237,7 @@
             "TK",
             "CSH",
             "CSH v2"});
-            this.cmbPreset.Location = new System.Drawing.Point(84, 102);
+            this.cmbPreset.Location = new System.Drawing.Point(82, 102);
             this.cmbPreset.Margin = new System.Windows.Forms.Padding(2);
             this.cmbPreset.Name = "cmbPreset";
             this.cmbPreset.Size = new System.Drawing.Size(68, 21);
@@ -319,7 +319,7 @@
             // cbUnfollow
             // 
             this.cbUnfollow.AutoSize = true;
-            this.cbUnfollow.Location = new System.Drawing.Point(104, 19);
+            this.cbUnfollow.Location = new System.Drawing.Point(105, 20);
             this.cbUnfollow.Margin = new System.Windows.Forms.Padding(2);
             this.cbUnfollow.Name = "cbUnfollow";
             this.cbUnfollow.Size = new System.Drawing.Size(84, 17);
@@ -330,7 +330,7 @@
             // cbStopAttack
             // 
             this.cbStopAttack.AutoSize = true;
-            this.cbStopAttack.Location = new System.Drawing.Point(192, 19);
+            this.cbStopAttack.Location = new System.Drawing.Point(193, 20);
             this.cbStopAttack.Margin = new System.Windows.Forms.Padding(2);
             this.cbStopAttack.Name = "cbStopAttack";
             this.cbStopAttack.Size = new System.Drawing.Size(95, 17);
@@ -341,8 +341,7 @@
             // cbEnableGlobalHotkey
             // 
             this.cbEnableGlobalHotkey.AutoSize = true;
-            this.cbEnableGlobalHotkey.Location = new System.Drawing.Point(7, 19);
-            this.cbEnableGlobalHotkey.Margin = new System.Windows.Forms.Padding(2);
+            this.cbEnableGlobalHotkey.Location = new System.Drawing.Point(7, 20);
             this.cbEnableGlobalHotkey.Name = "cbEnableGlobalHotkey";
             this.cbEnableGlobalHotkey.Size = new System.Drawing.Size(93, 17);
             this.cbEnableGlobalHotkey.TabIndex = 18;
@@ -493,7 +492,7 @@
             this.lbStopAttackBg.AutoSize = true;
             this.lbStopAttackBg.BackColor = System.Drawing.Color.Transparent;
             this.lbStopAttackBg.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbStopAttackBg.Location = new System.Drawing.Point(193, 16);
+            this.lbStopAttackBg.Location = new System.Drawing.Point(188, 16);
             this.lbStopAttackBg.Name = "lbStopAttackBg";
             this.lbStopAttackBg.Size = new System.Drawing.Size(105, 24);
             this.lbStopAttackBg.TabIndex = 21;

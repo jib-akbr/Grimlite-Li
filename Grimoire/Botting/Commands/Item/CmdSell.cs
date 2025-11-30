@@ -23,7 +23,7 @@ namespace Grimoire.Botting.Commands.Item
         public async Task Execute(IBotEngine instance)
         {
             BotData.BotState = BotData.State.Transaction;
-            string _ItemName = (instance.IsVar(this.ItemName) ? Configuration.Tempvariable[instance.GetVar(this.ItemName)] : this.ItemName);
+            string _ItemName = instance.ResolveVars(ItemName);
             int _qty = int.Parse(instance.ResolveVars(Qty));
             await instance.WaitUntil(() => World.IsActionAvailable(LockActions.SellItem));
             InventoryItem item = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => i.Name.Equals(_ItemName, StringComparison.OrdinalIgnoreCase));
@@ -33,7 +33,7 @@ namespace Grimoire.Botting.Commands.Item
                 {
                     await Player.ExitCombat();
                     Shop.SellItem(_ItemName, _qty);
-                    await instance.WaitUntil(() => !Player.Inventory.ContainsItem(item.Name, item.Quantity.ToString()));
+                    await instance.WaitUntil(() => !Player.Inventory.ContainsItem(item.Name, item.Quantity.ToString()),timeout:3);
                 }
             }
         }
@@ -42,7 +42,7 @@ namespace Grimoire.Botting.Commands.Item
         {
             int.TryParse(Qty, out int value);
 
-            if (value == 0)
+            if (value == 0 && !Qty.Contains("["))
                 return $"Sell (all): {ItemName}";
             else if (value < 0)
                 return $"Sell (until): {ItemName} x{Math.Abs(value)}";

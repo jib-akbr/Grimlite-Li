@@ -2,6 +2,7 @@
 using Grimoire.UI;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Grimoire.Networking.Handlers
@@ -31,19 +32,19 @@ namespace Grimoire.Networking.Handlers
                     LogForm.Instance.devDebug("[AddItemHandler] 'items' not found in packet.");
                     return;
                 }
-                
+
                 foreach (var item in items)
                 {
                     var obj2 = item.Value as JObject;
                     if (obj2 == null)
                         continue;
 
-                    string name = item.Value["sName"]?.ToString() ?? "blank";
+                    string name = item.Value["sName"]?.ToString() ?? Player.TempInventory.Items.FirstOrDefault
+                        (i => i.Id == (int)item.Value["ItemID"])?.Name ?? "blank";
 
                     lock (Player.recentMapItem)
                     {
-                        if (!Player.recentMapItem.ContainsKey(mapItemid))
-                            Player.recentMapItem[mapItemid] = name;
+                        Player.recentMapItem[mapItemid] = name;
                     }
 
                     LogForm.Instance.devDebug($"[AddItemHandler] MapItem added: {name} ({mapItemid})");

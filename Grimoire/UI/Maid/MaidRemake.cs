@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Grimoire.Botting;
 using Grimoire.Game;
 using Grimoire.Networking;
 using DarkUI.Forms;
@@ -71,11 +72,18 @@ namespace Grimoire.UI.Maid
             KeyPreview = true;
 
             //KeyListener non Global Hook
-            //this.KeyDown += new KeyEventHandler(this.hotkey);
+            this.KeyDown += new KeyEventHandler(this.hotkey);
             if (Player.IsLoggedIn) cmbGotoUsername.Text = Player.Username;
             cmbUltraBoss.SelectedIndex = 0;
             this.Text = $"Maid Remake";
 
+            if (cbAntiCounter.Checked)
+                Flash.FlashCall2 += AntiCounterHandler;
+            if (cbPartyCmd.Checked)
+            {
+                Proxy.Instance.RegisterHandler(PartyInvitationHandler);
+                Proxy.Instance.RegisterHandler(PartyChatHandler);
+            }
             ToolTip toolTip = new ToolTip();
             toolTip.SetToolTip(this.cbPartyCmd,
                 "[Auto accept any party invitation when checked]" +
@@ -200,7 +208,7 @@ namespace Grimoire.UI.Maid
 
                                 if (cbBuffIfStop.Checked && tbBuffSkill.Text != String.Empty)
                                 {
-                                    useSkill(buffSkill[buffIndex]);
+                                    useSkill(buffSkill[buffIndex], true);
                                     //Player.UseSkill(buffSkill[buffIndex]);
                                     buffIndex++;
 
@@ -251,7 +259,7 @@ namespace Grimoire.UI.Maid
                                     await Task.Delay(1000);
                                     await Task.Delay(Player.SkillAvailable(skillAct));
                                     //Player.UseSkill(skillAct);
-                                    useSkill(skillAct);
+                                    useSkill(skillAct, true);
                                     forceSkill = false;
                                     await Task.Delay(500);
                                 }
@@ -296,6 +304,7 @@ namespace Grimoire.UI.Maid
                             while (cbEnablePlugin.Checked && Player.IsLoggedIn && isPlayerInMyRoom && !isPlayerInMyCell)
                             {
                                 Player.GoToPlayer(targetUsername);
+                                debug("Attempt to chase");
                                 if (cbEnablePlugin.Checked && Player.IsLoggedIn && isPlayerInMyRoom && !isPlayerInMyCell)
                                     await Task.Delay(1000);
                                 else break;
@@ -312,10 +321,20 @@ namespace Grimoire.UI.Maid
                 stopMaid();
             }
         }
-
-        private void useSkill(string skillIndex)
+        private async Task waitSkill(string index)
         {
-            if (isUsingCSH())
+            int cd = Player.SkillAvailable(index);
+            await Task.Delay(Math.Min(cd, 1500));
+            useSkill(index, true);
+            for (int i = 0; i < 10 && Player.SkillAvailable(index) == 0; i++)
+            {
+                await Task.Delay(100); //Ensure its going to cooldown
+            }
+            useSkill(index, true);
+        }
+        private void useSkill(string skillIndex, bool force = false)
+        {
+            if (isUsingCSH() || force)
             {
                 Player.ForceUseSkill(skillIndex);
                 return;
@@ -345,13 +364,13 @@ namespace Grimoire.UI.Maid
                     int order = -1;
 
                     if (parts.Length > 1 && !int.TryParse(parts[1], out cycle))
-                        throw new Exception("Cycle harus berupa angka!");
+                        throw new Exception("Cycle isn't a valid number!");
 
                     if (parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2]))
                         mon = parts[2];
 
                     if (parts.Length > 3 && !int.TryParse(parts[3], out second))
-                        throw new Exception("Second harus berupa angka!");
+                        throw new Exception("Seconds isn't a valid number!");
                     if (parts.Length > 4 && !int.TryParse(parts[4], out order))
                         order -= 1;
 
@@ -377,7 +396,7 @@ namespace Grimoire.UI.Maid
                     stopMaid();
                     Task.Delay(200);
                     Player.MoveToCell(Player.Cell, Player.Pad);
-                    tbSpecialMsg.Text = $"tc;2;*;14;<order 1-4>(optional)";
+                    tbSpecialMsg.Text = $"tc;2;*;12;<order 1-4>(optional)";
                 }
             }
         }
@@ -391,21 +410,21 @@ namespace Grimoire.UI.Maid
         string[] potionNames = { "Felicitous Philtre", "Potent Malice", "Potent Honor" };
         private async Task SpecialCombo()
         {
-            var potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i)
-                => i.IsEquipped && i.Quantity >= 1 && potionNames.Contains(i.Name));
+            var potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i) =>
+                i.IsEquipped &&
+                i.Quantity >= 1 &&
+                potionNames.Any(pots => i.Name.IndexOf(pots, StringComparison.OrdinalIgnoreCase) >= 0));
             if (potion != null)
             {
                 if (potion.Name.Contains("Potent") && Player.GetAuras(true, "Potent Honor Malice") == 0)
                 {
-                    await Task.Delay(Player.SkillAvailable("5"));
-                    useSkill("5");
-                    return;
+                    await waitSkill("5");
                 }
-                if (potion.Name.Contains("Felicitous") && Player.GetAuras(true, "Felicitous Philtre") == 0)
+                else if (potion.Name.Contains("Felicitous") && Player.GetAuras(true, "Felicitous Philtre") == 0)
                 {
-                    await Task.Delay(Player.SkillAvailable("5"));
-                    useSkill("5");
-                    return;
+                    await waitSkill("5");
+                    //await Task.Delay(Player.SkillAvailable("5"));
+                    //useSkill("5");
                 }
             }
 
@@ -430,20 +449,23 @@ namespace Grimoire.UI.Maid
             {
                 if (Player.GetAuras(true, "Rounds Empty") == 1 || Player.Mana < 15)
                 {
-                    useSkill("4");
+                    await waitSkill("4");
+                    await waitSkill("1");
+                    /*useSkill("4");
                     await Task.Delay(Player.SkillAvailable("1"));
                     await Task.Delay(100);
                     useSkill("1");
-                    await Task.Delay(200);
+                    await Task.Delay(200);*/
                 }
             }
             else if (Player.EquippedClass == "ARCANA INVOKER")
             {
-                if (Player.GetAuras(true, "XX - Judgement") == 1 ||
-                    Player.GetAuras(true, "End of the world") >= 13 ||
-                    Player.GetAuras(true, "XXI - The World") == 0 && Player.GetAuras(true, "0 - The Fool") == 0)
+                if ((Player.GetAuras(true, "0 - The Fool") == 0 &&
+                    Player.GetAuras(true, "XXI - The World") == 0) || 
+					Player.GetAuras(true, "XX - Judgement") == 1 ||
+                    Player.GetAuras(true, "End of the world") >= 20 )
                 {
-                    useSkill("1");
+                    await waitSkill("1");
                     await Task.Delay(200);
                 }
             }
@@ -453,8 +475,7 @@ namespace Grimoire.UI.Maid
                     Player.GetAuras(true, "Corporeal Ascension") == 0 ||
                     Player.GetAuras(true, "Arcane Sigil") == 0)
                 {
-                    useSkill("4");
-                    await Task.Delay(200);
+                    await waitSkill("4");
                 }
             }
 
@@ -462,7 +483,7 @@ namespace Grimoire.UI.Maid
             if (Player.Map == "ultragramiel")
             {
                 // string target = Player.GetTargetName().ToLower();
-                if (Player.GetTargetName()?.IndexOf("grace crystal", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                if (Player.GetTargetName?.IndexOf("grace crystal", StringComparison.OrdinalIgnoreCase) >= 0 ||
                     World.IsMonsterAvailable("grace crystal"))
                 {
                     CheckCrystalHealthBalance();
@@ -493,7 +514,9 @@ namespace Grimoire.UI.Maid
                 return;
             }
 
+            //Gramiel crystal HP threshold
             const int threshold = 100;
+            //Get Current target MonId
             int.TryParse(Flash.GetGameObject("world.myAvatar.target.objData.MonMapID").Replace("\"", ""), out int currentId);
 
             if (currentId == 2 && L_crystal.Health <= threshold && R_crystal.Health > threshold)
@@ -535,7 +558,7 @@ namespace Grimoire.UI.Maid
             {
                 count %= cycle;
             }
-            debug($"Executing tauntcycle with Cycle = {cycle}, Every {second}s, initial taunt at {second / (count + 1)}s");
+            debug($"Executing tauntcycle with Cycle = {cycle}, Every {second}s, initial taunt at {second / cycle * count}s");
             while (World.IsMonsterAvailable(mon) && !cts.IsCancellationRequested)
             {
                 if (count <= 0)
@@ -597,14 +620,20 @@ namespace Grimoire.UI.Maid
                                     int monId = 0;
 
                                     int.TryParse(anim?["tInf"]?.ToString()?.Split(':')[1], out monId);
+
+                                    // Store animation message for bot statement commands
+                                    Configuration.LastAnimationMessage = msg;
+                                    Configuration.AnimationTriggered = true;
+
                                     string[] inputMsg = tbSpecialMsg.Text?.ToLower().Split(',');
                                     foreach (string m in inputMsg)
                                     {
                                         string specialMsg = m.Trim();
                                         if (!string.IsNullOrEmpty(specialMsg))
                                         {
-                                            if (msg.Contains(specialMsg) && ultraBossHandler(msg))
+                                            if (msg.Contains(specialMsg) && ultraBossHandler(msg, monId))
                                             {
+                                                //LogForm.Instance.devDebug($"Forcing taunt into id:{monId}");
                                                 forceSkill = true;
                                                 return;
                                             }
@@ -658,7 +687,10 @@ namespace Grimoire.UI.Maid
                         JArray a = (JArray)jsonMessage.DataObject?["a"];
                         if (a != null)
                         {
-                            cbStopAttack.Checked = Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack;
+                            if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
+								cbStopAttack.Checked = true; //changed to avoid force uncheck 
+                            else if (Player.Map == "ascendedeclipse")
+                                cbStopAttack.Checked = false;
                             foreach (JObject aura in a)
                             {
                                 JObject aura2 = (JObject)aura["aura"];
@@ -701,7 +733,7 @@ namespace Grimoire.UI.Maid
             if (balance)
                 return;
 
-            string currentTarget = Player.GetTargetName();
+            string currentTarget = Player.GetTargetName;
             for (int i = 0; i < monsterList.Length; i++)
             {
                 //if (monsterList[i].Equals(Player.GetTargetName(), StringComparison.OrdinalIgnoreCase))
@@ -784,6 +816,8 @@ namespace Grimoire.UI.Maid
             Proxy.Instance.UnregisterHandler(CopyWalkHandler);
             if (cbSpecialAnims.Checked)
                 Flash.FlashCall2 -= AnimsMsgHandler;
+            if (cbAntiCounter.Checked)
+                Flash.FlashCall2 -= AntiCounterHandler;
 
             cbSpecialAnims.Enabled = true;
             tbSpecialMsg.Enabled = true;
@@ -852,7 +886,8 @@ namespace Grimoire.UI.Maid
 
         private void hotkey(object sender, KeyEventArgs e)
         {
-            if (cmbGotoUsername.Focused || tbAttPriority.Focused || tbSpecialMsg.Focused)
+            //if (cmbGotoUsername.Focused || tbAttPriority.Focused || tbSpecialMsg.Focused)
+            if (IsFocusedOnBox)
                 return;
 
             switch (e.KeyCode)
@@ -872,7 +907,8 @@ namespace Grimoire.UI.Maid
 
         private void globalHotkey(object sender, Keys e)
         {
-            if (cmbGotoUsername.Focused || tbAttPriority.Focused || tbSpecialMsg.Focused)
+            //if (cmbGotoUsername.Focused || tbAttPriority.Focused || tbSpecialMsg.Focused)
+            if (IsFocusedOnBox)
                 return;
 
             switch (e)
@@ -887,8 +923,8 @@ namespace Grimoire.UI.Maid
                     break;
             }
         }
-
         /* Other Control */
+        public bool IsFocusedOnBox => this.ActiveControl is TextBox || this.ActiveControl is ComboBox;
 
         public void pauseFollow()
         {
@@ -910,7 +946,8 @@ namespace Grimoire.UI.Maid
 
         private void cbLockCell_CheckedChanged(object sender, EventArgs e)
         {
-            if (cbEnableGlobalHotkey.Checked == false) return;
+            if (!cbEnablePlugin.Checked)
+                return;
             if (cbUnfollow.Checked)
             {
                 Proxy.Instance.UnregisterHandler(CJHandler);
@@ -925,7 +962,7 @@ namespace Grimoire.UI.Maid
 
         private void cbStopAttack_CheckedChanged(object sender, EventArgs e)
         {
-            if (cbEnableGlobalHotkey.Checked == false) return;
+            // if (cbEnableGlobalHotkey.Checked == false) return;
             if (cbStopAttack.Checked)
             {
                 lbStopAttackBg.BackColor = System.Drawing.Color.DeepPink;
@@ -995,11 +1032,15 @@ namespace Grimoire.UI.Maid
                 {
                     case "Gramiel L1":
                     case "Gramiel L2":
+                        if (monId != 2)
+                            return false;
                         crystalCount++;
                         debug($"Defense shattering 'Left Crystal' count: {crystalCount}");
                         break;
                     case "Gramiel R1":
                     case "Gramiel R2":
+                        if (monId != 3)
+                            return false;
                         crystalCount++;
                         debug($"Defense shattering 'Right Crystal' count: {crystalCount}");
                         break;
@@ -1043,11 +1084,11 @@ namespace Grimoire.UI.Maid
                     break;
                 case "Gramiel L1":
                 case "Gramiel R1":
-                    act = crystalCount % 4 == 2 || !msg.Contains("shattering");
+                    act = crystalCount % 2 != 0 || !msg.Contains("shattering");
                     break;
                 case "Gramiel L2":
                 case "Gramiel R2":
-                    act = crystalCount % 4 == 0 || !msg.Contains("shattering");
+                    act = crystalCount % 2 == 0 || !msg.Contains("shattering");
                     break;
             }
             return act;
@@ -1199,10 +1240,15 @@ namespace Grimoire.UI.Maid
                 AntiCounter = cbAntiCounter.Checked,
                 UltraBossExtra = cmbUltraBoss.SelectedIndex,
             };
+
+            string configFolder = Path.Combine(Application.StartupPath, "Config");
+            if (!Directory.Exists(configFolder))
+                Directory.CreateDirectory(configFolder);
+
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
                 saveFileDialog.Title = "Save config";
-                saveFileDialog.InitialDirectory = Path.Combine(Application.StartupPath, "Config");
+                saveFileDialog.InitialDirectory = configFolder;
                 saveFileDialog.Filter = "Maid config|*.json";
                 saveFileDialog.DefaultExt = ".json";
                 saveFileDialog.CheckFileExists = false;
@@ -1224,10 +1270,14 @@ namespace Grimoire.UI.Maid
 
         private void btnLoad_Click(object sender, EventArgs e)
         {
+            string configFolder = Path.Combine(Application.StartupPath, "Config");
+            if (!Directory.Exists(configFolder))
+                Directory.CreateDirectory(configFolder);
+
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.Title = "Load config";
-                openFileDialog.InitialDirectory = Path.Combine(Application.StartupPath, "Config");
+                openFileDialog.InitialDirectory = configFolder;
                 openFileDialog.Filter = "Maid config|*.json";
                 openFileDialog.DefaultExt = ".json";
                 if (openFileDialog.ShowDialog() == DialogResult.OK &&
@@ -1259,6 +1309,9 @@ namespace Grimoire.UI.Maid
                     cbAntiCounter.Checked = config.AntiCounter;
                 }
             }
+            if (cbEnableGlobalHotkey.Checked)
+                this.KeyDown -= hotkey; //Global hotkey will disable instance hotkey
+            
         }
 
         private bool TryDeserialize(string json, out MaidConfig config)
@@ -1311,10 +1364,9 @@ namespace Grimoire.UI.Maid
         }
         private void antiCounter()
         {
+            Flash.FlashCall2 -= AntiCounterHandler;
             if (cbAntiCounter.Checked)
                 Flash.FlashCall2 += AntiCounterHandler;
-            else
-                Flash.FlashCall2 -= AntiCounterHandler;
         }
         private void cbSpecialAnims_CheckedChanged(object sender, EventArgs e)
         {

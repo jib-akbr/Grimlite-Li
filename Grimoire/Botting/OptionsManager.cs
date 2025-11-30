@@ -123,7 +123,7 @@ namespace Grimoire.Botting
         public static bool InfiniteRange
         {
             get => _infRange;
-            set 
+            set
             {
                 _infRange = value;
                 if (_infRange)
@@ -159,7 +159,7 @@ namespace Grimoire.Botting
 
         private static void SetEnemyMagnet() => Flash.Call("SetEnemyMagnet", empty);
 
-        public static void SetLagKiller() => Flash.Call("SetLagKiller", LagKiller ? bool.TrueString : bool.FalseString);
+        public static void SetLagKiller(bool lagkiller) => Flash.Call("SetLagKiller", lagkiller ? bool.TrueString : bool.FalseString);
 
         public static void DestroyPlayers() => Flash.Call("DestroyPlayers", empty);
 
@@ -178,6 +178,7 @@ namespace Grimoire.Botting
         public static void Stop()
         {
             IsRunning = false;
+			//SetLagKiller(false);
         }
 
         private static async Task ApplySettings()
@@ -185,24 +186,25 @@ namespace Grimoire.Botting
             IsRunning = true;
             while (IsRunning && Player.IsLoggedIn)
             {
-                if (!Player.IsLoggedIn)
+                /*if (!Player.IsLoggedIn)
                 {
                     return;
-                }
+                }*/ //Commented due to redundant
                 bool flagprovoke = ProvokeMonsters && Player.IsAlive && BotData.BotState != BotData.State.Move && BotData.BotState != BotData.State.Rest && BotData.BotState != BotData.State.Transaction;
                 if (flagprovoke)
-					SetProvokeMonsters();
-				if (EnemyMagnet && Player.IsAlive)
+                    SetProvokeMonsters();
+                if (EnemyMagnet && Player.IsAlive)
                     SetEnemyMagnet();
                 if (SkipCutscenes)
                     SetSkipCutscenes();
                 if (HidePlayers)
                     DestroyPlayers();
-                SetLagKiller();
+                SetLagKiller(LagKiller);
                 await Task.Delay(millisecondsDelay: Timer);
             }
+            //IsRunning = false; //To ensure it can be started again after disconnected
         }
-        
+
         private static IJsonMessageHandler HandlerDisableAnimations
         {
             get;
@@ -213,8 +215,8 @@ namespace Grimoire.Botting
             get;
         } = new HandlerPlayers();
 
-        public static IJsonMessageHandler HandlerRange 
-        { 
+        public static IJsonMessageHandler HandlerRange
+        {
             get;
         } = new HandlerSkills();
 

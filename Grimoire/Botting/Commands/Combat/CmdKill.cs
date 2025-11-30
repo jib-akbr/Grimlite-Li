@@ -34,8 +34,9 @@ namespace Grimoire.Botting.Commands.Combat
 
 			string Monster = instance.IsVar(this.Monster) ? Configuration.Tempvariable[instance.GetVar(this.Monster)] : this.Monster;
 
+			//waiting monster to respawn for 3s
 			await instance.WaitUntil(() => World.IsMonsterAvailable(Monster), null, 3);
-
+			
 			if (instance.Configuration.WaitForAllSkills)
 			{
 				await Task.Delay(Player.AllSkillsAvailable);
@@ -57,8 +58,8 @@ namespace Grimoire.Botting.Commands.Combat
 			if (instance.Configuration.Skills.Count > 0)
 				await UseSkillsSet(instance);
 
-			await instance.WaitUntil(() => !Player.HasTarget && !onPause, timeout:20);
 			Player.CancelTarget(); //timeout increased to 20 for Autoattack/empty skills users
+			await instance.WaitUntil(() => !Player.HasTarget && !onPause, timeout:20);
 
 			if (AntiCounter)
 			{
@@ -86,7 +87,7 @@ namespace Grimoire.Botting.Commands.Combat
 			int Count = instance.Configuration.Skills.Count - 1;
 			this.Index = ClassIndex;
 
-			while (!this._cts.IsCancellationRequested && !onPause && Player.HasTarget)
+			while (!this._cts.IsCancellationRequested && !onPause && Player.HasTarget && Player.GetTargetHealth() > 0)
 			{
 				switch (this.Monster.ToLower())
 				{
@@ -143,7 +144,7 @@ namespace Grimoire.Botting.Commands.Combat
 						continue;
 					}
 
-					if (instance.Configuration.WaitForSkill || s.Type == Skill.SkillType.Wait)
+					if (instance.Configuration.WaitForSkill || s.waitCd)
 					{
 						BotManager.Instance.OnSkillIndexChanged(Index);
 						await Task.Delay(Player.SkillAvailable(s.Index));
@@ -170,7 +171,7 @@ namespace Grimoire.Botting.Commands.Combat
 					
 					Skill s = instance.Configuration.Skills[_skillIndex];
                     //LogForm.Instance.AppendDebug($"Trying to execute Skill-{s.Index} at index {_skillIndex}/{Count}");
-                    if (instance.Configuration.WaitForSkill)
+                    if (instance.Configuration.WaitForSkill || s.waitCd)
 					{
 						BotManager.Instance.OnSkillIndexChanged(Index);
 						await Task.Delay(Player.SkillAvailable(s.Index));
@@ -183,12 +184,9 @@ namespace Grimoire.Botting.Commands.Combat
 					_skillIndex = _skillIndex >= count ? 0 : ++_skillIndex;
 				}
 				await Task.Delay(instance.Configuration.SkillDelay);
-			}
 
-			if (Player.HasTarget)
-			{
-				Player.CancelTarget();
 			}
+			
 		}
 
 		private void AntiCounterHandler(AxShockwaveFlashObjects.AxShockwaveFlash flash, string function, params object[] args)

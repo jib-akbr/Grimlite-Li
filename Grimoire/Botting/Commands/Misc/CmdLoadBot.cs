@@ -1,3 +1,4 @@
+using Grimoire.Game;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -53,7 +54,9 @@ namespace Grimoire.Botting.Commands.Misc
                         instance.Index = -1;
                         instance.LoadBankItems();
                         instance.LoadAllQuests();
+						instance.StartQuestList();
                         instance.CurrentConfiguration++;
+						BotData.BotSkill = null; //This is needed to make Skillset dynamic
                     }
                 }
                 catch (Exception e) { MessageBox.Show(e.ToString()); }
