@@ -1,4 +1,15 @@
-# GrimLite Ligma 1.8
-## 14-11-2025
+# GrimLite Ligma 1.9
+## 30-11-2025
 
-Too many improvements to be listed (check the commit history)
+>CmdSell support max sell or until leaving x-stack
+>CmdQuestcomplete support max turn in
+>CmdKill performance improved
+>CmdShorthunt Cell locking/Multi cell
+>New CmdTauntcycle
+>New CmdMovetocell2 (basically jump when target not detected)
+>Gramiel crystal HP balancer on Maid
+>Loader & Grabber improvement
+>Lagkiller auto off (except using Cmdstopbot)
+>Multivar support for major commands
+>Questlist performance stabilized
+>and many minor performance changes
