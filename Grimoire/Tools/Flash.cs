@@ -478,6 +478,10 @@ namespace Grimoire.Tools
 						Player.Logout();
 					}
 					break;*/
+                case "resPlayerTimed":
+					Flash.Call("ResetAura", new string[0]);
+					break;
+					
                 case "getMapItem":
                     int itemId = int.Parse(packet.Split('%')[5]);
                     if (Player.recentMapItem.TryGetValue(itemId, out var itemName) && itemName?.Equals("blank") == false)
