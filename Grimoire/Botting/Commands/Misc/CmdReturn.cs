@@ -1,8 +1,6 @@
-using Newtonsoft.Json;
+using Grimoire.Game;
 using System;
-using System.IO;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Grimoire.Botting.Commands.Misc
 {
@@ -21,6 +19,7 @@ namespace Grimoire.Botting.Commands.Misc
                     instance.Index = oldIndex;
                     instance.LoadBankItems();
                     instance.LoadAllQuests();
+					BotData.BotSkill = null;
                 }
             }
             catch (Exception e)
