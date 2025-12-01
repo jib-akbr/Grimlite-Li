@@ -193,6 +193,95 @@ namespace Grimoire.UI
 
         public void InitFlashMovie(string gameSwf)
         {
+            string exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string swfPath = null;
+            if (!string.IsNullOrEmpty(gameSwf))
+            {
+                try
+                {
+                    string rel = gameSwf.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
+                    swfPath = Path.Combine(exeDir, rel);
+                }
+                catch { swfPath = null; }
+            }
+
+            if (string.IsNullOrEmpty(gameSwf) || string.IsNullOrEmpty(swfPath) || !File.Exists(swfPath))
+            {
+                try
+                {
+                    LogForm.Instance.AppendDebug("InitFlashMovie: flash path is not configured (null or empty). Showing placeholder.\r\n");
+                }
+                catch
+                {
+                }
+
+                // Clear any existing controls and show a friendly message in the game container
+                gameContainer.Controls.Clear();
+                Label msg = new Label();
+                msg.AutoSize = false;
+                msg.Dock = DockStyle.Fill;
+                msg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+                msg.ForeColor = System.Drawing.Color.LightGray;
+                msg.BackColor = System.Drawing.Color.FromArgb(30, 30, 36);
+                msg.Text = "Game SWF not configured.\n\nPlace your game SWF at 'Loader\\grimoire.swf' relative to the exe,\nor add 'flash=Loader\\grimoire.swf' to ClientConfig.cfg.";
+                msg.Font = new System.Drawing.Font(msg.Font.FontFamily, 12f);
+                msg.Padding = new Padding(20);
+
+                // Add a button allowing the user to pick a SWF now
+                FlowLayoutPanel fl = new FlowLayoutPanel();
+                fl.Dock = DockStyle.Fill;
+                fl.FlowDirection = FlowDirection.TopDown;
+                fl.WrapContents = false;
+                fl.AutoScroll = true;
+                fl.Padding = new Padding(20);
+                fl.BackColor = gameContainer.BackColor;
+
+                Button chooseBtn = new Button();
+                chooseBtn.Text = "Choose SWF...";
+                chooseBtn.AutoSize = true;
+                chooseBtn.Padding = new Padding(8);
+                chooseBtn.Anchor = AnchorStyles.None;
+
+                chooseBtn.Click += (s, ev) =>
+                {
+                    using (OpenFileDialog ofd = new OpenFileDialog())
+                    {
+                        ofd.Filter = "Flash files (*.swf)|*.swf|All files (*.*)|*.*";
+                        ofd.Title = "Select Game SWF";
+                        if (ofd.ShowDialog() == DialogResult.OK)
+                        {
+                            try
+                            {
+                                string exeDirLocal = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                                string loaderDir = Path.Combine(exeDirLocal, "Loader");
+                                Directory.CreateDirectory(loaderDir);
+                                string dest = Path.Combine(loaderDir, "grimoire.swf");
+                                File.Copy(ofd.FileName, dest, true);
+                                ClientConfig.SetValue(ClientConfig.C_FLASH, "Loader\\grimoire.swf");
+                                // Reload using the newly set path
+                                InitFlashMovie("Loader\\grimoire.swf");
+                            }
+                            catch (Exception ex)
+                            {
+                                try
+                                {
+                                    LogForm.Instance.AppendDebug("InitFlashMovie: failed to set SWF: " + ex.Message + "\r\n");
+                                }
+                                catch { }
+                                MessageBox.Show("Failed to set SWF: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                        }
+                    }
+                };
+
+                fl.Controls.Add(msg);
+                fl.SetFlowBreak(msg, true);
+                fl.Controls.Add(chooseBtn);
+
+                gameContainer.Controls.Add(fl);
+
+                return;
+            }
             //Hook.EoLHook.Hook();
             Flash.flash?.Dispose();
             Flash.SwfLoadProgress -= OnLoadProgress;

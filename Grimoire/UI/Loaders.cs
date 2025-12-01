@@ -49,8 +49,9 @@ namespace Grimoire.UI
 		private DarkButton btnSave;
 		private DarkButton btnForceAccept;
 		private DarkNumericUpDown numTQuests;
-		private DarkComboBox cbOrderBy;
-		private TreeView treeGrabbed;
+        private DarkComboBox cbOrderBy;
+        private TreeView treeGrabbed;
+        private DarkCheckBox cbGhost;
 
         public static Loaders Instance
         {

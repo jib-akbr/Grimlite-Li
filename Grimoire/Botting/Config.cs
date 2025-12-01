@@ -36,16 +36,33 @@ namespace Grimoire.Botting
 
         public static Config Load(string path)
         {
-            if(!File.Exists(path))
+            try
             {
-                File.Create(path);
-                Task.Delay(100);
+                if (!File.Exists(path))
+                {
+                    using (File.Create(path)) { }
+                }
+
+                var lines = File.Exists(path) ? File.ReadLines(path) : Enumerable.Empty<string>();
+                var dict = lines
+                    .Select(l => l.Split(new[] { '=' }, 2))
+                    .Where(parts => parts.Length == 2 && !string.IsNullOrWhiteSpace(parts[0]))
+                    .ToDictionary(parts => parts[0], parts => parts[1]);
+
+                return new Config()
+                {
+                    file = path,
+                    Contents = dict
+                };
             }
-            return new Config()
+            catch
             {
-                file = path,
-                Contents = File.ReadLines(path).Select(l => l.Split('=')).ToDictionary(a => a[0], a => a[1])
-            };
+                return new Config()
+                {
+                    file = path,
+                    Contents = new Dictionary<string, string>()
+                };
+            }
         }
     }
 }
