@@ -50,7 +50,8 @@ namespace Grimoire.UI
 		private DarkButton btnForceAccept;
 		private DarkNumericUpDown numTQuests;
 		private DarkComboBox cbOrderBy;
-		private TreeView treeGrabbed;
+        private DarkCheckBox cbGhost;
+        private TreeView treeGrabbed;
 
         public static Loaders Instance
         {
@@ -527,6 +528,8 @@ namespace Grimoire.UI
             this.Controls.Add(this.cbGrab);
             this.Controls.Add(this.btnLoad);
             this.Controls.Add(this.cbLoad);
+            this.Controls.Add(this.txtSearchGrab);
+            this.Controls.Add(this.btnSearchGrab);
             this.Controls.Add(this.txtLoaders);
             this.Icon = global::Properties.Resources.GrimoireIcon;
             this.MaximizeBox = false;
