@@ -28,10 +28,10 @@ namespace Grimoire.Networking.Handlers
         private readonly GramielPreset _preset;
         private CancellationTokenSource _cts;
         private Task _tauntTask;
-        private int _crystalCount;
-        // Set to true when a matching "shattering" event occurs and this preset
-        // should act. Consumed once by the taunt loop to perform a single orb taunt.
-        private bool _pendingOrbTaunt;
+
+        // Per-instance defense shattering counter, mirroring Maid's ultraBossHandler
+        // logic on each client independently for Gramiel L1/L2/R1/R2.
+        private int _defenseShatteringCount;
 
         // Listen to "ct" (combat/animation) packets so we can inspect the boss
         // text like Maid's AnimsMsgHandler (e.g., "shattering").
@@ -64,20 +64,150 @@ namespace Grimoire.Networking.Handlers
                     if (string.IsNullOrEmpty(msg))
                         continue;
 
-                    // Only care about the Gramiel crystal shattering message.
-                    if (!msg.Contains("shattering"))
+                    // Only care about Gramiel's defense shattering message, like Maid.
+                    if (!msg.Contains("defense shattering"))
                         continue;
 
-                    _crystalCount++;
+                    // Extract monId from tInf (e.g. "id:2" / "id:3") just like Maid.
+                    int monId = 0;
+                    string tInf = anim?["tInf"]?.ToString();
+                    if (!string.IsNullOrEmpty(tInf))
+                    {
+                        string[] parts = tInf.Split(':');
+                        if (parts.Length > 1)
+                            int.TryParse(parts[1], out monId);
+                    }
 
-                    bool act = ShouldActOnShattering();
+                    // Prefer to use monId when available, but do not *require* it.
+                    // If monId is 0 (missing), still count the shatter so left-side
+                    // (P1/P2) and right-side (P3/P4) clients can alternate locally.
+                    if (monId != 0)
+                    {
+                        switch (_preset)
+                        {
+                            // Left-side presets expect crystal id 2.
+                            case GramielPreset.P1:
+                            case GramielPreset.P2:
+                                if (monId != 2)
+                                    continue;
+                                break;
+
+                            // Right-side presets expect crystal id 3.
+                            case GramielPreset.P3:
+                            case GramielPreset.P4:
+                                if (monId != 3)
+                                    continue;
+                                break;
+                        }
+                    }
+
+                    _defenseShatteringCount++;
+
+                    // Decide if this preset should act on this shatter, using the same
+                    // odd/even rule as Maid's ultraBossHandler.
+                    bool act;
+                    switch (_preset)
+                    {
+                        // Gramiel L1 / Gramiel R1: odd counts.
+                        case GramielPreset.P1:
+                        case GramielPreset.P3:
+                            act = (_defenseShatteringCount % 2 != 0);
+                            break;
+
+                        // Gramiel L2 / Gramiel R2: even counts (and > 0).
+                        case GramielPreset.P2:
+                        case GramielPreset.P4:
+                            act = (_defenseShatteringCount % 2 == 0 && _defenseShatteringCount > 0);
+                            break;
+
+                        default:
+                            act = false;
+                            break;
+                    }
+
                     if (!act)
                         continue;
 
-                    // Mark that on the next loop tick we should perform a single orb
-                    // taunt for this preset. The taunt loop will resolve the correct
-                    // side and consume this flag.
-                    _pendingOrbTaunt = true;
+                    // Decide our orb side based on preset.
+                    string orbTarget = null;
+                    switch (_preset)
+                    {
+                        case GramielPreset.P1:
+                        case GramielPreset.P2:
+                            orbTarget = "id:2";
+                            break;
+                        case GramielPreset.P3:
+                        case GramielPreset.P4:
+                            orbTarget = "id:3";
+                            break;
+                    }
+
+                    bool hasOrb = !string.IsNullOrEmpty(orbTarget) && World.IsMonsterAvailable(orbTarget);
+                    bool hasGramiel = World.IsMonsterAvailable("Gramiel");
+                    bool hasGrace = World.IsMonsterAvailable("Grace Crystal");
+
+                    // When it's this preset's defense shattering turn, taunt our side's
+                    // crystal if it exists; otherwise fall back to Gramiel when safe.
+                    // Use a strong cast sequence similar to Maid's Special Anims:
+                    // wait for cooldown, then cast the taunt skill twice, and retry
+                    // until the Focus target aura is applied or attempts are exhausted.
+                    if (hasOrb)
+                    {
+                        Player.AttackMonster(orbTarget);
+                        Task.Run(async () =>
+                        {
+                            try
+                            {
+                                for (int attempt = 0; attempt < 3; attempt++)
+                                {
+                                    // If target already has Focus, stop retrying.
+                                    if (Player.GetAuras(false, "Focus") > 0)
+                                        break;
+
+                                    int wait = Player.SkillAvailable("5");
+                                    if (wait > 0)
+                                        await Task.Delay(wait);
+
+                                    Player.ForceUseSkill("5");
+                                    await Task.Delay(500);
+                                    Player.UseSkill("5");
+
+                                    // Short delay before re-checking Focus.
+                                    await Task.Delay(300);
+                                }
+                            }
+                            catch { }
+                        });
+                    }
+                    else if (hasGramiel && !hasGrace)
+                    {
+                        if (Player.GetAuras(true, "Vendetta") == 0)
+                        {
+                            Player.AttackMonster("Gramiel");
+                            Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    for (int attempt = 0; attempt < 3; attempt++)
+                                    {
+                                        if (Player.GetAuras(false, "Focus") > 0)
+                                            break;
+
+                                        int wait = Player.SkillAvailable("5");
+                                        if (wait > 0)
+                                            await Task.Delay(wait);
+
+                                        Player.ForceUseSkill("5");
+                                        await Task.Delay(500);
+                                        Player.UseSkill("5");
+
+                                        await Task.Delay(300);
+                                    }
+                                }
+                                catch { }
+                            });
+                        }
+                    }
                 }
             }
             catch
@@ -86,28 +216,11 @@ namespace Grimoire.Networking.Handlers
             }
         }
 
+        // Legacy shatter helper is no longer used; the defense shattering logic
+        // is implemented inline in Handle based on _defenseShatteringCount.
         private bool ShouldActOnShattering()
         {
-            // Reproduce the Gramiel L1/L2/R1/R2 pattern from Maid's
-            // ultraBossHandler:
-            //
-            // - L1/R1: act when crystalCount % 4 == 2
-            // - L2/R2: act when crystalCount % 4 == 0
-
-            int mod = _crystalCount % 4;
-            switch (_preset)
-            {
-                case GramielPreset.P1: // Gramiel L1
-                case GramielPreset.P3: // Gramiel R1
-                    return mod == 2;
-
-                case GramielPreset.P2: // Gramiel L2
-                case GramielPreset.P4: // Gramiel R2
-                    return mod == 0;
-
-                default:
-                    return false;
-            }
+            return true;
         }
 
         private void StartTauntLoop()
@@ -125,23 +238,28 @@ namespace Grimoire.Networking.Handlers
             const int cycle = 4;
             const int second = 20;
 
-            // Each preset gets a different initial offset in the cycle so that
-            // P1–P4 are evenly spaced.
+            // NOTE: The original Maid-style per-preset taunt cycle is no longer used
+            // for Gramiel. Instead, each account will spam taunt on Gramiel until it
+            // obtains the Vendetta aura, then stop taunting.
             int count = (int)_preset;
 
-            // Side-specific orb priority, based on Maid's attack priority:
-            // - Left side:  id.2
-            // - Right side: id.3
+            // Side-specific orb identifiers. The main taunt logic for orbs happens
+            // reactively in Handle(...). Here we keep track of both "our" orb and
+            // the opposite orb so that, once our side's crystal is dead, we can
+            // automatically help kill the remaining crystal.
             string orbTarget = null;
+            string otherOrbTarget = null;
             switch (_preset)
             {
                 case GramielPreset.P1:
                 case GramielPreset.P2:
-                    orbTarget = "id.2";
+                    orbTarget = "id:2";
+                    otherOrbTarget = "id:3";
                     break;
                 case GramielPreset.P3:
                 case GramielPreset.P4:
-                    orbTarget = "id.3";
+                    orbTarget = "id:3";
+                    otherOrbTarget = "id:2";
                     break;
             }
 
@@ -161,28 +279,20 @@ namespace Grimoire.Networking.Handlers
 
                     bool hasGramiel = World.IsMonsterAvailable("Gramiel");
                     bool hasGrace = World.IsMonsterAvailable("Grace Crystal");
-                    bool hasOrb = !string.IsNullOrEmpty(orbTarget) && World.IsMonsterAvailable(orbTarget);
 
-                    // Maid-style attack priority:
-                    // 1) While our side's orb exists (id.2/id.3), stay on that orb.
-                    // 2) Only fall back to Gramiel when no orb is available.
-                    if (hasOrb)
+                    bool hasOurOrb = !string.IsNullOrEmpty(orbTarget) && World.IsMonsterAvailable(orbTarget);
+                    bool hasOtherOrb = !string.IsNullOrEmpty(otherOrbTarget) && World.IsMonsterAvailable(otherOrbTarget);
+
+                    // If our crystal is dead but the opposite crystal is still alive,
+                    // help kill the remaining crystal before focusing Gramiel.
+                    if (!hasOurOrb && hasOtherOrb)
                     {
-                        Player.AttackMonster(orbTarget);
-
-                        // If we have a pending orb taunt from a recent "shattering" event,
-                        // consume it here with a single skill 5 cast.
-                        if (_pendingOrbTaunt)
-                        {
-                            _pendingOrbTaunt = false;
-                            Player.ForceUseSkill("5");
-                        }
-
+                        Player.AttackMonster(otherOrbTarget);
                         await Task.Delay(1000, token);
                         continue;
                     }
 
-                    // No orb available. If Gramiel isn't present, nothing to do.
+                    // If Gramiel isn't present, nothing to do.
                     if (!hasGramiel)
                     {
                         await Task.Delay(2000, token);
@@ -196,24 +306,37 @@ namespace Grimoire.Networking.Handlers
                         continue;
                     }
 
-                    // Maid-style taunt cycle: when count hits 0, force a taunt
-                    // on Gramiel, then reset the counter for the next cycle.
-                    if (count <= 0)
+                    // New behaviour: spam taunt on Gramiel until this account has
+                    // Vendetta, then stop taunting. All accounts can run this logic
+                    // concurrently; each will naturally stop once it has the aura.
+                    if (Player.GetAuras(true, "Vendetta") == 0)
                     {
-                        count = cycle;
+                        Player.AttackMonster("Gramiel");
 
-                        // Respect Vendetta aura: once we have it, stop taunting
-                        // Gramiel so other accounts can obtain the aura.
-                        if (Player.GetAuras(true, "Vendetta") == 0)
+                        // Strong taunt sequence with cooldown wait, similar to the
+                        // defence-shattering taunt logic.
+                        Task.Run(async () =>
                         {
-                            // Target Gramiel and cast taunt skill 5.
-                            Player.AttackMonster("Gramiel");
-                            Player.ForceUseSkill("5");
-                        }
-                    }
-                    else
-                    {
-                        count--;
+                            try
+                            {
+                                for (int attempt = 0; attempt < 3; attempt++)
+                                {
+                                    if (Player.GetAuras(true, "Vendetta") > 0)
+                                        break;
+
+                                    int wait = Player.SkillAvailable("5");
+                                    if (wait > 0)
+                                        await Task.Delay(wait);
+
+                                    Player.ForceUseSkill("5");
+                                    await Task.Delay(500);
+                                    Player.UseSkill("5");
+
+                                    await Task.Delay(300);
+                                }
+                            }
+                            catch { }
+                        });
                     }
 
                     int delayMs = (int)(second / (double)cycle * 1000);

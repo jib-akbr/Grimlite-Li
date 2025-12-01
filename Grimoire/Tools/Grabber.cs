@@ -212,7 +212,16 @@ namespace Grimoire.Tools
                     {
                         treeNode.Nodes.Add($"sFile: {item.File}");
                         treeNode.Nodes.Add($"sLink: {item.Link}");
-                        treeNode.Nodes.Add($"Enhancement: {item.ForgeEnhancement}");
+
+                        // Show a friendly enhancement name if we know it.
+                        string enhName = null;
+                        if (InventoryItem.EnhancementNames.TryGetValue(item.Enhancement, out var named))
+                            enhName = named;
+                        else if (item.ForgeEnhancement.HasValue)
+                            enhName = item.ForgeEnhancement.Value.ToString();
+
+                        treeNode.Nodes.Add($"Enhancement: {enhName ?? "Unknown"}");
+                        treeNode.Nodes.Add($"Enhancement ID: {item.Enhancement}");
                     }
                 }
             }

@@ -688,8 +688,8 @@ namespace Grimoire.UI.Maid
                         if (a != null)
                         {
                             if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
-								cbStopAttack.Checked = true; //changed to avoid force uncheck 
-                            else if (Player.Map == "ascendedeclipse")
+								cbStopAttack.Checked = true;  
+                            else if (Player.Map == "ascendedeclipse") //changed to avoid force uncheck
                                 cbStopAttack.Checked = false;
                             foreach (JObject aura in a)
                             {

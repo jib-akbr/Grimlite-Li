@@ -3233,39 +3233,51 @@ namespace Grimoire.UI
                     disposable.Dispose();
             }
 
-            switch (cmbSpecials.SelectedItem.ToString())
-            {
-                case "Auto Zone - Ultradage":
-                    SpecialJsonHandler = new HandlerAutoZoneUltraDage();
-                    break;
-                case "Auto Zone - Dark Carnax":
-                    SpecialJsonHandler = new HandlerAutoZoneDarkCarnax();
-                    break;
-                case "Auto Zone - Astral Empyrean":
-                    SpecialJsonHandler = new HandlerAutoZoneAstralEmpyrean();
-                    break;
-                case "Auto Zone - Queen Iona":
-                    SpecialJsonHandler = new HandlerAutoZoneQueenIona();
-                    break;
-                case "Auto Zone - Colossal Vordred":
-                    SpecialJsonHandler = new HandlerAutoZoneVordred();
-                    break;
-                case "Gramiel P1":
-                    SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P1);
-                    break;
-                case "Gramiel P2":
-                    SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P2);
-                    break;
-                case "Gramiel P3":
-                    SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P3);
-                    break;
-                case "Gramiel P4":
-                    SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P4);
-                    break;
-                default:
-                    SpecialJsonHandler = null;
-                    break;
-            }
+				switch (cmbSpecials.SelectedItem.ToString())
+				{
+					case "Auto Zone - Ultradage":
+						SpecialJsonHandler = new HandlerAutoZoneUltraDage();
+						break;
+				case "Auto Zone - Dark Carnax":
+					SpecialJsonHandler = new HandlerAutoZoneDarkCarnax();
+					break;
+				case "Auto Zone - Astral Empyrean":
+					SpecialJsonHandler = new HandlerAutoZoneAstralEmpyrean();
+					break;
+				case "Auto Zone - Queen Iona":
+					SpecialJsonHandler = new HandlerAutoZoneQueenIona();
+					break;
+				case "Auto Zone - Colossal Vordred":
+					SpecialJsonHandler = new HandlerAutoZoneVordred();
+					break;
+				case "Gramiel P1":
+					SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P1);
+					break;
+				case "Gramiel P2":
+					SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P2);
+					break;
+				case "Gramiel P3":
+					SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P3);
+					break;
+					case "Gramiel P4":
+						SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P4);
+						break;
+					case "Ultra Speaker DPS":
+						SpecialJsonHandler = new HandlerUltraSpeakerDPS();
+						break;
+					case "Ultra Speaker LR":
+						SpecialJsonHandler = new HandlerUltraSpeakerLR();
+						break;
+					case "Ultra Speaker LOO":
+						SpecialJsonHandler = new HandlerUltraSpeakerLOO();
+						break;
+					case "Ultra Speaker AP":
+						SpecialJsonHandler = new HandlerUltraSpeakerAP();
+						break;
+					default:
+						SpecialJsonHandler = null;
+						break;
+				}
 
             // Register new handler immediately if bot is already running
             if (SpecialJsonHandler != null && ActiveBotEngine.IsRunning)
