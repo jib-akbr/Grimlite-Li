@@ -727,6 +727,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="4zvbZ3m.ico" />
+    <Content Include="ClientConfig.cfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="config.cfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Loader\grimoire.swf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\astolfo_head.png" />
     <None Include="Resources\Dropbox.png" />
     <None Include="Resources\astolfo.jpg" />

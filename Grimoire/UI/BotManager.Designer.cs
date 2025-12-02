@@ -614,7 +614,6 @@ namespace Grimoire.UI
             this.btnchangeGuild = new DarkUI.Controls.DarkButton();
             this.txtGuild = new DarkUI.Controls.DarkTextBox();
             this.tabHunt = new System.Windows.Forms.TabPage();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.darkLabel9 = new DarkUI.Controls.DarkLabel();
             this.btnAddCmdHunt = new DarkUI.Controls.DarkButton();
             this.chkIsTempF = new DarkUI.Controls.DarkCheckBox();
@@ -750,7 +749,6 @@ namespace Grimoire.UI
             this.grpAccessLevel.SuspendLayout();
             this.grpAlignment.SuspendLayout();
             this.tabHunt.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabBots.SuspendLayout();
             this.darkPanel1.SuspendLayout();
             this.tabInfo.SuspendLayout();
@@ -4801,7 +4799,6 @@ namespace Grimoire.UI
             // tabHunt
             // 
             this.tabHunt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(36)))), ((int)(((byte)(36)))), ((int)(((byte)(46)))));
-            this.tabHunt.Controls.Add(this.pictureBox1);
             this.tabHunt.Controls.Add(this.darkLabel9);
             this.tabHunt.Controls.Add(this.btnAddCmdHunt);
             this.tabHunt.Controls.Add(this.chkIsTempF);
@@ -4823,18 +4820,6 @@ namespace Grimoire.UI
             this.tabHunt.Size = new System.Drawing.Size(192, 70);
             this.tabHunt.TabIndex = 3;
             this.tabHunt.Text = "Hunt";
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBox1.Image = global::Properties.Resources.astolfo_head;
-            this.pictureBox1.Location = new System.Drawing.Point(60, -49);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(133, 122);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox1.TabIndex = 172;
-            this.pictureBox1.TabStop = false;
-            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
             // 
             // darkLabel9
             // 
@@ -5581,7 +5566,6 @@ namespace Grimoire.UI
             this.grpAlignment.ResumeLayout(false);
             this.tabHunt.ResumeLayout(false);
             this.tabHunt.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tabBots.ResumeLayout(false);
             this.tabBots.PerformLayout();
             this.darkPanel1.ResumeLayout(false);
@@ -5650,7 +5634,6 @@ namespace Grimoire.UI
 		private DarkCheckBox chkQuestListItem;
 		private DarkNumericUpDown numQuestListItem;
 		private DarkButton btnRemoveQuestList;
-		private PictureBox pictureBox1;
 		private DarkRadioButton radBuyByName;
 		private DarkRadioButton radBuyByID;
 		private DarkTextBox tbShopId;

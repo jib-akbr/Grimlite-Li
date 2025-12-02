@@ -3521,17 +3521,6 @@ namespace Grimoire.UI
             }, (ModifierKeys & Keys.Control) == Keys.Control);
         }
 
-        int clickCounter = 0;
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-            clickCounter++;
-            if (clickCounter >= 3)
-            {
-                Root.Instance.ShowForm(new Egg());
-                clickCounter = 0;
-            }
-        }
-
         private void btnStopAttack_Click(object sender, EventArgs e)
         {
             AddCommand(new CmdCancelTarget(), (ModifierKeys & Keys.Control) == Keys.Control);

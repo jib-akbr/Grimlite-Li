@@ -380,6 +380,25 @@ namespace Grimoire.UI
             this.btnLoad.Text = "Load";
             this.btnLoad.Click += new System.EventHandler(this.btnLoad_Click);
             // 
+            // 
+            // txtSearchGrab
+            // 
+            this.txtSearchGrab.Location = new System.Drawing.Point(12, 280);
+            this.txtSearchGrab.Name = "txtSearchGrab";
+            this.txtSearchGrab.Size = new System.Drawing.Size(174, 20);
+            this.txtSearchGrab.TabIndex = 32;
+            this.txtSearchGrab.Text = "Search";
+            // 
+            // btnSearchGrab
+            // 
+            this.btnSearchGrab.Checked = false;
+            this.btnSearchGrab.Location = new System.Drawing.Point(192, 278);
+            this.btnSearchGrab.Name = "btnSearchGrab";
+            this.btnSearchGrab.Size = new System.Drawing.Size(67, 23);
+            this.btnSearchGrab.TabIndex = 36;
+            this.btnSearchGrab.Text = "Search";
+            this.btnSearchGrab.Click += new System.EventHandler(this.btnSearchGrab_Click);
+            // 
 			// cbGrab
 			// 
 			this.cbGrab.FormattingEnabled = true;
@@ -392,34 +411,16 @@ namespace Grimoire.UI
 			"Bank items",
 			"Monsters",
 			"All Monsters"});
-			this.cbGrab.Location = new System.Drawing.Point(12, 332);
+			this.cbGrab.Location = new System.Drawing.Point(12, 306);
 			this.cbGrab.Name = "cbGrab";
 			this.cbGrab.Size = new System.Drawing.Size(174, 21);
 			this.cbGrab.TabIndex = 33;
 			this.cbGrab.SelectedIndexChanged += new System.EventHandler(this.cbGrab_SelectedIndexChanged);
 			// 
-			// txtSearchGrab
-			// 
-			this.txtSearchGrab.Location = new System.Drawing.Point(12, 306);
-			this.txtSearchGrab.Name = "txtSearchGrab";
-			this.txtSearchGrab.Size = new System.Drawing.Size(174, 20);
-			this.txtSearchGrab.TabIndex = 32;
-			this.txtSearchGrab.Text = "Search";
-			// 
-			// btnSearchGrab
-			// 
-			this.btnSearchGrab.Checked = false;
-			this.btnSearchGrab.Location = new System.Drawing.Point(192, 304);
-			this.btnSearchGrab.Name = "btnSearchGrab";
-			this.btnSearchGrab.Size = new System.Drawing.Size(67, 23);
-			this.btnSearchGrab.TabIndex = 36;
-			this.btnSearchGrab.Text = "Search";
-			this.btnSearchGrab.Click += new System.EventHandler(this.btnSearchGrab_Click);
-			// 
             // btnGrab
             // 
             this.btnGrab.Checked = false;
-            this.btnGrab.Location = new System.Drawing.Point(134, 359);
+            this.btnGrab.Location = new System.Drawing.Point(134, 333);
             this.btnGrab.Name = "btnGrab";
             this.btnGrab.Size = new System.Drawing.Size(125, 26);
             this.btnGrab.TabIndex = 34;
@@ -429,7 +430,7 @@ namespace Grimoire.UI
             // btnSave
             // 
             this.btnSave.Checked = false;
-            this.btnSave.Location = new System.Drawing.Point(12, 359);
+            this.btnSave.Location = new System.Drawing.Point(12, 333);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(121, 26);
             this.btnSave.TabIndex = 35;
@@ -446,8 +447,8 @@ namespace Grimoire.UI
             this.treeGrabbed.LabelEdit = true;
             this.treeGrabbed.Location = new System.Drawing.Point(12, 94);
             this.treeGrabbed.Name = "treeGrabbed";
-            // Reduce height a bit so the search bar is clearly visible below it.
-            this.treeGrabbed.Size = new System.Drawing.Size(247, 200);
+            // Reduce height so the search bar is clearly visible below it.
+            this.treeGrabbed.Size = new System.Drawing.Size(247, 174);
             this.treeGrabbed.TabIndex = 38;
             // 
             // btnForceAccept
@@ -497,7 +498,7 @@ namespace Grimoire.UI
             this.cbOrderBy.Items.AddRange(new object[] {
             "Name",
             "Id"});
-            this.cbOrderBy.Location = new System.Drawing.Point(192, 332);
+            this.cbOrderBy.Location = new System.Drawing.Point(192, 306);
             this.cbOrderBy.Name = "cbOrderBy";
             this.cbOrderBy.Size = new System.Drawing.Size(67, 21);
             this.cbOrderBy.TabIndex = 169;
@@ -517,7 +518,7 @@ namespace Grimoire.UI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(271, 393);
+            this.ClientSize = new System.Drawing.Size(271, 367);
             this.Controls.Add(this.cbGhost);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnGrab);
@@ -526,9 +527,11 @@ namespace Grimoire.UI
             this.Controls.Add(this.btnForceAccept);
             this.Controls.Add(this.treeGrabbed);
             this.Controls.Add(this.cbGrab);
+            this.Controls.Add(this.btnSearchGrab);
             this.Controls.Add(this.btnLoad);
             this.Controls.Add(this.cbLoad);
             this.Controls.Add(this.txtLoaders);
+            this.Controls.Add(this.txtSearchGrab);
             this.Icon = global::Properties.Resources.GrimoireIcon;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
