@@ -172,8 +172,6 @@ namespace Grimoire.Botting
             set;
         }
 
-
-
         public bool LagKiller
         {
             get;

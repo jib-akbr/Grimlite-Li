@@ -530,6 +530,8 @@ namespace Grimoire.UI
             this.Controls.Add(this.btnSearchGrab);
             this.Controls.Add(this.btnLoad);
             this.Controls.Add(this.cbLoad);
+            this.Controls.Add(this.txtSearchGrab);
+            this.Controls.Add(this.btnSearchGrab);
             this.Controls.Add(this.txtLoaders);
             this.Controls.Add(this.txtSearchGrab);
             this.Icon = global::Properties.Resources.GrimoireIcon;
