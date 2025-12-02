@@ -1942,82 +1942,84 @@ namespace Grimoire.UI
 
             chkEnable.Enabled = false;
             Root.Instance.chkStartBot.Enabled = false;
-			try {
-			if (chkEnable.Checked)
+            try
             {
-                if (cmbSpecials.SelectedIndex != -1 && !chkSpecial.Checked)
+                if (chkEnable.Checked)
                 {
-                    chkSpecial.Checked = true;
+                    if (cmbSpecials.SelectedIndex != -1 && !chkSpecial.Checked)
+                    {
+                        chkSpecial.Checked = true;
+                    }
+
+                    setPresetsSkills();
+
+                    if (lstItems.Items.Count > 0 && chkInventOnStart.Checked)
+                        await UnBankItems();
+                    selectionMode(SelectionMode.One);
+                    ActiveBotEngine.IsRunningChanged += OnIsRunningChanged;
+                    ActiveBotEngine.IndexChanged += OnIndexChanged;
+                    ActiveBotEngine.ConfigurationChanged += OnConfigurationChanged;
+                    ActiveBotEngine.Start(GenerateConfiguration());
+                    BotStateChanged(IsRunning: true);
+                    Root.Instance.BotStateChanged(IsRunning: true);
+                    Root.Instance.chkStartBot.Checked = true;
+                    //Configuration.Instance.keepLagKiller = false;
+                    if (chkAntiMod.Checked)
+                    {
+                        chkHidePlayers.Enabled = false;
+                        chkHidePlayers.Checked = false;
+                    }
+
+                    // Register any user-selected special handlers
+                    if (SpecialJsonHandler != null)
+                        Proxy.Instance.RegisterHandler(SpecialJsonHandler);
+                    if (SpecialXtHandler != null)
+                        Proxy.Instance.RegisterHandler(SpecialXtHandler);
+
+                    // Always register the Special Anims handler so Misc "Special Anims" works
+                    Proxy.Instance.RegisterHandler(_specialAnimsHandler);
                 }
-
-                setPresetsSkills();
-
-                if (lstItems.Items.Count > 0 && chkInventOnStart.Checked)
-                    await UnBankItems();
-                selectionMode(SelectionMode.One);
-                ActiveBotEngine.IsRunningChanged += OnIsRunningChanged;
-                ActiveBotEngine.IndexChanged += OnIndexChanged;
-                ActiveBotEngine.ConfigurationChanged += OnConfigurationChanged;
-                ActiveBotEngine.Start(GenerateConfiguration());
-                BotStateChanged(IsRunning: true);
-                Root.Instance.BotStateChanged(IsRunning: true);
-                Root.Instance.chkStartBot.Checked = true;
-                //Configuration.Instance.keepLagKiller = false;
-                if (chkAntiMod.Checked)
+                else
                 {
-                    chkHidePlayers.Enabled = false;
-                    chkHidePlayers.Checked = false;
+                    ActiveBotEngine.Stop();
+                    selectionMode(SelectionMode.MultiExtended);
+                    BotStateChanged(IsRunning: false);
+                    Root.Instance.BotStateChanged(IsRunning: false);
+                    Root.Instance.chkStartBot.Checked = false;
+                    chkHidePlayers.Enabled = true;
+
+                    if (Player.CurrentState == Player.State.InCombat)
+                    {
+                        Player.CancelTarget();
+                        Player.CancelAutoAttack();
+                    }
+                    if (lstItems.Items.Count > 0 && this.chkBankOnStop.Checked)
+                    {
+                        Player.MoveToCell(Player.Cell, Player.Pad);
+                        await Task.Delay(2000);
+                        await BankingItems();
+                    }
+
+                    if (SpecialJsonHandler != null)
+                        Proxy.Instance.UnregisterHandler(SpecialJsonHandler);
+                    if (SpecialXtHandler != null)
+                        Proxy.Instance.UnregisterHandler(SpecialXtHandler);
+
+                    // Unregister the always-on Special Anims handler
+                    Proxy.Instance.UnregisterHandler(_specialAnimsHandler);
+
+                    if (cmbSpecials.SelectedIndex != -1 && chkSpecial.Enabled)
+                    {
+                        chkSpecial.Checked = false;
+                        chkSpecial.Enabled = true;
+                    }
                 }
-
-                // Register any user-selected special handlers
-                if (SpecialJsonHandler != null)
-                    Proxy.Instance.RegisterHandler(SpecialJsonHandler);
-                if (SpecialXtHandler != null)
-                    Proxy.Instance.RegisterHandler(SpecialXtHandler);
-
-                // Always register the Special Anims handler so Misc "Special Anims" works
-                Proxy.Instance.RegisterHandler(_specialAnimsHandler);
             }
-            else
+            catch (Exception ex)
             {
-				ActiveBotEngine.Stop();
-                selectionMode(SelectionMode.MultiExtended);
-                BotStateChanged(IsRunning: false);
-                Root.Instance.BotStateChanged(IsRunning: false);
-                Root.Instance.chkStartBot.Checked = false;
-                chkHidePlayers.Enabled = true;
-
-                if (Player.CurrentState == Player.State.InCombat)
-                {
-                    Player.CancelTarget();
-                    Player.CancelAutoAttack();
-                }
-                if (lstItems.Items.Count > 0 && this.chkBankOnStop.Checked)
-                {
-                    Player.MoveToCell(Player.Cell, Player.Pad);
-                    await Task.Delay(2000);
-                    await BankingItems();
-                }
-
-                if (SpecialJsonHandler != null)
-                    Proxy.Instance.UnregisterHandler(SpecialJsonHandler);
-                if (SpecialXtHandler != null)
-                    Proxy.Instance.UnregisterHandler(SpecialXtHandler);
-
-                // Unregister the always-on Special Anims handler
-                Proxy.Instance.UnregisterHandler(_specialAnimsHandler);
-
-                if (cmbSpecials.SelectedIndex != -1 && chkSpecial.Enabled)
-                {
-                    chkSpecial.Checked = false;
-                    chkSpecial.Enabled = true;
-                }
-            }
-			}
-			catch (Exception ex) {
                 MessageBox.Show("Failed to start bot : " + ex.Message, "Grimoire", MessageBoxButtons.OK, MessageBoxIcon.Hand);
-				
-			}
+
+            }
             toggleAntiMod(chkAntiMod.Checked && chkEnable.Checked);
 
             chkEnable.Enabled = true;
@@ -3184,21 +3186,28 @@ namespace Grimoire.UI
                 string c2 = "prepares a counter attack";
                 if (msg.Contains(c2))
                 {
-                    Player.CancelAutoAttack();
-                    Player.CancelTarget();
-                    if (chkEnable.Checked)
+                    Task.Run(async () =>
                     {
-                        ActiveBotEngine.Configuration.SkipAttack = true;
-                    }
-                    Console.WriteLine("Counter Attack: active");
+                        Player.CancelAutoAttack();
+                        Player.CancelTarget();
+                        if (chkEnable.Checked)
+                        {
+                            ActiveBotEngine.Configuration.SkipAttack = true;
+                        }
+                        Console.WriteLine("Counter Attack: active");
+
+                        //This function will ensure auto exit Counter/Stop Atk
+                        await Task.Delay(10000);
+                        ActiveBotEngine.Configuration.SkipAttack = false;
+                    });
                 }
 
-                //"cmd":"aura--","aura":{"nam":"Counter Attack"
+                 //"cmd":"aura--","aura":{"nam":"Counter Attack" 
                 if (msg.Contains("\"cmd\":\"aura--\",\"aura\":{\"nam\":\"Counter Attack\""))
                 {
                     Console.WriteLine("Counter Attack: fades");
                     ActiveBotEngine.Configuration.SkipAttack = false;
-                }
+                } 
             }
             catch (Exception e)
             {
@@ -3233,51 +3242,51 @@ namespace Grimoire.UI
                     disposable.Dispose();
             }
 
-				switch (cmbSpecials.SelectedItem.ToString())
-				{
-					case "Auto Zone - Ultradage":
-						SpecialJsonHandler = new HandlerAutoZoneUltraDage();
-						break;
-				case "Auto Zone - Dark Carnax":
-					SpecialJsonHandler = new HandlerAutoZoneDarkCarnax();
-					break;
-				case "Auto Zone - Astral Empyrean":
-					SpecialJsonHandler = new HandlerAutoZoneAstralEmpyrean();
-					break;
-				case "Auto Zone - Queen Iona":
-					SpecialJsonHandler = new HandlerAutoZoneQueenIona();
-					break;
-				case "Auto Zone - Colossal Vordred":
-					SpecialJsonHandler = new HandlerAutoZoneVordred();
-					break;
-				case "Gramiel P1":
-					SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P1);
-					break;
-				case "Gramiel P2":
-					SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P2);
-					break;
-				case "Gramiel P3":
-					SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P3);
-					break;
-					case "Gramiel P4":
-						SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P4);
-						break;
-					case "Ultra Speaker DPS":
-						SpecialJsonHandler = new HandlerUltraSpeakerDPS();
-						break;
-					case "Ultra Speaker LR":
-						SpecialJsonHandler = new HandlerUltraSpeakerLR();
-						break;
-					case "Ultra Speaker LOO":
-						SpecialJsonHandler = new HandlerUltraSpeakerLOO();
-						break;
-					case "Ultra Speaker AP":
-						SpecialJsonHandler = new HandlerUltraSpeakerAP();
-						break;
-					default:
-						SpecialJsonHandler = null;
-						break;
-				}
+            switch (cmbSpecials.SelectedItem.ToString())
+            {
+                case "Auto Zone - Ultradage":
+                    SpecialJsonHandler = new HandlerAutoZoneUltraDage();
+                    break;
+                case "Auto Zone - Dark Carnax":
+                    SpecialJsonHandler = new HandlerAutoZoneDarkCarnax();
+                    break;
+                case "Auto Zone - Astral Empyrean":
+                    SpecialJsonHandler = new HandlerAutoZoneAstralEmpyrean();
+                    break;
+                case "Auto Zone - Queen Iona":
+                    SpecialJsonHandler = new HandlerAutoZoneQueenIona();
+                    break;
+                case "Auto Zone - Colossal Vordred":
+                    SpecialJsonHandler = new HandlerAutoZoneVordred();
+                    break;
+                case "Gramiel P1":
+                    SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P1);
+                    break;
+                case "Gramiel P2":
+                    SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P2);
+                    break;
+                case "Gramiel P3":
+                    SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P3);
+                    break;
+                case "Gramiel P4":
+                    SpecialJsonHandler = new HandlerUltraGramielTaunt(HandlerUltraGramielTaunt.GramielPreset.P4);
+                    break;
+                case "Ultra Speaker DPS":
+                    SpecialJsonHandler = new HandlerUltraSpeakerDPS();
+                    break;
+                case "Ultra Speaker LR":
+                    SpecialJsonHandler = new HandlerUltraSpeakerLR();
+                    break;
+                case "Ultra Speaker LOO":
+                    SpecialJsonHandler = new HandlerUltraSpeakerLOO();
+                    break;
+                case "Ultra Speaker AP":
+                    SpecialJsonHandler = new HandlerUltraSpeakerAP();
+                    break;
+                default:
+                    SpecialJsonHandler = null;
+                    break;
+            }
 
             // Register new handler immediately if bot is already running
             if (SpecialJsonHandler != null && ActiveBotEngine.IsRunning)
