@@ -2091,6 +2091,41 @@ namespace Grimoire.UI
             }
         }
 
+        private void btnBuyMax_Click(object sender, EventArgs e)
+        {
+            if (tbShopItemName.TextLength > 0)
+            {
+                Int32.TryParse(tbShopId.Text, out int shopId);
+                Int32.TryParse(tbItemId.Text, out int itemId);
+                Int32.TryParse(tbShopItemId.Text, out int shopItemId);
+
+                if (radBuyByID.Checked)
+                {
+                    if (shopId == 0 || itemId == 0 || shopItemId == 0) return;
+                    AddCommand(new CmdBuy
+                    {
+                        ShopId = shopId,
+                        ItemId = itemId,
+                        ShopItemId = shopItemId,
+                        Qty = 100000,
+                        ByID = radBuyByID.Checked,
+                    }, (ModifierKeys & Keys.Control) == Keys.Control);
+                }
+
+                if (radBuyByName.Checked)
+                {
+                    if (shopId == 0) return;
+                    AddCommand(new CmdBuy
+                    {
+                        ItemName = tbShopItemName.Text,
+                        ShopId = shopId,
+                        Qty = 100000,
+                        ByID = radBuyByID.Checked,
+                    }, (ModifierKeys & Keys.Control) == Keys.Control);
+                }
+            }
+        }
+
         private void btnLoadShop_Click(object sender, EventArgs e)
         {
             Int32.TryParse(tbShopId.Text, out int shopId);

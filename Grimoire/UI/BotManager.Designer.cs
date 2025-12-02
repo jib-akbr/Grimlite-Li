@@ -217,6 +217,7 @@ namespace Grimoire.UI
 		private DarkTextBox tbShopItemName;
 		private DarkButton btnBuy;
 		private DarkButton btnBuyFast;
+		private DarkButton btnBuyMax;
 		private DarkGroupBox darkGroupBox2;
 		private DarkButton btnWhitelistToggle;
 		private DarkButton btnWhitelistOn;
@@ -409,6 +410,7 @@ namespace Grimoire.UI
             this.tbShopItemName = new DarkUI.Controls.DarkTextBox();
             this.btnBuy = new DarkUI.Controls.DarkButton();
             this.btnBuyFast = new DarkUI.Controls.DarkButton();
+            this.btnBuyMax = new DarkUI.Controls.DarkButton();
             this.darkGroupBox2 = new DarkUI.Controls.DarkGroupBox();
             this.btnWhitelistToggle = new DarkUI.Controls.DarkButton();
             this.btnWhitelistOn = new DarkUI.Controls.DarkButton();
@@ -2011,6 +2013,7 @@ namespace Grimoire.UI
             this.darkGroupBox3.Controls.Add(this.tbShopItemName);
             this.darkGroupBox3.Controls.Add(this.btnBuy);
             this.darkGroupBox3.Controls.Add(this.btnBuyFast);
+            this.darkGroupBox3.Controls.Add(this.btnBuyMax);
             this.darkGroupBox3.Location = new System.Drawing.Point(6, 144);
             this.darkGroupBox3.Name = "darkGroupBox3";
             this.darkGroupBox3.Size = new System.Drawing.Size(154, 129);
@@ -2147,6 +2150,16 @@ namespace Grimoire.UI
             this.btnBuyFast.TabIndex = 133;
             this.btnBuyFast.Text = "Buy fast";
             this.btnBuyFast.Click += new System.EventHandler(this.btnBuyFast_Click);
+            // 
+            // btnBuyMax
+            // 
+            this.btnBuyMax.Checked = false;
+            this.btnBuyMax.Location = new System.Drawing.Point(146, 103);
+            this.btnBuyMax.Name = "btnBuyMax";
+            this.btnBuyMax.Size = new System.Drawing.Size(48, 20);
+            this.btnBuyMax.TabIndex = 159;
+            this.btnBuyMax.Text = "Max";
+            this.btnBuyMax.Click += new System.EventHandler(this.btnBuyMax_Click);
             // 
             // darkGroupBox2
             // 
