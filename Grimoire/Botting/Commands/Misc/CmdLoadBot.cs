@@ -44,12 +44,17 @@ namespace Grimoire.Botting.Commands.Misc
                     int i = instance.CurrentConfiguration;
                     if (newConfiguration != null && newConfiguration.Commands.Count > 0)
                     {
+                        //Previous Config
                         if (!Bot.Configurations.ContainsKey(i))
                             Bot.Configurations.Add(i, instance.Configuration);
-                        else Bot.Configurations[i] = instance.Configuration;
+                        else 
+                            Bot.Configurations[i] = instance.Configuration;
+                        //Previous Index
                         if (!Bot.OldIndex.ContainsKey(i))
                             Bot.OldIndex.Add(i, instance.Index);
-                        else Bot.OldIndex[i] = instance.Index;
+                        else 
+                            Bot.OldIndex[i] = instance.Index;
+                        //Apply new config
                         instance.Configuration = newConfiguration;
                         instance.Index = -1;
                         instance.LoadBankItems();
