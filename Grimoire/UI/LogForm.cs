@@ -43,6 +43,10 @@ namespace Grimoire.UI
 
 		private DarkButton btnSave;
 
+		private DarkButton btnStart;
+
+		private DarkButton btnStop;
+
 		private FlatTabControl.FlatTabControl tabLogs;
 
 		private TabPage tabLogDebug;
@@ -97,6 +101,16 @@ namespace Grimoire.UI
 		{
 			InitializeComponent();
 			logRec = new DebugLogger(this);
+			// default: not logging
+			try
+			{
+				if (btnStart != null && btnStop != null)
+				{
+					btnStart.Enabled = true;
+					btnStop.Enabled = false;
+				}
+			}
+			catch { }
 		}
 
 		private void LogForm_Load(object sender, EventArgs e)
@@ -224,6 +238,30 @@ namespace Grimoire.UI
 			}
 		}
 
+		private void btnStart_Click(object sender, EventArgs e)
+		{
+			try
+			{
+				if (logRec != null && !Trace.Listeners.Contains(logRec))
+					Trace.Listeners.Add(logRec);
+				btnStart.Enabled = false;
+				btnStop.Enabled = true;
+			}
+			catch { }
+		}
+
+		private void btnStop_Click(object sender, EventArgs e)
+		{
+			try
+			{
+				if (logRec != null && Trace.Listeners.Contains(logRec))
+					Trace.Listeners.Remove(logRec);
+				btnStart.Enabled = true;
+				btnStop.Enabled = false;
+			}
+			catch { }
+		}
+
 		protected override void Dispose(bool disposing)
 		{
 			if (disposing && components != null)
@@ -239,6 +277,8 @@ namespace Grimoire.UI
 			this.txtLogDebug = new DarkUI.Controls.DarkTextBox();
 			this.btnClear = new DarkUI.Controls.DarkButton();
 			this.btnSave = new DarkUI.Controls.DarkButton();
+			this.btnStart = new DarkUI.Controls.DarkButton();
+			this.btnStop = new DarkUI.Controls.DarkButton();
 			this.tabLogs = new FlatTabControl.FlatTabControl();
 			this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.changeFontToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -278,7 +318,7 @@ namespace Grimoire.UI
 			this.btnClear.Location = new System.Drawing.Point(18, 383);
 			this.btnClear.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.btnClear.Name = "btnClear";
-			this.btnClear.Size = new System.Drawing.Size(298, 35);
+			this.btnClear.Size = new System.Drawing.Size(150, 35);
 			this.btnClear.TabIndex = 1;
 			this.btnClear.Text = "Clear";
 			this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
@@ -287,13 +327,37 @@ namespace Grimoire.UI
 			// 
 			this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.btnSave.Checked = false;
-			this.btnSave.Location = new System.Drawing.Point(326, 383);
+			this.btnSave.Location = new System.Drawing.Point(176, 383);
 			this.btnSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.btnSave.Name = "btnSave";
-			this.btnSave.Size = new System.Drawing.Size(298, 35);
+			this.btnSave.Size = new System.Drawing.Size(150, 35);
 			this.btnSave.TabIndex = 2;
 			this.btnSave.Text = "Save";
 			this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+			// 
+			// btnStart
+			// 
+			this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.btnStart.Checked = false;
+			this.btnStart.Location = new System.Drawing.Point(334, 383);
+			this.btnStart.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.btnStart.Name = "btnStart";
+			this.btnStart.Size = new System.Drawing.Size(150, 35);
+			this.btnStart.TabIndex = 3;
+			this.btnStart.Text = "Start";
+			this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
+			// 
+			// btnStop
+			// 
+			this.btnStop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.btnStop.Checked = false;
+			this.btnStop.Location = new System.Drawing.Point(492, 383);
+			this.btnStop.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.btnStop.Name = "btnStop";
+			this.btnStop.Size = new System.Drawing.Size(150, 35);
+			this.btnStop.TabIndex = 4;
+			this.btnStop.Text = "Stop";
+			this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
 			// 
 			// tabLogs
 			// 
@@ -426,6 +490,8 @@ namespace Grimoire.UI
 			this.ClientSize = new System.Drawing.Size(642, 437);
 			this.ContextMenuStrip = this.contextMenuStrip1;
 			this.Controls.Add(this.tabLogs);
+			this.Controls.Add(this.btnStop);
+			this.Controls.Add(this.btnStart);
 			this.Controls.Add(this.btnSave);
 			this.Controls.Add(this.btnClear);
 			this.Icon = global::Properties.Resources.GrimoireIcon;
