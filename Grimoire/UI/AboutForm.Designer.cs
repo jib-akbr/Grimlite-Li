@@ -208,7 +208,7 @@ namespace Grimoire.UI
 		// pbZee
 		// 
 		this.pbZee.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-		this.pbZee.Image = ((System.Drawing.Image)(resources.GetObject("pbZee.Image")));
+		this.pbZee.Image = global::Properties.Resources.Kofipb;
 		this.pbZee.InitialImage = null;
 		this.pbZee.Location = new System.Drawing.Point(30, 187);
 		this.pbZee.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
