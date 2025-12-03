@@ -71,7 +71,7 @@ namespace Grimoire.Botting.Commands.Combat
 
         private CancellationTokenSource _cts;
 
-        private static int Index = -1;
+        private static int Index = 0;
 
         private static string _lastBotSkill;
         private async Task UseSkillsSet(IBotEngine instance)
