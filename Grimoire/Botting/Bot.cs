@@ -73,7 +73,7 @@ namespace Grimoire.Botting
 
         private bool _isRunning;
 
-        private CancellationTokenSource _ctsQuestList;
+        private static CancellationTokenSource _ctsQuestList;
 
         private bool _onCompletingQuest = false;
 
@@ -188,6 +188,7 @@ namespace Grimoire.Botting
             _onCompletingQuest = false;
             paused = false;
             BotData.BotState = BotData.State.Others;
+            _ = Player.ExitCombat();
             this.StopCommands();
             TauntCycle.Reset();
             OptionsManager.SetLagKiller(Configuration.Instance.keepLagKiller);
@@ -310,13 +311,13 @@ namespace Grimoire.Botting
             if (_ctsQuestList != null && !_ctsQuestList.IsCancellationRequested)
                 StopQuestList(); //Ensure restarting QuestList
 
-            _ctsQuestList = new CancellationTokenSource();
-            var token = _ctsQuestList.Token;
-
-            int questDelay = (int)BotManager.Instance.numQuestDelay.Value;
-
             if (Configuration.Quests.Count == 0)
                 return;
+            //Moved to Avoid creating tokens when no QList at all
+            
+            _ctsQuestList = new CancellationTokenSource();
+            var token = _ctsQuestList.Token;
+            int questDelay = (int)BotManager.Instance.numQuestDelay.Value;
 
             LogForm.Instance.devDebug($"QuestList Started");
             qFailures.Clear();
@@ -324,7 +325,7 @@ namespace Grimoire.Botting
             {
                 qFailures.Add(quest.Id, 0);
             }
-
+            
             try
             {
                 while (!_ctsBot.IsCancellationRequested && !token.IsCancellationRequested && Player.IsLoggedIn)
@@ -498,7 +499,9 @@ namespace Grimoire.Botting
 
         private void OnQuestsLoaded(List<Quest> quests)
         {
-            List<Quest> qs = quests.Where((Quest q) => Configuration.Quests.Any((Quest qq) => qq.Id == q.Id)).ToList();
+            //triggers when Loading the quest for the first time
+            List<Quest> qs = quests.Where((Quest q) => 
+                Configuration.Quests.Any((Quest qq) => qq.Id == q.Id)).ToList();
             int count = qs.Count;
             if (qs.Count <= 0)
             {
