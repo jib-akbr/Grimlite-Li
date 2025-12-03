@@ -114,7 +114,7 @@ namespace Grimoire.UI
 			this.pbKuzyph.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
 			this.pbKuzyph.Image = ((System.Drawing.Image)(resources.GetObject("pbKuzyph.Image")));
 			this.pbKuzyph.InitialImage = null;
-			this.pbKuzyph.Location = new System.Drawing.Point(30, 166);
+			this.pbKuzyph.Location = new System.Drawing.Point(30, 160);
 			this.pbKuzyph.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.pbKuzyph.Name = "pbKuzyph";
 			this.pbKuzyph.Size = new System.Drawing.Size(24, 25);
@@ -126,7 +126,7 @@ namespace Grimoire.UI
 			// 
 			this.darkLabel4.AutoSize = true;
 			this.darkLabel4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
-			this.darkLabel4.Location = new System.Drawing.Point(58, 169);
+			this.darkLabel4.Location = new System.Drawing.Point(58, 160);
 			this.darkLabel4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.darkLabel4.Name = "darkLabel4";
 			this.darkLabel4.Size = new System.Drawing.Size(61, 20);
@@ -197,7 +197,7 @@ namespace Grimoire.UI
 			this.pbFrozttGithub.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
 			this.pbFrozttGithub.Image = ((System.Drawing.Image)(resources.GetObject("pbFrozttGithub.Image")));
 			this.pbFrozttGithub.InitialImage = null;
-			this.pbFrozttGithub.Location = new System.Drawing.Point(30, 138);
+			this.pbFrozttGithub.Location = new System.Drawing.Point(30, 130);
 			this.pbFrozttGithub.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.pbFrozttGithub.Name = "pbFrozttGithub";
 			this.pbFrozttGithub.Size = new System.Drawing.Size(24, 25);
@@ -222,7 +222,7 @@ namespace Grimoire.UI
 			// 
 			this.darkLabel6.AutoSize = true;
 			this.darkLabel6.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
-			this.darkLabel6.Location = new System.Drawing.Point(58, 142);
+			this.darkLabel6.Location = new System.Drawing.Point(58, 130);
 			this.darkLabel6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.darkLabel6.Name = "darkLabel6";
 			this.darkLabel6.Size = new System.Drawing.Size(69, 20);
@@ -245,7 +245,7 @@ namespace Grimoire.UI
 			// 
 			this.darkLabel3.AutoSize = true;
 			this.darkLabel3.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
-			this.darkLabel3.Location = new System.Drawing.Point(20, 111);
+			this.darkLabel3.Location = new System.Drawing.Point(20, 100);
 			this.darkLabel3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.darkLabel3.Name = "darkLabel3";
 			this.darkLabel3.Size = new System.Drawing.Size(154, 20);
