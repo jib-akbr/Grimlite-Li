@@ -34,12 +34,14 @@ namespace Grimoire.UI
 			this.panel1 = new System.Windows.Forms.Panel();
 			this.pbKuzyph = new System.Windows.Forms.PictureBox();
 			this.darkLabel4 = new DarkUI.Controls.DarkLabel();
+			this.lblZee = new DarkUI.Controls.DarkLabel();
 			this.pbDropbox = new System.Windows.Forms.PictureBox();
 			this.lblDropbox = new DarkUI.Controls.DarkLabel();
 			this.lblSwfInfo = new DarkUI.Controls.DarkLabel();
 			this.btnLoadSWF = new DarkUI.Controls.DarkButton();
 			this.tbGameSWF = new DarkUI.Controls.DarkTextBox();
 			this.pbFrozttGithub = new System.Windows.Forms.PictureBox();
+			this.pbZee = new System.Windows.Forms.PictureBox();
 			this.darkLabel6 = new DarkUI.Controls.DarkLabel();
 			this.darkLabel3 = new DarkUI.Controls.DarkLabel();
 			this.lblVersion = new DarkUI.Controls.DarkLabel();
@@ -47,6 +49,7 @@ namespace Grimoire.UI
 			this.panel2 = new System.Windows.Forms.Panel();
 			this.pbGrimoireBig = new System.Windows.Forms.PictureBox();
 			this.darkLabel5 = new DarkUI.Controls.DarkLabel();
+			this.lblZee = new DarkUI.Controls.DarkLabel();
 			this.appName = new DarkUI.Controls.DarkLabel();
 			this.pbCatGithub = new System.Windows.Forms.PictureBox();
 			this.pbEmperorMPGH = new System.Windows.Forms.PictureBox();
@@ -74,6 +77,8 @@ namespace Grimoire.UI
 			// 
 			this.panel1.Controls.Add(this.pbKuzyph);
 			this.panel1.Controls.Add(this.darkLabel4);
+			this.panel1.Controls.Add(this.pbZee);
+			this.panel1.Controls.Add(this.lblZee);
 			this.panel1.Controls.Add(this.pbDropbox);
 			this.panel1.Controls.Add(this.lblDropbox);
 			this.panel1.Controls.Add(this.lblSwfInfo);
@@ -128,27 +133,27 @@ namespace Grimoire.UI
 			this.darkLabel4.TabIndex = 27;
 			this.darkLabel4.Text = "Kuzyph";
 			// 
-			// pbDropbox
-			// 
-			this.pbDropbox.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-			this.pbDropbox.Image = global::Properties.Resources.Dropbox;
-			this.pbDropbox.InitialImage = null;
-			this.pbDropbox.Location = new System.Drawing.Point(30, 195);
-			this.pbDropbox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-			this.pbDropbox.Name = "pbDropbox";
-			this.pbDropbox.Size = new System.Drawing.Size(24, 25);
+		// pbDropbox
+		// 
+		this.pbDropbox.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+		this.pbDropbox.Image = global::Properties.Resources.Dropbox;
+		this.pbDropbox.InitialImage = null;
+		this.pbDropbox.Location = new System.Drawing.Point(30, 215);
+		this.pbDropbox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+		this.pbDropbox.Name = "pbDropbox";
+		this.pbDropbox.Size = new System.Drawing.Size(24, 25);
 			this.pbDropbox.TabIndex = 24;
 			this.pbDropbox.TabStop = false;
 			this.pbDropbox.Click += new System.EventHandler(this.pbDropbox_Click);
 			// 
-			// lblDropbox
-			// 
-			this.lblDropbox.AutoSize = true;
-			this.lblDropbox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
-			this.lblDropbox.Location = new System.Drawing.Point(58, 198);
-			this.lblDropbox.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-			this.lblDropbox.Name = "lblDropbox";
-			this.lblDropbox.Size = new System.Drawing.Size(96, 20);
+		// lblDropbox
+		// 
+		this.lblDropbox.AutoSize = true;
+		this.lblDropbox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+		this.lblDropbox.Location = new System.Drawing.Point(58, 215);
+		this.lblDropbox.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+		this.lblDropbox.Name = "lblDropbox";
+		this.lblDropbox.Size = new System.Drawing.Size(96, 20);
 			this.lblDropbox.TabIndex = 23;
 			this.lblDropbox.Text = "Dropbox link";
 			this.lblDropbox.Click += new System.EventHandler(this.lblDropbox_Click);
@@ -200,6 +205,19 @@ namespace Grimoire.UI
 			this.pbFrozttGithub.TabStop = false;
 			this.pbFrozttGithub.Click += new System.EventHandler(this.pbFrozttGithub_Click);
 			// 
+			// pbZee
+			// 
+			this.pbZee.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+			this.pbZee.Image = ((System.Drawing.Image)(resources.GetObject("pbFrozttGithub.Image")));
+			this.pbZee.InitialImage = null;
+			this.pbZee.Location = new System.Drawing.Point(30, 187);
+			this.pbZee.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.pbZee.Name = "pbZee";
+			this.pbZee.Size = new System.Drawing.Size(24, 25);
+			this.pbZee.TabIndex = 29;
+			this.pbZee.TabStop = false;
+			this.pbZee.Click += new System.EventHandler(this.pbZee_Click);
+			// 
 			// darkLabel6
 			// 
 			this.darkLabel6.AutoSize = true;
@@ -211,6 +229,18 @@ namespace Grimoire.UI
 			this.darkLabel6.TabIndex = 16;
 			this.darkLabel6.Text = "Froztt13";
 			// 
+			// lblZee
+			// 
+		this.lblZee.AutoSize = true;
+		this.lblZee.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+		this.lblZee.Location = new System.Drawing.Point(58, 187);
+		this.lblZee.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+		this.lblZee.Name = "lblZee";
+		this.lblZee.Size = new System.Drawing.Size(34, 20);
+		this.lblZee.TabIndex = 30;
+		this.lblZee.Text = "Zee";
+		this.lblZee.Click += new System.EventHandler(this.lblZee_Click);
+		// 
 			// darkLabel3
 			// 
 			this.darkLabel3.AutoSize = true;
@@ -458,7 +488,8 @@ namespace Grimoire.UI
         private DarkUI.Controls.DarkLabel darkLabel3;
         public DarkUI.Controls.DarkLabel lblVersion;
         private DarkUI.Controls.DarkLabel darkLabel6;
-        private System.Windows.Forms.PictureBox pbFrozttGithub;
+		private System.Windows.Forms.PictureBox pbFrozttGithub;
+		private System.Windows.Forms.PictureBox pbZee;
         private DarkUI.Controls.DarkTextBox tbGameSWF;
         private DarkUI.Controls.DarkButton btnLoadSWF;
         private DarkUI.Controls.DarkLabel lblSwfInfo;
@@ -466,5 +497,6 @@ namespace Grimoire.UI
 		private DarkUI.Controls.DarkLabel lblDropbox;
         private System.Windows.Forms.PictureBox pbKuzyph;
         private DarkUI.Controls.DarkLabel darkLabel4;
+		private DarkUI.Controls.DarkLabel lblZee;
     }
 }

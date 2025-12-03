@@ -71,6 +71,16 @@ namespace Grimoire.UI
 			Process.Start("https://www.mpgh.net/forum/member.php?u=2374072");
 		}
 
+		private void pbZee_Click(object sender, EventArgs e)
+		{
+			Process.Start("https://github.com/clownass-op/Grimlite-Li");
+		}
+
+		private void lblZee_Click(object sender, EventArgs e)
+		{
+			Process.Start("https://github.com/clownass-op/Grimlite-Li");
+		}
+
 		private void AboutForm_Load(object sender, EventArgs e)
 		{
 			bool latest = false;

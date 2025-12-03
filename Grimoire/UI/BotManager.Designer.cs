@@ -216,7 +216,7 @@ namespace Grimoire.UI
 		private DarkButton btnLoadShop;
 		private DarkTextBox tbShopItemName;
 		private DarkButton btnBuy;
-		private DarkButton btnBuyFast;
+        private DarkButton btnBuyFast;
 		private DarkGroupBox darkGroupBox2;
 		private DarkButton btnWhitelistToggle;
 		private DarkButton btnWhitelistOn;
@@ -614,7 +614,6 @@ namespace Grimoire.UI
             this.btnchangeGuild = new DarkUI.Controls.DarkButton();
             this.txtGuild = new DarkUI.Controls.DarkTextBox();
             this.tabHunt = new System.Windows.Forms.TabPage();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.darkLabel9 = new DarkUI.Controls.DarkLabel();
             this.btnAddCmdHunt = new DarkUI.Controls.DarkButton();
             this.chkIsTempF = new DarkUI.Controls.DarkCheckBox();
@@ -750,7 +749,6 @@ namespace Grimoire.UI
             this.grpAccessLevel.SuspendLayout();
             this.grpAlignment.SuspendLayout();
             this.tabHunt.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabBots.SuspendLayout();
             this.darkPanel1.SuspendLayout();
             this.tabInfo.SuspendLayout();
@@ -2149,6 +2147,8 @@ namespace Grimoire.UI
             this.btnBuyFast.TabIndex = 133;
             this.btnBuyFast.Text = "Buy fast";
             this.btnBuyFast.Click += new System.EventHandler(this.btnBuyFast_Click);
+            // 
+            
             // 
             // darkGroupBox2
             // 
@@ -4802,7 +4802,6 @@ namespace Grimoire.UI
             // tabHunt
             // 
             this.tabHunt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(36)))), ((int)(((byte)(36)))), ((int)(((byte)(46)))));
-            this.tabHunt.Controls.Add(this.pictureBox1);
             this.tabHunt.Controls.Add(this.darkLabel9);
             this.tabHunt.Controls.Add(this.btnAddCmdHunt);
             this.tabHunt.Controls.Add(this.chkIsTempF);
@@ -4824,18 +4823,6 @@ namespace Grimoire.UI
             this.tabHunt.Size = new System.Drawing.Size(541, 298);
             this.tabHunt.TabIndex = 3;
             this.tabHunt.Text = "Hunt";
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBox1.Image = global::Properties.Resources.astolfo_head;
-            this.pictureBox1.Location = new System.Drawing.Point(408, 174);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(133, 122);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox1.TabIndex = 172;
-            this.pictureBox1.TabStop = false;
-            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
             // 
             // darkLabel9
             // 
@@ -5212,7 +5199,7 @@ namespace Grimoire.UI
             this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.splitContainer1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(34)))), ((int)(((byte)(34)))));
-            this.splitContainer1.IsSplitterFixed = true;
+            this.splitContainer1.IsSplitterFixed = false;
             this.splitContainer1.Location = new System.Drawing.Point(0, 255);
             this.splitContainer1.Margin = new System.Windows.Forms.Padding(4);
             this.splitContainer1.Name = "splitContainer1";
@@ -5453,7 +5440,8 @@ namespace Grimoire.UI
             // BotManager
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowOnly;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
             this.AutoValidate = System.Windows.Forms.AutoValidate.EnablePreventFocusChange;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(36)))), ((int)(((byte)(36)))), ((int)(((byte)(46)))));
             this.ClientSize = new System.Drawing.Size(822, 342);
@@ -5582,7 +5570,6 @@ namespace Grimoire.UI
             this.grpAlignment.ResumeLayout(false);
             this.tabHunt.ResumeLayout(false);
             this.tabHunt.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tabBots.ResumeLayout(false);
             this.tabBots.PerformLayout();
             this.darkPanel1.ResumeLayout(false);
@@ -5651,7 +5638,6 @@ namespace Grimoire.UI
 		private DarkCheckBox chkQuestListItem;
 		private DarkNumericUpDown numQuestListItem;
 		private DarkButton btnRemoveQuestList;
-		private PictureBox pictureBox1;
 		private DarkRadioButton radBuyByName;
 		private DarkRadioButton radBuyByID;
 		private DarkTextBox tbShopId;

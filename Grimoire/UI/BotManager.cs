@@ -2093,6 +2093,8 @@ namespace Grimoire.UI
             }
         }
 
+        
+
         private void btnLoadShop_Click(object sender, EventArgs e)
         {
             Int32.TryParse(tbShopId.Text, out int shopId);
@@ -3528,17 +3530,6 @@ namespace Grimoire.UI
                 ItemId = itemId,
                 SafeRelogin = chkReloginCompleteQuest.Checked
             }, (ModifierKeys & Keys.Control) == Keys.Control);
-        }
-
-        int clickCounter = 0;
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-            clickCounter++;
-            if (clickCounter >= 3)
-            {
-                Root.Instance.ShowForm(new Egg());
-                clickCounter = 0;
-            }
         }
 
         private void btnStopAttack_Click(object sender, EventArgs e)
