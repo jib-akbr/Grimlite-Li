@@ -746,7 +746,12 @@
     <None Include="Resources\MPGHfavicon16.png" />
     <None Include="Resources\MPGHfavicon.png" />
     <None Include="Resources\GrimoireIconBig.png" />
-    <None Include="Resources\GitHub.png" />
+    <Content Include="Resources\GitHub.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Kofipb.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\big.Ico" />
   </ItemGroup>
   <ItemGroup />

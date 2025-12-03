@@ -73,12 +73,12 @@ namespace Grimoire.UI
 
 		private void pbZee_Click(object sender, EventArgs e)
 		{
-			Process.Start("https://github.com/clownass-op/Grimlite-Li");
+			Process.Start("https://ko-fi.com/zeesnuts");
 		}
 
 		private void lblZee_Click(object sender, EventArgs e)
 		{
-			Process.Start("https://github.com/clownass-op/Grimlite-Li");
+			Process.Start("https://ko-fi.com/zeesnuts");
 		}
 
 		private void AboutForm_Load(object sender, EventArgs e)
