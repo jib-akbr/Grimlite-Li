@@ -27,11 +27,9 @@ jobs:
       run: |
         mkdir artifact
         copy bin\Release\Grimoire.exe artifact\
-        copy bin\Debug\CharSelect.cfg artifact\
-        copy bin\Debug\ClientConfig.cfg artifact\
-        copy bin\Debug\config.cfg artifact\
-        copy bin\Debug\hotkeys.json artifact\
-        xcopy /E /I bin\Debug\Loader artifact\Loader
+        copy bin\Release\ClientConfig.cfg artifact\
+        copy bin\Release\config.cfg artifact\
+        xcopy /E /I bin\Release\Loader artifact\Loader
         xcopy /E /I resources\Bots artifact\Bots
         xcopy /E /I resources\Notes artifact\Notes
         xcopy /E /I resources\Plugins artifact\Plugins
