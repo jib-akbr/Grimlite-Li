@@ -207,8 +207,13 @@ namespace Grimoire.UI
 			// 
 		// pbZee
 		// 
-		this.pbZee.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-		this.pbZee.Image = global::Properties.Resources.Kofipb;
+		this.pbZee.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+		try
+		{
+			this.pbZee.Image = global::Properties.Resources.Kofipb;
+			this.pbZee.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+		}
+		catch { }
 		this.pbZee.InitialImage = null;
 		this.pbZee.Location = new System.Drawing.Point(30, 187);
 		this.pbZee.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -216,6 +221,7 @@ namespace Grimoire.UI
 		this.pbZee.Size = new System.Drawing.Size(24, 25);
 		this.pbZee.TabIndex = 29;
 		this.pbZee.TabStop = false;
+		this.pbZee.Visible = true;
 		this.pbZee.Click += new System.EventHandler(this.pbZee_Click);
 			// 
 			// darkLabel6
