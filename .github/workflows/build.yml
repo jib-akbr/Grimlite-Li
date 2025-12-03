@@ -27,13 +27,14 @@ jobs:
       run: |
         mkdir artifact
         copy bin\Release\Grimoire.exe artifact\
-        copy CharSelect.cfg artifact\
-        copy ClientConfig.cfg artifact\
-        copy config.cfg artifact\
-        xcopy /E /I bin\Release\Loader artifact\Loader
-        xcopy /E /I Resources\Bots artifact\Bots
-        xcopy /E /I Resources\Notes artifact\Notes
-        xcopy /E /I Resources\Plugins artifact\Plugins
+        copy bin\Debug\CharSelect.cfg artifact\
+        copy bin\Debug\ClientConfig.cfg artifact\
+        copy bin\Debug\config.cfg artifact\
+        copy bin\Debug\hotkeys.json artifact\
+        xcopy /E /I bin\Debug\Loader artifact\Loader
+        xcopy /E /I resources\Bots artifact\Bots
+        xcopy /E /I resources\Notes artifact\Notes
+        xcopy /E /I resources\Plugins artifact\Plugins
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
