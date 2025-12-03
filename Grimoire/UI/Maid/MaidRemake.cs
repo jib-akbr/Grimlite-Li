@@ -675,8 +675,15 @@ namespace Grimoire.UI.Maid
                                     if (msg.Contains("prepares a counter attack"))
                                     {
                                         //debug("Counter Attack: active");
-                                        counterAttack = true;
-                                        cbStopAttack.Checked = true;
+                                        Task.Run(async () => 
+                                        { 
+                                            counterAttack = true;
+                                            cbStopAttack.Checked = true;
+                                            await Task.Delay(10000);
+                                            //This function will auto exit Counter/Stop Atk
+                                            counterAttack = false;
+                                            cbStopAttack.Checked = false;
+                                        });
                                     }
                                 }
                             }
@@ -700,7 +707,7 @@ namespace Grimoire.UI.Maid
                                     cbStopAttack.Checked = false;
                                     //debug("Counter Attack: fades");
                                     break;
-                                }
+                                } //Commented Old Counter handling
                             }
                         }
                     }

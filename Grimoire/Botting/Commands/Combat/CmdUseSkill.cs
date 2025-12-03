@@ -20,7 +20,10 @@ namespace Grimoire.Botting.Commands.Combat
             string target = instance.IsVar(Monster) ? Configuration.Tempvariable[instance.GetVar(Monster)] : Monster;
             if (instance.Configuration.SkipAttack)
             {
-                if (Player.HasTarget) Player.CancelTarget();
+                if (Player.HasTarget) 
+                    Player.CancelTarget();
+                if (Skill.isBuff(Index))
+                    Player.ForceUseSkill(Index);
                 return;
             }
             FindTarget(target);

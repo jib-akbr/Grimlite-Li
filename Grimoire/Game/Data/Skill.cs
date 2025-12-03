@@ -1,6 +1,7 @@
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using Grimoire.Tools;
+using Newtonsoft.Json.Linq;
 
 namespace Grimoire.Game.Data
 {
@@ -24,10 +25,23 @@ namespace Grimoire.Game.Data
 
         public static string GetSkillName(string index)
         {
-            return Flash.Call<string>("GetSkillName", new string[]
+            return Flash.Call<string>("GetSkillName", new string[]{index});
+        }
+
+        public static bool isBuff(string index)
+        {
+            try
             {
-                index
-            });
+                var prop = Flash.Instance.GetGameObject<List<JObject>>("world.actions.active");
+
+                string selfskill = prop[int.Parse(index)]?["tgt"]?.ToString();
+                //debug($"{selfskill}");
+                return selfskill != "h"; //H or F/S [H - monster/hostile, F/S - Friendly/self]
+            }
+            catch 
+            { 
+                return false; 
+            }
         }
 
         public enum SkillType
@@ -124,7 +138,7 @@ namespace Grimoire.Game.Data
                 skillText = $"{Text}";
             else //normal
                 skillText = $"{Index}: {skillName}";
-            return waitCd ? $"[Wait] {skillText}":skillText;
+            return waitCd ? $"[Wait] {skillText}" : skillText;
         }
     }
 }
