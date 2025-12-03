@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Windows.Forms;
 using DarkUI.Forms;
 using Grimoire.Botting;
 using static Unity3.Eyedropper.EyeDropper;
@@ -37,6 +38,15 @@ namespace Grimoire.UI
                 eyeDropper1.SelectedColor.B,
                 eyeDropper1.SelectedColor.ToArgb().ToString("X2").Substring(2));
             richTextBox1.AppendText(color, eyeDropper1.SelectedColor);
+        }
+
+        private void EyeDropper_FormClosing(object sender, System.Windows.Forms.FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                Hide();
+            }
         }
     }
 }
