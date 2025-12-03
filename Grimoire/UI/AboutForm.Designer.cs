@@ -205,18 +205,18 @@ namespace Grimoire.UI
 			this.pbFrozttGithub.TabStop = false;
 			this.pbFrozttGithub.Click += new System.EventHandler(this.pbFrozttGithub_Click);
 			// 
-			// pbZee
-			// 
-			this.pbZee.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-			this.pbZee.Image = ((System.Drawing.Image)(resources.GetObject("pbFrozttGithub.Image")));
-			this.pbZee.InitialImage = null;
-			this.pbZee.Location = new System.Drawing.Point(30, 187);
-			this.pbZee.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-			this.pbZee.Name = "pbZee";
-			this.pbZee.Size = new System.Drawing.Size(24, 25);
-			this.pbZee.TabIndex = 29;
-			this.pbZee.TabStop = false;
-			this.pbZee.Click += new System.EventHandler(this.pbZee_Click);
+		// pbZee
+		// 
+		this.pbZee.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+		this.pbZee.Image = ((System.Drawing.Image)(resources.GetObject("pbZee.Image")));
+		this.pbZee.InitialImage = null;
+		this.pbZee.Location = new System.Drawing.Point(30, 187);
+		this.pbZee.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+		this.pbZee.Name = "pbZee";
+		this.pbZee.Size = new System.Drawing.Size(24, 25);
+		this.pbZee.TabIndex = 29;
+		this.pbZee.TabStop = false;
+		this.pbZee.Click += new System.EventHandler(this.pbZee_Click);
 			// 
 			// darkLabel6
 			// 
