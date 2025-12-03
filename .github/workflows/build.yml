@@ -30,6 +30,7 @@ jobs:
         copy bin\Release\ClientConfig.cfg artifact\
         copy bin\Release\config.cfg artifact\
         xcopy /E /I bin\Release\Loader artifact\Loader
+        xcopy /E /I bin\Release\Resources artifact\Resources
         xcopy /E /I resources\Bots artifact\Bots
         xcopy /E /I resources\Notes artifact\Notes
         xcopy /E /I resources\Plugins artifact\Plugins
