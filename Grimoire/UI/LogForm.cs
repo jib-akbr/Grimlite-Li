@@ -16,20 +16,24 @@ namespace Grimoire.UI
 		public class DebugLogger : TraceListener
 		{
 			private LogForm log;
+			public bool IsEnabled { get; set; }
 
 			public DebugLogger(LogForm log)
 			{
 				this.log = log;
+				IsEnabled = false;
 			}
 
 			public override void Write(string message)
 			{
-				log.AppendDebug(message);
+				if (IsEnabled)
+					log.AppendDebug(message);
 			}
 
 			public override void WriteLine(string message)
 			{
-				log.AppendDebug(message);
+				if (IsEnabled)
+					log.AppendDebug(message);
 			}
 		}
 
@@ -72,6 +76,8 @@ namespace Grimoire.UI
 		private ColorDialog colorDialog1;
 
 		public DarkTextBox txtLogChat;
+
+		public bool IsDebugLoggingEnabled { get; set; }
 
 		public TextBox SelectedLog
 		{
@@ -143,6 +149,9 @@ namespace Grimoire.UI
         }
 		public void AppendDebug(string text, bool ignoreInvoke = true)
 		{
+			if (!IsDebugLoggingEnabled)
+				return;
+			
 			if (Visible || ignoreInvoke)
 			{
 				if (text.Contains("{CLEAR}"))
@@ -242,8 +251,13 @@ namespace Grimoire.UI
 		{
 			try
 			{
-				if (logRec != null && !Trace.Listeners.Contains(logRec))
-					Trace.Listeners.Add(logRec);
+				IsDebugLoggingEnabled = true;
+				if (logRec != null)
+				{
+					logRec.IsEnabled = true;
+					if (!Trace.Listeners.Contains(logRec))
+						Trace.Listeners.Add(logRec);
+				}
 				btnStart.Enabled = false;
 				btnStop.Enabled = true;
 			}
@@ -254,8 +268,13 @@ namespace Grimoire.UI
 		{
 			try
 			{
-				if (logRec != null && Trace.Listeners.Contains(logRec))
-					Trace.Listeners.Remove(logRec);
+				IsDebugLoggingEnabled = false;
+				if (logRec != null)
+				{
+					logRec.IsEnabled = false;
+					if (Trace.Listeners.Contains(logRec))
+						Trace.Listeners.Remove(logRec);
+				}
 				btnStart.Enabled = true;
 				btnStop.Enabled = false;
 			}
@@ -345,6 +364,7 @@ namespace Grimoire.UI
 			this.btnStart.Size = new System.Drawing.Size(150, 35);
 			this.btnStart.TabIndex = 3;
 			this.btnStart.Text = "Start";
+			this.btnStart.Enabled = true;
 			this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
 			// 
 			// btnStop
@@ -357,6 +377,7 @@ namespace Grimoire.UI
 			this.btnStop.Size = new System.Drawing.Size(150, 35);
 			this.btnStop.TabIndex = 4;
 			this.btnStop.Text = "Stop";
+			this.btnStop.Enabled = false;
 			this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
 			// 
 			// tabLogs
