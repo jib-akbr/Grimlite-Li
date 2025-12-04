@@ -479,6 +479,7 @@ namespace Grimoire.Tools
 					}
 					break;*/
                 case "resPlayerTimed":
+                    //Ensure remove all auras when respawn (aura might stuck when received packet loss)
 					Flash.Call("ResetAura", new string[0]);
 					break;
 					

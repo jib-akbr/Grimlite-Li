@@ -67,16 +67,17 @@ namespace Grimoire.Botting.Commands.Combat
             }
 
             _cts?.Cancel(false);
+            _cts?.Dispose();
         }
 
-        private CancellationTokenSource _cts;
+        private static CancellationTokenSource _cts;
 
         private static int Index = 0;
 
         private static string _lastBotSkill;
         private async Task UseSkillsSet(IBotEngine instance)
         {
-            this._cts = new CancellationTokenSource();
+            _cts = new CancellationTokenSource();
 
             int ClassIndex = 0;
             bool flag = BotData.SkillSet != null && BotData.SkillSet.ContainsKey("[" + BotData.BotSkill + "]");
@@ -100,7 +101,7 @@ namespace Grimoire.Botting.Commands.Combat
             }
 
 
-            while (!this._cts.IsCancellationRequested && !onPause && Player.HasTarget && Player.GetTargetHealth() > 0)
+            while (!_cts.IsCancellationRequested && !onPause && Player.HasTarget && Player.GetTargetHealth() > 0)
             {
                 switch (this.Monster.ToLower())
                 {
@@ -150,10 +151,13 @@ namespace Grimoire.Botting.Commands.Combat
                 Skill s = instance.Configuration.Skills[Index];
                 if (s.Type == Skill.SkillType.Label)
                 {
-                    //Reset back when meet with SkillLabel
+                    //Reset back when meet with another SkillLabel
                     Index = ClassIndex;
                     continue;
                 }
+
+                if (!Player.IsAlive)
+                    return;
 
                 if (instance.Configuration.WaitForSkill || s.waitCd)
                 {
@@ -163,6 +167,7 @@ namespace Grimoire.Botting.Commands.Combat
 
                 s.ExecuteSkill();
 
+                //Reset back when reaching end of skill list index
                 Index = (Index < Count) ? Index + 1 : ClassIndex;
 
                 await Task.Delay(instance.Configuration.SkillDelay);
@@ -180,31 +185,32 @@ namespace Grimoire.Botting.Commands.Combat
                 dynamic packet = JsonConvert.DeserializeObject<dynamic>(msg);
                 string type = packet["params"].type;
                 dynamic data = packet["params"].dataObj;
-                if (type == "json")
-                    if (data.cmd == "ct")
-                    {
-                        JArray anims = (JArray)data.anims;
-                        if (anims != null)
-                            if (anims[0]["msg"].ToString().ToLower().Contains("prepares a counter attack"))
+                if (type != "json")
+                    return;
+                if (data.cmd == "ct")
+                {
+                    JArray anims = (JArray)data.anims;
+                    if (anims != null)
+                        if (anims[0]["msg"].ToString().ToLower().Contains("prepares a counter attack"))
+                        {
+                            Player.CancelAutoAttack();
+                            Player.CancelTarget();
+                            onPause = true;
+                            Console.WriteLine("Counter Attack: active");
+                        }
+                    JArray a = (JArray)data.a;
+                    if (a != null)
+                        foreach (JObject aura in a)
+                        {
+                            JObject aura2 = (JObject)aura["aura"];
+                            if (aura2.GetValue("nam")?.ToString() == "Counter Attack" && aura.GetValue("cmd")?.ToString() == "aura--")
                             {
-                                Player.CancelAutoAttack();
-                                Player.CancelTarget();
-                                onPause = true;
-                                Console.WriteLine("Counter Attack: active");
+                                onPause = false;
+                                Console.WriteLine("Counter Attack: fades");
+                                break;
                             }
-                        JArray a = (JArray)data.a;
-                        if (a != null)
-                            foreach (JObject aura in a)
-                            {
-                                JObject aura2 = (JObject)aura["aura"];
-                                if (aura2.GetValue("nam")?.ToString() == "Counter Attack" && aura.GetValue("cmd")?.ToString() == "aura--")
-                                {
-                                    onPause = false;
-                                    Console.WriteLine("Counter Attack: fades");
-                                    break;
-                                }
-                            }
-                    }
+                        }
+                }
             }
         }
 

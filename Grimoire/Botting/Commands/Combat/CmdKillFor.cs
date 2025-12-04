@@ -37,7 +37,6 @@ namespace Grimoire.Botting.Commands.Combat
 		public string QuestId { get; set; }
 		public int DelayAfterKill { get; set; } = 500;
 
-		private Configuration config;
 		public async Task Execute(IBotEngine instance)
 		{
 			string Monster = (instance.IsVar(this.Monster) ? Configuration.Tempvariable[instance.GetVar(this.Monster)] : this.Monster);
@@ -58,7 +57,10 @@ namespace Grimoire.Botting.Commands.Combat
 					Player.Quests.Accept(id);
 					await Task.Delay(1000);
 				}
-				while (instance.IsRunning && Player.IsLoggedIn && Player.IsAlive && !Player.Quests.CanComplete(id))
+				while (instance.IsRunning && 
+						Player.IsLoggedIn && 
+						Player.IsAlive && 
+						!Player.Quests.CanComplete(id))
 				{
 					await kill.Execute(instance);
 					await Task.Delay(DelayAfterKill);
@@ -67,8 +69,7 @@ namespace Grimoire.Botting.Commands.Combat
 			else
 			{
 				List<string> removedList = new List<string>();
-				config = instance.Configuration;
-
+				
 				string[] itemsName = ItemName.Split(new char[] { ',' });
 
 				string[] quantities = Quantity.Split(new char[] { ',' });

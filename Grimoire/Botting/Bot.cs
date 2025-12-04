@@ -207,11 +207,13 @@ namespace Grimoire.Botting
             {
                 if (Player.IsLoggedIn && !Player.IsAlive)
                 {
-					//Death handling system
+                    //Death handling system
+                    OptionsManager.Stop(); //Ensure to stop provoke until respawned
                     World.SetSpawnPoint();
-                    await this.WaitUntil(() => Player.IsAlive, () => IsRunning && Player.IsLoggedIn, -1);
+                    await this.WaitUntil(() => Player.IsAlive, () => IsRunning && Player.IsLoggedIn,timeout:10);
                     await Task.Delay(1000);
                     Index = Configuration.RestartUponDeath ? 0 : Index - 1;
+                    OptionsManager.Start();
                 }
 
                 if (!Player.IsLoggedIn)
