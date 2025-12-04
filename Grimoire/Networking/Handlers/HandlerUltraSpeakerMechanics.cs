@@ -48,7 +48,7 @@ namespace Grimoire.Networking.Handlers
 
             // On handler start, move to the safe edge position so we don't
             // interfere with existing zones.
-            if (Player.IsLoggedIn && Player.IsAlive)
+            if (Player.IsLoggedIn && Player.IsAlive && Player.Map.Equals("ultraspeaker", StringComparison.OrdinalIgnoreCase) && Player.Cell.Equals("Boss", StringComparison.OrdinalIgnoreCase))
             {
                 Player.WalkToPoint("893", "257");
             }
