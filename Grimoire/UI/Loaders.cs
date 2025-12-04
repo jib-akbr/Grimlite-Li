@@ -333,15 +333,15 @@ namespace Grimoire.UI
 
 		private void InitializeComponent()
 		{
-			this.txtLoaders = new DarkUI.Controls.DarkTextBox();
-			this.cbLoad = new DarkUI.Controls.DarkComboBox();
-			this.btnLoad = new DarkUI.Controls.DarkButton();
-			this.cbGrab = new DarkUI.Controls.DarkComboBox();
-			this.txtSearchGrab = new DarkUI.Controls.DarkTextBox();
-			this.btnSearchGrab = new DarkUI.Controls.DarkButton();
-			this.btnGrab = new DarkUI.Controls.DarkButton();
-			this.btnSave = new DarkUI.Controls.DarkButton();
-			this.treeGrabbed = new System.Windows.Forms.TreeView();
+            this.txtLoaders = new DarkUI.Controls.DarkTextBox();
+            this.cbLoad = new DarkUI.Controls.DarkComboBox();
+            this.btnLoad = new DarkUI.Controls.DarkButton();
+            this.cbGrab = new DarkUI.Controls.DarkComboBox();
+            this.txtSearchGrab = new DarkUI.Controls.DarkTextBox();
+            this.btnSearchGrab = new DarkUI.Controls.DarkButton();
+            this.btnGrab = new DarkUI.Controls.DarkButton();
+            this.btnSave = new DarkUI.Controls.DarkButton();
+            this.treeGrabbed = new System.Windows.Forms.TreeView();
             this.btnForceAccept = new DarkUI.Controls.DarkButton();
             this.numTQuests = new DarkUI.Controls.DarkNumericUpDown();
             this.cbOrderBy = new DarkUI.Controls.DarkComboBox();
@@ -351,6 +351,8 @@ namespace Grimoire.UI
             // 
             // txtLoaders
             // 
+            this.txtLoaders.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.txtLoaders.Location = new System.Drawing.Point(12, 12);
             this.txtLoaders.Name = "txtLoaders";
             this.txtLoaders.Size = new System.Drawing.Size(156, 20);
@@ -358,6 +360,8 @@ namespace Grimoire.UI
             // 
             // cbLoad
             // 
+            this.cbLoad.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.cbLoad.FormattingEnabled = true;
             this.cbLoad.Items.AddRange(new object[] {
             "Hair shop",
@@ -372,6 +376,8 @@ namespace Grimoire.UI
             // 
             // btnLoad
             // 
+            this.btnLoad.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.btnLoad.Checked = false;
             this.btnLoad.Location = new System.Drawing.Point(12, 65);
             this.btnLoad.Name = "btnLoad";
@@ -380,9 +386,30 @@ namespace Grimoire.UI
             this.btnLoad.Text = "Load";
             this.btnLoad.Click += new System.EventHandler(this.btnLoad_Click);
             // 
+            // cbGrab
+            // 
+            this.cbGrab.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbGrab.FormattingEnabled = true;
+            this.cbGrab.Items.AddRange(new object[] {
+            "Shop items",
+            "Quest IDs",
+            "Quest items, drop rates",
+            "Inventory items",
+            "Temp inventory items",
+            "Bank items",
+            "Monsters",
+            "All Monsters"});
+            this.cbGrab.Location = new System.Drawing.Point(12, 306);
+            this.cbGrab.Name = "cbGrab";
+            this.cbGrab.Size = new System.Drawing.Size(174, 21);
+            this.cbGrab.TabIndex = 33;
+            this.cbGrab.SelectedIndexChanged += new System.EventHandler(this.cbGrab_SelectedIndexChanged);
             // 
             // txtSearchGrab
             // 
+            this.txtSearchGrab.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.txtSearchGrab.Location = new System.Drawing.Point(12, 280);
             this.txtSearchGrab.Name = "txtSearchGrab";
             this.txtSearchGrab.Size = new System.Drawing.Size(174, 20);
@@ -391,6 +418,7 @@ namespace Grimoire.UI
             // 
             // btnSearchGrab
             // 
+            this.btnSearchGrab.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSearchGrab.Checked = false;
             this.btnSearchGrab.Location = new System.Drawing.Point(192, 278);
             this.btnSearchGrab.Name = "btnSearchGrab";
@@ -399,26 +427,9 @@ namespace Grimoire.UI
             this.btnSearchGrab.Text = "Search";
             this.btnSearchGrab.Click += new System.EventHandler(this.btnSearchGrab_Click);
             // 
-			// cbGrab
-			// 
-			this.cbGrab.FormattingEnabled = true;
-			this.cbGrab.Items.AddRange(new object[] {
-			"Shop items",
-			"Quest IDs",
-			"Quest items, drop rates",
-			"Inventory items",
-			"Temp inventory items",
-			"Bank items",
-			"Monsters",
-			"All Monsters"});
-			this.cbGrab.Location = new System.Drawing.Point(12, 306);
-			this.cbGrab.Name = "cbGrab";
-			this.cbGrab.Size = new System.Drawing.Size(174, 21);
-			this.cbGrab.TabIndex = 33;
-			this.cbGrab.SelectedIndexChanged += new System.EventHandler(this.cbGrab_SelectedIndexChanged);
-			// 
             // btnGrab
             // 
+            this.btnGrab.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnGrab.Checked = false;
             this.btnGrab.Location = new System.Drawing.Point(134, 333);
             this.btnGrab.Name = "btnGrab";
@@ -429,6 +440,8 @@ namespace Grimoire.UI
             // 
             // btnSave
             // 
+            this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.Checked = false;
             this.btnSave.Location = new System.Drawing.Point(12, 333);
             this.btnSave.Name = "btnSave";
@@ -439,7 +452,8 @@ namespace Grimoire.UI
             // 
             // treeGrabbed
             // 
-            this.treeGrabbed.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.treeGrabbed.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.treeGrabbed.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(46)))), ((int)(((byte)(56)))));
             this.treeGrabbed.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -447,12 +461,12 @@ namespace Grimoire.UI
             this.treeGrabbed.LabelEdit = true;
             this.treeGrabbed.Location = new System.Drawing.Point(12, 94);
             this.treeGrabbed.Name = "treeGrabbed";
-            // Reduce height so the search bar is clearly visible below it.
-            this.treeGrabbed.Size = new System.Drawing.Size(247, 174);
+            this.treeGrabbed.Size = new System.Drawing.Size(247, 180);
             this.treeGrabbed.TabIndex = 38;
             // 
             // btnForceAccept
             // 
+            this.btnForceAccept.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnForceAccept.Checked = false;
             this.btnForceAccept.Enabled = false;
             this.btnForceAccept.Location = new System.Drawing.Point(192, 38);
@@ -464,6 +478,7 @@ namespace Grimoire.UI
             // 
             // numTQuests
             // 
+            this.numTQuests.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.numTQuests.Enabled = false;
             this.numTQuests.IncrementAlternate = new decimal(new int[] {
             10,
@@ -493,6 +508,7 @@ namespace Grimoire.UI
             // 
             // cbOrderBy
             // 
+            this.cbOrderBy.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cbOrderBy.Enabled = false;
             this.cbOrderBy.FormattingEnabled = true;
             this.cbOrderBy.Items.AddRange(new object[] {
@@ -505,6 +521,7 @@ namespace Grimoire.UI
             // 
             // cbGhost
             // 
+            this.cbGhost.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbGhost.AutoSize = true;
             this.cbGhost.Checked = true;
             this.cbGhost.CheckState = System.Windows.Forms.CheckState.Checked;
@@ -527,10 +544,8 @@ namespace Grimoire.UI
             this.Controls.Add(this.btnForceAccept);
             this.Controls.Add(this.treeGrabbed);
             this.Controls.Add(this.cbGrab);
-            this.Controls.Add(this.btnSearchGrab);
             this.Controls.Add(this.btnLoad);
             this.Controls.Add(this.cbLoad);
-            this.Controls.Add(this.txtSearchGrab);
             this.Controls.Add(this.btnSearchGrab);
             this.Controls.Add(this.txtLoaders);
             this.Controls.Add(this.txtSearchGrab);

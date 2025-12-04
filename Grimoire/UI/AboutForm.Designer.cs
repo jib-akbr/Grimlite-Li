@@ -49,7 +49,6 @@ namespace Grimoire.UI
 			this.panel2 = new System.Windows.Forms.Panel();
 			this.pbGrimoireBig = new System.Windows.Forms.PictureBox();
 			this.darkLabel5 = new DarkUI.Controls.DarkLabel();
-			this.lblZee = new DarkUI.Controls.DarkLabel();
 			this.appName = new DarkUI.Controls.DarkLabel();
 			this.pbCatGithub = new System.Windows.Forms.PictureBox();
 			this.pbEmperorMPGH = new System.Windows.Forms.PictureBox();
@@ -208,12 +207,9 @@ namespace Grimoire.UI
 		// pbZee
 		// 
 		this.pbZee.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-		try
-		{
+			//removed try catch to fix Designer/Ui visual Editor
 			this.pbZee.Image = global::Properties.Resources.Kofipb;
 			this.pbZee.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-		}
-		catch { }
 		this.pbZee.InitialImage = null;
 		this.pbZee.Location = new System.Drawing.Point(30, 187);
 		this.pbZee.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
