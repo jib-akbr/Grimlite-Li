@@ -3442,6 +3442,8 @@ namespace Grimoire.UI
             "Auto Zone - Ultradage",
             "Auto Zone - Dark Carnax",
             "Auto Zone - Astral Empyrean",
+            "Auto Zone - Astral Empyrean P1",
+            "Auto Zone - Astral Empyrean P2",
             "Auto Zone - Queen Iona",
             "Auto Zone - Colossal Vordred",
             "Gramiel P1",
