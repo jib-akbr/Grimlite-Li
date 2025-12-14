@@ -231,7 +231,7 @@ namespace Grimoire.Botting.Commands.Combat
                 Pad = Pad,
                 Try = 3
             };
-            await join.Execute(instance);
+            await join.ExecuteSkipCell(instance);
         }
 
         public override string ToString()

@@ -118,7 +118,7 @@ namespace Grimoire.Botting.Commands.Map
         {
             if (stop)
 				return $"Stop Cell Jump";
-            if (target != "*")
+            if (!string.IsNullOrEmpty(target) & target != "*")
 				return $"Start Jump and Find : {target}";
             return $"Start Jump between : {string.Join("|", Cell)}";
         }

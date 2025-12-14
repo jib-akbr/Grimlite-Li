@@ -200,6 +200,7 @@
     <Compile Include="Grimoire\Networking\Handlers\HandlerAntiMod.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneQueenIona.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneAstralEmpyrean.cs" />
+    <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneAstralEmpyreanP1.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneDarkCarnax.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerAutoZoneVordred.cs" />
     <Compile Include="Grimoire\Networking\Handlers\HandlerFollow.cs" />

@@ -18,6 +18,7 @@ namespace Grimoire.Botting.Commands.Map
 		public string MapSwf { get; set; } = "";
 		private string _Cell;
 		private string _Pad;
+		private bool _skipcell = false;
 		public async Task Execute(IBotEngine instance)
 		{
 			BotData.BotState = BotData.State.Move;
@@ -55,7 +56,10 @@ namespace Grimoire.Botting.Commands.Map
 				}
 			}
 
-			if (MapName.Equals(Player.Map, StringComparison.OrdinalIgnoreCase))
+			if (_skipcell)
+				return;
+
+            if (MapName.Equals(Player.Map, StringComparison.OrdinalIgnoreCase))
 			{
 				if (!Player.Cell.Equals(_Cell, StringComparison.OrdinalIgnoreCase))
 				{
@@ -103,6 +107,12 @@ namespace Grimoire.Botting.Commands.Map
 				", ",
 				this.Pad
 			});
+		}
+
+		public async Task ExecuteSkipCell(IBotEngine instance)
+		{
+			_skipcell = true;
+			await Execute(instance);
 		}
 	}
 }
