@@ -303,7 +303,6 @@ namespace Grimoire.UI
                 DisableAnimations = chkDisableAnims.Checked,
                 FollowCheck = chkFollowOnly.Checked,
                 FollowName = tbFollowPlayer2.Text,
-                keepLagKiller = false,
                 AutoZone = cmbSpecials.SelectedItem != null ? cmbSpecials.SelectedItem.ToString() : string.Empty,
             };
         }
