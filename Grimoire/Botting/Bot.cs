@@ -172,6 +172,7 @@ namespace Grimoire.Botting
                     BotData.SkillSet.Add(Configuration.Skills[i].Text.ToUpper(), i);
                 }
             }
+			Configuration.Instance.keepLagKiller = false;
         }
 
         public void Stop()
