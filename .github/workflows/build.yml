@@ -27,9 +27,9 @@ jobs:
       run: |
         mkdir artifact
         copy bin\Release\Grimoire.exe artifact\
+        copy bin\Release\CharSelect.cfg artifact\
         copy bin\Release\ClientConfig.cfg artifact\
         copy bin\Release\config.cfg artifact\
-        if (Test-Path bin\Release\CharSelect.cfg) { copy bin\Release\CharSelect.cfg artifact\ }
         xcopy /E /I bin\Release\Loader artifact\Loader
         xcopy /E /I bin\Release\Resources artifact\Resources
         xcopy /E /I resources\Bots artifact\Bots
