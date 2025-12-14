@@ -32,6 +32,8 @@ namespace Grimoire.UI.Maid
 
         public bool isPlayerInMyRoom => IsPlayerInMap(targetUsername);
 
+        public bool shouldFollow => !isPlayerInMyRoom || (isPlayerInMyRoom && !isPlayerInMyCell);
+        //Avoiding unwanted stuck
         public int skillDelay => (int)MaidRemake.Instance.numSkillDelay.Value;
 
         LowLevelKeyboardHook kbh = new LowLevelKeyboardHook();
@@ -138,7 +140,7 @@ namespace Grimoire.UI.Maid
                 if (cbSpecialAnims.Checked)
                     Flash.FlashCall2 += AnimsMsgHandler;
 
-                if (!cbUnfollow.Checked && Player.IsLoggedIn && !World.IsMapLoading && isPlayerInMyRoom && !isPlayerInMyCell)
+                if (!cbUnfollow.Checked && Player.IsLoggedIn && !World.IsMapLoading && shouldFollow)//isPlayerInMyRoom && !isPlayerInMyCell)
                     Player.GoToPlayer(targetUsername);
 
                 if (cbAttackPriority.Checked)
@@ -158,7 +160,9 @@ namespace Grimoire.UI.Maid
                 {
                     equipEnrage();
                 }
-
+				if (skillproperties[5]?["sArg1"]?.ToString() != "")
+					useSkill("5",true);
+				
                 while (cbEnablePlugin.Checked)
                 {
                     try
@@ -208,7 +212,7 @@ namespace Grimoire.UI.Maid
 
                                 if (cbBuffIfStop.Checked && tbBuffSkill.Text != String.Empty)
                                 {
-                                    useSkill(buffSkill[buffIndex], true);
+                                    useSkill(buffSkill[buffIndex]);
                                     //Player.UseSkill(buffSkill[buffIndex]);
                                     buffIndex++;
 
@@ -252,14 +256,20 @@ namespace Grimoire.UI.Maid
                                 await SpecialCombo();
                                 if (tauntTask == null)
                                     taunt();
+
+                                if (cbWaitSkill.Checked && Player.SkillAvailable(skillList[skillIndex]) > 0)
+                                    continue;
+                                //Preventing SpecialCombo interfere skill combo after consuming potion
+
                                 // force, to ensure a skill is REALLY executed 
                                 if (forceSkill)
                                 {
                                     string skillAct = numSkillAct.Value.ToString();
-                                    await Task.Delay(1000);
+                                    await waitSkill(skillAct);
+                                    /* await Task.Delay(1000);
                                     await Task.Delay(Player.SkillAvailable(skillAct));
-                                    //Player.UseSkill(skillAct);
-                                    useSkill(skillAct, true);
+                                    Player.UseSkill(skillAct);
+                                    useSkill(skillAct, true);*/
                                     forceSkill = false;
                                     await Task.Delay(500);
                                 }
@@ -301,12 +311,12 @@ namespace Grimoire.UI.Maid
                                 await Task.Delay(250);
 
                             // goto target current cell when in the same room
-                            while (cbEnablePlugin.Checked && Player.IsLoggedIn && isPlayerInMyRoom && !isPlayerInMyCell)
+                            while (cbEnablePlugin.Checked && Player.IsLoggedIn && shouldFollow) //isPlayerInMyRoom && !isPlayerInMyCell)
                             {
                                 Player.GoToPlayer(targetUsername);
-                                debug("Attempt to chase");
-                                if (cbEnablePlugin.Checked && Player.IsLoggedIn && isPlayerInMyRoom && !isPlayerInMyCell)
-                                    await Task.Delay(1000);
+                                // debug("Attempt to chase");
+                                if (cbEnablePlugin.Checked && Player.IsLoggedIn && shouldFollow) //isPlayerInMyRoom && !isPlayerInMyCell)
+                                    await Task.Delay(2000);
                                 else break;
                             }
                         }
@@ -326,9 +336,11 @@ namespace Grimoire.UI.Maid
             int cd = Player.SkillAvailable(index);
             await Task.Delay(Math.Min(cd, 1500));
             useSkill(index, true);
-            for (int i = 0; i < 10 && Player.SkillAvailable(index) == 0; i++)
+            for (int i = 0; i < 15; i++)
             {
                 await Task.Delay(100); //Ensure its going to cooldown
+                if (Player.SkillAvailable(index) > 0) 
+                    return;
             }
             useSkill(index, true);
         }
@@ -346,7 +358,10 @@ namespace Grimoire.UI.Maid
         {
             InventoryItem item = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => i.Name.Equals("Scroll of Enrage") && i.IsEquippable);
             Player.EquipPotion(item.Id, item.Description, item.File, item.Name);
-            Task.Delay(1000);
+            _ = Task.Run(async () => {
+                await Task.Delay(2000);
+                useSkill("5", true);
+            });
         }
 
         private void taunt()
@@ -461,8 +476,8 @@ namespace Grimoire.UI.Maid
             else if (Player.EquippedClass == "ARCANA INVOKER")
             {
                 if ((Player.GetAuras(true, "0 - The Fool") == 0 &&
-                    Player.GetAuras(true, "XXI - The World") == 0) || 
-					Player.GetAuras(true, "XX - Judgement") == 1 ||
+                    Player.GetAuras(true, "XXI - The World") == 0) ||
+                    Player.GetAuras(true, "XX - Judgement") == 1 ||
                     Player.GetAuras(true, "End of the world") >= 20 )
                 {
                     await waitSkill("1");
@@ -533,7 +548,7 @@ namespace Grimoire.UI.Maid
             }
             balance = false;
         }
-
+        #region Tauntcycle
         private Task tauntTask = null;
         private CancellationTokenSource cts;
         private void ResetToken(bool createNew)
@@ -576,7 +591,7 @@ namespace Grimoire.UI.Maid
             debug($"Monster no longer detected, stopping taunt cycle");
             ResetToken(true);
         }
-
+        #endregion
         private Grimoire.Networking.Message CreateMessage(string raw)
         {
             if (raw != null && raw.Length > 0)
@@ -675,8 +690,8 @@ namespace Grimoire.UI.Maid
                                     if (msg.Contains("prepares a counter attack"))
                                     {
                                         //debug("Counter Attack: active");
-                                        Task.Run(async () => 
-                                        { 
+                                        Task.Run(async () =>
+                                        {
                                             counterAttack = true;
                                             cbStopAttack.Checked = true;
                                             await Task.Delay(10000);
@@ -695,7 +710,7 @@ namespace Grimoire.UI.Maid
                         if (a != null)
                         {
                             if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
-								cbStopAttack.Checked = true;  
+                                cbStopAttack.Checked = true;
                             else if (Player.Map == "ascendedeclipse") //changed to avoid force uncheck
                                 cbStopAttack.Checked = false;
                             foreach (JObject aura in a)
@@ -931,7 +946,9 @@ namespace Grimoire.UI.Maid
             }
         }
         /* Other Control */
-        public bool IsFocusedOnBox => this.ActiveControl is TextBox || this.ActiveControl is ComboBox;
+        public bool IsFocusedOnBox => this.ActiveControl != null && 
+		(this.ActiveControl is TextBox || this.ActiveControl is ComboBox) && 
+		this.ActiveControl.Enabled;
 
         public void pauseFollow()
         {
@@ -1318,7 +1335,7 @@ namespace Grimoire.UI.Maid
             }
             if (cbEnableGlobalHotkey.Checked)
                 this.KeyDown -= hotkey; //Global hotkey will disable instance hotkey
-            
+
         }
 
         private bool TryDeserialize(string json, out MaidConfig config)

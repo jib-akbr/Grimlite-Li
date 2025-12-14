@@ -31,7 +31,7 @@ namespace Grimoire.Botting.Commands.Combat
 				} 
                 else
                 {
-					Player.AttackMonster(instance.IsVar(Monster) ? Configuration.Tempvariable[instance.GetVar(Monster)] : Monster);
+					Player.AttackMonster(instance.ResolveVars(Monster));
 				}
             }
 

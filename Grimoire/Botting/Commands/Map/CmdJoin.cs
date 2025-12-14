@@ -44,13 +44,14 @@ namespace Grimoire.Botting.Commands.Map
 					int num = random.Next(1000, 99999);
 					RoomNumber = num.ToString();
 				}
-				while (_try > 0 && Player.Map != Map)
-				{
-                    using (new pauseProvoke(instance.Configuration))
+                using (new pauseProvoke(instance.Configuration))
+                {
+					//check for MapName, instead of Map 
+					while (_try > 0 && !MapName.Equals(Player.Map, StringComparison.OrdinalIgnoreCase)) 
                     {
 						await this.TryJoin(instance, MapName, RoomNumber);
+						_try--;
                     }
-					_try--;
 				}
 			}
 

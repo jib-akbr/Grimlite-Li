@@ -37,14 +37,20 @@ namespace Grimoire.Botting.Commands.Quest
                 max = true;
 
             Quest.Complete(CompleteTry,max);
+			
             //await instance.WaitUntil(() => !Player.Quests.IsInProgress(Quest.Id));
             instance.Configuration.ProvokeMonsters = provokeMons;
 
             if (ReAccept)
             {
-                await Task.Delay(1200);
+                await Task.Delay(1500);
                 Quest.Accept();
             }
+			else
+			{
+				int delay = instance.Configuration.BotDelay <= 800 ? 800-instance.Configuration.BotDelay : 0;
+				await Task.Delay(delay);
+			}
         }
         
         public override string ToString()

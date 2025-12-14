@@ -31,8 +31,7 @@ namespace Grimoire.Botting.Commands.Combat
 
             if (ItemType == ItemType.Items)
                 if (Player.Inventory.ContainsItem(_Items, _Qty)) return;
-                else
-                if (Player.TempInventory.ContainsItem(_Items, _Qty)) return;
+            else if (Player.TempInventory.ContainsItem(_Items, _Qty)) return;
 
             CmdJoin join = new CmdJoin
             {

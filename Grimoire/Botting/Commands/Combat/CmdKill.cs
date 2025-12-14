@@ -148,6 +148,8 @@ namespace Grimoire.Botting.Commands.Combat
                     }
                 }
 
+                //Moved to ensure not causing crazy atk spam
+                await Task.Delay(instance.Configuration.SkillDelay);
                 Skill s = instance.Configuration.Skills[Index];
                 if (s.Type == Skill.SkillType.Label)
                 {
@@ -169,11 +171,7 @@ namespace Grimoire.Botting.Commands.Combat
 
                 //Reset back when reaching end of skill list index
                 Index = (Index < Count) ? Index + 1 : ClassIndex;
-
-                await Task.Delay(instance.Configuration.SkillDelay);
-
             }
-
         }
 
         private void AntiCounterHandler(AxShockwaveFlashObjects.AxShockwaveFlash flash, string function, params object[] args)

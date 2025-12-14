@@ -24,18 +24,35 @@ namespace Grimoire.Botting.Commands.Quest
         public async Task Execute(IBotEngine instance)
         {
             BotData.BotState = BotData.State.Quest;
-            await instance.WaitUntil(() => Player.Quests.QuestTree.Any((Game.Data.Quest q) => q.Id == this.Quest.Id));
-            await instance.WaitUntil(() => World.IsActionAvailable(LockActions.AcceptQuest));
-            var Quest = Player.Quests.Quest(this.Quest.Id);
-            int i = 0;
-            if (Quest.IValue <= Player.Quests.progress(Quest.Id) && Quest.ISlot != 0 && Quest.IsNotRepeatable)
+            int id = this.Quest.Id;
+
+            if (!Player.Quests.QuestTree.Any(q => q.Id == id))
+            {
+                Player.Quests.Load(id);
+                await instance.WaitUntil(() => Player.Quests.QuestTree.Any(q => q.Id == id), timeout:3);
+            }
+
+            var Quest = Player.Quests.Quest(id);
+            if (Quest == null)
+            {
+                LogForm.Instance.devDebug("[Quest] Failed to accept, Quest not found/loaded");
                 return;
+            }
+
+            if (Quest.IValue <= Player.Quests.progress(Quest.Id) && Quest.ISlot != 0 && Quest.IsNotRepeatable)
+            {
+                LogForm.Instance.devDebug($"[Quest] Skipping quest since requirement satisfied ({Quest.ISlot}) : {Player.Quests.progress(id)}/{Quest.IValue}");
+                return;
+            }
+
             if (ghostAccept)
             {
                 Quest.GhostAccept();
                 await Task.Delay(600);
                 return;
             }
+
+            int i = 0;
             while (!Player.Quests.IsInProgress(Quest.Id) && Player.IsLoggedIn && instance.IsRunning && i < 2)
             {
                 Quest.Accept();
