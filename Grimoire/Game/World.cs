@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace Grimoire.Game
@@ -59,6 +60,62 @@ namespace Grimoire.Game
                 );
             }
             return allMonsters;
+        }
+
+		public static List<string> GetMonsterCells(string monsterName)
+        {
+            List<Monster> monMap = GetAllMonsters();
+
+            //1. Collect all monster, then ordered by most amount within a cell
+            if (monsterName == "*")
+                return monMap
+                    .Where(m => !string.IsNullOrEmpty(m.cell))
+                    .GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
+                    .OrderByDescending(g => g.Count())
+                    .Select(g => g.Key)
+                    .ToList();
+            
+			string[] tokens = monsterName
+				.Split('&')
+				.Select(t => t.Trim())
+				.Where(t => !string.IsNullOrEmpty(t))
+				.ToArray();
+
+            // 3. Filtering process
+            List<Func<Monster, bool>> predicates = new List<Func<Monster, bool>>();
+            foreach (string token in tokens)
+			{
+				Match match = Regex.Match(token, @"^id['.:-](?<Id>\d+)$", RegexOptions.IgnoreCase);
+				if (match.Success && int.TryParse(match.Groups["Id"].Value, out int id))
+				{
+					predicates.Add(m => m.MonMapID == id);
+				}
+				else
+				{
+					string name = token;
+					predicates.Add(m =>
+						m.Name?.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0
+					);
+				}
+			}
+			// 4. Combine with OR
+			bool FinalPredicate(Monster m) => predicates.Any(p => p(m));
+
+            // 5. Collect cells filtered with monster name/id
+			return monMap
+				.Where(FinalPredicate)
+				.Where(m => !string.IsNullOrEmpty(m.cell))
+				.GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
+				.OrderByDescending(g => g.Count())
+				.Select(g => g.Key)
+				.ToList();
+            /*List<string> targetCells = monMap
+                .Where(finalPredicate)
+                .GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(g => g.Count()) // cell with most monster 
+                .Select(g => g.Key)
+                .ToList();
+            return targetCells;*/
         }
 
         public static void ReloadMap()
