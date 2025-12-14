@@ -1,5 +1,6 @@
 using Grimoire.Game.Data;
 using Grimoire.Networking;
+using Grimoire.UI;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -50,6 +51,7 @@ namespace Grimoire.Game
             {
                 _drops.Add(item);
             }
+            DropUi.instance.AddItem(item);
         }
 
         public async Task<bool> GetDrop(InventoryItem item)
@@ -87,11 +89,28 @@ namespace Grimoire.Game
                 {
                     await Proxy.Instance.SendToServer($"%xt%zm%getDrop%{World.RoomId}%{itemId}%");
                     _cooldown.Add(new KeyValuePair<int, Stopwatch>(itemId, Stopwatch.StartNew()));
-                    _drops.RemoveAll((InventoryItem d) => d.Id == itemId);
+                    _ = clean(itemId);
                     return true;
                 }
             }
             return false;
+        }
+
+        private readonly static object _lock = new object();
+        private async Task clean(int itemId)
+        {
+            bool obtained = await Player.Inventory.WaitForItemId(itemId, attempts: 10, delayMS: 200);
+            if (obtained)
+            {
+                lock (_lock)
+                {
+                    var item = _drops.Find((InventoryItem d) => d.Id == itemId);
+                    if (item == null)
+                        return;
+                    _drops.Remove(item);
+                    DropUi.instance.RemoveItem(item.Name);
+                }
+            }
         }
 
         public void Clear()

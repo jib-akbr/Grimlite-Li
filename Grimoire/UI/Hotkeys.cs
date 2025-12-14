@@ -108,9 +108,17 @@ namespace Grimoire.UI
 			},
 			delegate
 			{
+				Root.Instance.ShowForm(DropUi.instance);
+			},
+			delegate
+			{
+				Root.Instance.ShowForm(DevTest.Instance);
+			},
+            delegate
+            {
 				//execute debug
 			}
-		};
+        };
 
 		public static readonly List<Hotkey> InstalledHotkeys = new List<Hotkey>();
 
@@ -270,50 +278,50 @@ namespace Grimoire.UI
 
 		private void InitializeComponent()
 		{
-			this.components = new System.ComponentModel.Container();
-			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Hotkeys));
-			this.lstKeys = new DarkUI.Controls.DarkListBox(this.components);
-			this.btnSave = new DarkUI.Controls.DarkButton();
-			this.cbKeys = new DarkUI.Controls.DarkComboBox();
-			this.cbActions = new DarkUI.Controls.DarkComboBox();
-			this.btnAdd = new DarkUI.Controls.DarkButton();
-			this.btnRemove = new DarkUI.Controls.DarkButton();
-			this.SuspendLayout();
-			// 
-			// lstKeys
-			// 
-			this.lstKeys.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Hotkeys));
+            this.lstKeys = new DarkUI.Controls.DarkListBox(this.components);
+            this.btnSave = new DarkUI.Controls.DarkButton();
+            this.cbKeys = new DarkUI.Controls.DarkComboBox();
+            this.cbActions = new DarkUI.Controls.DarkComboBox();
+            this.btnAdd = new DarkUI.Controls.DarkButton();
+            this.btnRemove = new DarkUI.Controls.DarkButton();
+            this.SuspendLayout();
+            // 
+            // lstKeys
+            // 
+            this.lstKeys.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.lstKeys.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(46)))), ((int)(((byte)(56)))));
-			this.lstKeys.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-			this.lstKeys.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-			this.lstKeys.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.lstKeys.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
-			this.lstKeys.FormattingEnabled = true;
-			this.lstKeys.HorizontalScrollbar = true;
-			this.lstKeys.ItemHeight = 18;
-			this.lstKeys.Location = new System.Drawing.Point(12, 39);
-			this.lstKeys.Name = "lstKeys";
-			this.lstKeys.Size = new System.Drawing.Size(281, 200);
-			this.lstKeys.TabIndex = 28;
-			// 
-			// btnSave
-			// 
-			this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.lstKeys.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(46)))), ((int)(((byte)(56)))));
+            this.lstKeys.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lstKeys.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.lstKeys.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lstKeys.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+            this.lstKeys.FormattingEnabled = true;
+            this.lstKeys.HorizontalScrollbar = true;
+            this.lstKeys.ItemHeight = 18;
+            this.lstKeys.Location = new System.Drawing.Point(12, 39);
+            this.lstKeys.Name = "lstKeys";
+            this.lstKeys.Size = new System.Drawing.Size(281, 200);
+            this.lstKeys.TabIndex = 28;
+            // 
+            // btnSave
+            // 
+            this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnSave.Checked = false;
-			this.btnSave.Location = new System.Drawing.Point(13, 271);
-			this.btnSave.Name = "btnSave";
-			this.btnSave.Size = new System.Drawing.Size(280, 23);
-			this.btnSave.TabIndex = 33;
-			this.btnSave.Text = "Save";
-			this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
-			// 
-			// cbKeys
-			// 
-			this.cbKeys.FormattingEnabled = true;
-			this.cbKeys.Items.AddRange(new object[] {
+            this.btnSave.Checked = false;
+            this.btnSave.Location = new System.Drawing.Point(13, 271);
+            this.btnSave.Name = "btnSave";
+            this.btnSave.Size = new System.Drawing.Size(280, 23);
+            this.btnSave.TabIndex = 33;
+            this.btnSave.Text = "Save";
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+            // 
+            // cbKeys
+            // 
+            this.cbKeys.FormattingEnabled = true;
+            this.cbKeys.Items.AddRange(new object[] {
             "Escape",
             "Left",
             "Up",
@@ -370,16 +378,16 @@ namespace Grimoire.UI
             "Alt",
             "Tab",
             "Shift"});
-			this.cbKeys.Location = new System.Drawing.Point(12, 12);
-			this.cbKeys.MaxDropDownItems = 20;
-			this.cbKeys.Name = "cbKeys";
-			this.cbKeys.Size = new System.Drawing.Size(106, 21);
-			this.cbKeys.TabIndex = 35;
-			// 
-			// cbActions
-			// 
-			this.cbActions.FormattingEnabled = true;
-			this.cbActions.Items.AddRange(new object[] {
+            this.cbKeys.Location = new System.Drawing.Point(12, 12);
+            this.cbKeys.MaxDropDownItems = 20;
+            this.cbKeys.Name = "cbKeys";
+            this.cbKeys.Size = new System.Drawing.Size(106, 21);
+            this.cbKeys.TabIndex = 35;
+            // 
+            // cbActions
+            // 
+            this.cbActions.FormattingEnabled = true;
+            this.cbActions.Items.AddRange(new object[] {
             "Start/Stop Bot",
             "Show Bot",
             "Show Hotkeys",
@@ -399,54 +407,56 @@ namespace Grimoire.UI
             "Show Notepad",
             "Load Hair shop",
             "Load Armor Customizer",
-            "Toggle Options"});
-			this.cbActions.Location = new System.Drawing.Point(124, 12);
-			this.cbActions.MaxDropDownItems = 20;
-			this.cbActions.Name = "cbActions";
-			this.cbActions.Size = new System.Drawing.Size(169, 21);
-			this.cbActions.TabIndex = 36;
-			// 
-			// btnAdd
-			// 
-			this.btnAdd.Checked = false;
-			this.btnAdd.Location = new System.Drawing.Point(13, 244);
-			this.btnAdd.Name = "btnAdd";
-			this.btnAdd.Size = new System.Drawing.Size(138, 21);
-			this.btnAdd.TabIndex = 39;
-			this.btnAdd.Text = "Add";
-			this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
-			// 
-			// btnRemove
-			// 
-			this.btnRemove.Checked = false;
-			this.btnRemove.Location = new System.Drawing.Point(158, 244);
-			this.btnRemove.Name = "btnRemove";
-			this.btnRemove.Size = new System.Drawing.Size(135, 21);
-			this.btnRemove.TabIndex = 40;
-			this.btnRemove.Text = "Remove";
-			this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
-			// 
-			// Hotkeys
-			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(303, 306);
-			this.Controls.Add(this.btnAdd);
-			this.Controls.Add(this.btnRemove);
-			this.Controls.Add(this.cbKeys);
-			this.Controls.Add(this.cbActions);
-			this.Controls.Add(this.btnSave);
-			this.Controls.Add(this.lstKeys);
-			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.MaximizeBox = false;
-			this.MinimizeBox = false;
-			this.Name = "Hotkeys";
-			this.Text = "Hotkeys";
-			this.TopMost = true;
-			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Hotkeys_FormClosing);
-			this.Load += new System.EventHandler(this.Hotkeys_Load);
-			this.ResumeLayout(false);
+            "Toggle Options",
+            "Show DropUi",
+			"Show Swf Dev test"});
+            this.cbActions.Location = new System.Drawing.Point(124, 12);
+            this.cbActions.MaxDropDownItems = 20;
+            this.cbActions.Name = "cbActions";
+            this.cbActions.Size = new System.Drawing.Size(169, 21);
+            this.cbActions.TabIndex = 36;
+            // 
+            // btnAdd
+            // 
+            this.btnAdd.Checked = false;
+            this.btnAdd.Location = new System.Drawing.Point(13, 244);
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.Size = new System.Drawing.Size(138, 21);
+            this.btnAdd.TabIndex = 39;
+            this.btnAdd.Text = "Add";
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            // 
+            // btnRemove
+            // 
+            this.btnRemove.Checked = false;
+            this.btnRemove.Location = new System.Drawing.Point(158, 244);
+            this.btnRemove.Name = "btnRemove";
+            this.btnRemove.Size = new System.Drawing.Size(135, 21);
+            this.btnRemove.TabIndex = 40;
+            this.btnRemove.Text = "Remove";
+            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
+            // 
+            // Hotkeys
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(303, 306);
+            this.Controls.Add(this.btnAdd);
+            this.Controls.Add(this.btnRemove);
+            this.Controls.Add(this.cbKeys);
+            this.Controls.Add(this.cbActions);
+            this.Controls.Add(this.btnSave);
+            this.Controls.Add(this.lstKeys);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.Name = "Hotkeys";
+            this.Text = "Hotkeys";
+            this.TopMost = true;
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Hotkeys_FormClosing);
+            this.Load += new System.EventHandler(this.Hotkeys_Load);
+            this.ResumeLayout(false);
 
 		}
 	}

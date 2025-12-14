@@ -2,6 +2,7 @@ using Grimoire.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Grimoire.Game.Data
 {
@@ -33,7 +34,34 @@ namespace Grimoire.Game.Data
             }
             return false;
         }
+        #region waitItemTaken
+        public async Task<bool> WaitForItem(string itemName, int attempts = 3, int delayMS = 1000)
+        {
+            for (int i = 0; i < attempts; i++)
+            {
+                bool found = Player.Inventory.Items.Any(it => it.Name.Equals(itemName,StringComparison.OrdinalIgnoreCase)) ;
 
+                if (found)
+                    return true;
+
+                await Task.Delay(delayMS);
+            }
+            return false;
+        }
+        public async Task<bool> WaitForItemId(int itemId, int attempts = 3, int delayMS = 1000)
+        {
+            for (int i = 0; i < attempts; i++)
+            {
+                bool found = Player.Inventory.Items.Any(it => it.Id == itemId);
+
+                if (found)
+                    return true;
+
+                await Task.Delay(delayMS);
+            }
+            return false;
+        }
+        #endregion
         public bool ContainsItem(string itemName, string quantity = "*")
         {
             InventoryItem item = Player.Inventory.GetItemByName(itemName);

@@ -363,6 +363,7 @@ namespace Grimoire.Game
             return runTime > target;
         }
 
+        public static bool isRejectingAllDrop { get; set; } = false;
         public static Dictionary<int, string> recentMapItem = new Dictionary<int, string>();
         static Player()
         {

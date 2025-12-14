@@ -517,6 +517,7 @@ namespace Grimoire.Tools
                         }
                         );
                     }
+                    DropUi.instance.clearDrop();
                     break;
             }
             //Console.WriteLine($"client: {packet}");
@@ -601,6 +602,8 @@ namespace Grimoire.Tools
                                     Call("RejectDrop", new string[2] { item.Name.ToLower(), item.Id.ToString() });
                                 }
                             }
+                            else if (Player.isRejectingAllDrop)
+                                Call("RejectDrop", new string[2] { item.Name.ToLower(), item.Id.ToString() });
                         }
                         break;
 
