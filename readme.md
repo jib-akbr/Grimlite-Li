@@ -13,4 +13,4 @@ This fork is a bit different from [The original Froztt's Grim](https://github.co
 - **Holding Ctrl + add command**  : add command to upper current selected index
 - **Holding Alt + add command** : altering command 
 
-- [ ] 
+[ ] whatever
