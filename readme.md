@@ -1,16 +1,17 @@
-# GrimLite Ligma 1.9
-**Release Date:** 30-11-2025
+# GrimLite Ligma (dih 🥀)
+This fork is a bit different from [The original Froztt's Grim](https://github.com/Froztt13/Grimlite-Li/tree/master)
 
-## Changelog
-- CmdSell support max sell or until leaving x-stack  
-- CmdQuestcomplete support max turn in  
-- CmdKill performance improved  
-- CmdShorthunt Cell locking / Multi cell  
-- New CmdTauntcycle  
-- New CmdMovetocell2 (basically jump when target not detected)  
-- Gramiel crystal HP balancer on Maid  
-- Loader & Grabber improvement  
-- Lagkiller auto off (except using Cmdstopbot)  
-- Multivar support for major commands  
-- Questlist performance stabilized  
-- Many minor performance changes  
+## Requirements 
+- .Net Framework 4.7.2
+- Cleanflash ActiveX
+- Your brain with some basic logic knowledge to design a .gbot
+
+## Shortcuts
+- **Ctrl+C**  : Copy selected commands with .gbot serialization
+- **Ctrl+V** : Pasting a whole .gbot
+- **Ctrl+S** : Save as .gbot
+- **Ctrl+Arrow Up/Down** : move selected command up/down by 1 index
+- **Holding Ctrl + add command**  : add command to upper current selected index
+- **Holding Alt + add command** : altering command (ex. **Normal Accept quest** to **Ghost Accept quest**)
+- **Double click on a command** : opens up a command editor
+
