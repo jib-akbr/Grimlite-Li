@@ -78,6 +78,11 @@ namespace Grimoire.Game.Data
             return true;
         }
 
+        public bool ContainsItem(InventoryItem item)
+        {
+            return Items.FirstOrDefault((InventoryItem target) => target.Id == item.Id)?.Quantity >= item.Quantity;
+        }
+
         public bool ContainsMaxItem(string name)
         {
             InventoryItem inventoryItem = Items.FirstOrDefault((InventoryItem i) => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase));

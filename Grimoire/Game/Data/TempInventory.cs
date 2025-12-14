@@ -22,5 +22,10 @@ namespace Grimoire.Game.Data
             }
             return true;
         }
+
+        public bool ContainsItem(InventoryItem item)
+        {
+            return Items.FirstOrDefault((TempItem target) => target.Id == item.Id)?.Quantity >= item.Quantity;
+        }
     }
 }

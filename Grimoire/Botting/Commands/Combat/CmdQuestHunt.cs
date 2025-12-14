@@ -1,11 +1,9 @@
 ﻿using Grimoire.Botting.Commands.Map;
 using Grimoire.Game.Data;
 using Grimoire.Game;
-using Grimoire.Tools;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Grimoire.UI;
-using System.Web.UI;
 using System;
 using System.Linq;
 using Grimoire.Networking;
@@ -27,12 +25,15 @@ namespace Grimoire.Botting.Commands.Combat
 
         public async Task Execute(IBotEngine instance)
         {
-            string[] items = ItemName.Split(',');
-            string[] monsters = Monster.Split(',');
-            string[] quantities = Quantity.Split(',');
+            string[] items = instance.ResolveVars(ItemName).Split(',');
+            string[] monsters = instance.ResolveVars(Monster).Split(',');
+            string[] quantities = instance.ResolveVars(Quantity).Split(',');
             bool doQuest = QID != 0;
+            #region quest-based hunt
+            req = null;
             if (doQuest)
             {
+
                 if (!Player.Quests.QuestTree.Exists(q => q.Id == QID))
                 {
                     Player.Quests.Load(QID);
@@ -42,31 +43,37 @@ namespace Grimoire.Botting.Commands.Combat
                 Game.Data.Quest quest = Player.Quests.Quest(QID);
                 int progress = Player.Quests.progress(quest.Id);
                 //int.Parse(Flash.CallGameFunction2("world.getQuestValue", quest.ISlot));
-                
+
                 //Checks if the quest require questchains
-                if (progress >= quest.IValue && quest.ISlot > 0) 
+                if (progress >= quest.IValue && quest.ISlot > 0 && quest.IsNotRepeatable)
                     return;
+
                 if (!quest.IsInProgress)
                 {
                     quest.Accept();
-                    await instance.WaitUntil(() => !Player.Quests.IsInProgress(QID), timeout: 1);
+                    await instance.WaitUntil(() => !Player.Quests.IsInProgress(QID), timeout: 3);
                 }
+
                 var reqs = quest.RequiredItems;
                 if (items.Length < reqs.Count)
                     Array.Resize(ref items, reqs.Count);
                 if (monsters.Length < reqs.Count)
                     Array.Resize(ref monsters, reqs.Count);
+
+                await joinmap(Map, instance);
+
                 for (int i = 0; i < reqs.Count && instance.IsRunning; i++)
                 {
                     string name = reqs[i].Name;
                     string qty = reqs[i].Quantity.ToString();
+                    req = reqs[i];
 
                     if (items[i] == null)
                         items[i] = "";
 
                     LogForm.Instance.devDebug($"Name = {name} | Qty = {qty}");
-                    if (!Player.Map.Equals(Map.Split('-')[0].ToLower()))
-                        await joinmap(Map, instance);
+                    // if (!Player.Map.Equals(Map.Split('-')[0].ToLower()))
+
 
                     if (int.TryParse(items[i], out int mapitemid))
                         await getMap(mapitemid, qty);
@@ -78,6 +85,9 @@ namespace Grimoire.Botting.Commands.Combat
                 await Task.Delay(600);
                 return;
             }
+            #endregion
+            #region non-quest
+            await joinmap(Map, instance);
             for (int i = 0; i < items.Length && instance.IsRunning; i++)
             {
                 string qty = i < quantities.Length ? quantities[i] : "1";
@@ -86,9 +96,7 @@ namespace Grimoire.Botting.Commands.Combat
                 if (itemCollected(items[i], quantities[i]))
                     continue;
 
-                if (!Player.Map.Equals(Map.Split('-')[0].ToLower()))
-                    await joinmap(Map, instance);
-
+                // if (!Player.Map.Equals(Map.Split('-')[0].ToLower()))
                 if (int.TryParse(items[i], out int mapitemid))
                     await getMap(mapitemid, qty);
                 else
@@ -96,10 +104,12 @@ namespace Grimoire.Botting.Commands.Combat
 
                 await Task.Delay(600);
             }
+            #endregion
         }
+        private static InventoryItem req = null; //used only for doQuest 
         async Task hunt(string item, string qty, string monster, IBotEngine instance)
         {
-            List<string> targetCell = GetMonsterCells(monster);
+            List<string> targetCell = World.GetMonsterCells(monster);
             int _maxcell;
             if (targetCell.Count >= maxcell)
                 _maxcell = maxcell;
@@ -114,6 +124,7 @@ namespace Grimoire.Botting.Commands.Combat
                 int i = 0;
                 while (!itemCollected(item, qty) && instance.IsRunning)
                 {
+                    //LogForm.Instance.devDebug("is it bugging??");
                     if (World.IsMonsterAvailable(monster))
                     {
                         Player.AttackMonster(monster);
@@ -135,6 +146,10 @@ namespace Grimoire.Botting.Commands.Combat
         async Task getMap(int mapitemid, string sqty)
         {
             Player.MoveToCell("Cut1", "Left");
+            await Task.Delay(1000);
+            if (!World.Cells.Contains("Cut1"))
+                Player.MoveToCell("Enter", "Spawn");
+
             int qty = int.Parse(sqty);
 
             for (int i = -1; i < qty; i++) //extra 1 attempt for getting map anticipating failure
@@ -151,10 +166,23 @@ namespace Grimoire.Botting.Commands.Combat
 
         bool itemCollected(string id, string qty)
         {
-            return Player.TempInventory.ContainsItem(id, qty) || Player.Inventory.ContainsItem(id, qty);
+
+            if (req != null) //Handles quest.reqs item
+                return itemCollected(req);
+
+            return Player.TempInventory.ContainsItem(id, qty)
+                || Player.Inventory.ContainsItem(id, qty);
+        }
+        bool itemCollected(InventoryItem item)
+        {
+            //Finds containsItem but with item.id instead of Name
+            //Cuz some quest may have same itemName, this is useful for Bulk GhostAccepted quests
+            if (item.IsTemporary)
+                return Player.TempInventory.ContainsItem(item);
+            return Player.Inventory.ContainsItem(item);
         }
 
-        List<string> GetMonsterCells(string monsterName)
+        /*List<string> GetMonsterCells(string monsterName)
         {
             List<Monster> monMap = World.GetAllMonsters();
 
@@ -186,13 +214,13 @@ namespace Grimoire.Botting.Commands.Combat
 
             //2. Collect monsters that contains its name
             List<string> targetCells = monMap
-                .Where(finalPredicate) 
+                .Where(finalPredicate)
                 .GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
                 .OrderByDescending(g => g.Count()) // cell with most monster 
                 .Select(g => g.Key)
                 .ToList();
             return targetCells;
-        }
+        }*/
 
         async Task joinmap(string map, IBotEngine instance)
         {
@@ -200,22 +228,10 @@ namespace Grimoire.Botting.Commands.Combat
             {
                 Map = map,
                 Cell = Cell,
-                Pad = Pad
+                Pad = Pad,
+                Try = 3
             };
-            while (!Player.Map.Equals(map.Split('-')[0]) && instance.IsRunning)
-            {
-                if (BlankFirst)
-                {
-                    string[] safeCell = ClientConfig.GetValue(ClientConfig.C_SAFE_CELL).Split(',');
-                    Player.MoveToCell(safeCell[0], safeCell[1]);
-                    await instance.WaitUntil(() => Player.CurrentState != Player.State.InCombat, timeout: 3);
-                    await Task.Delay(1000);
-                }
-                await join.Execute(instance);
-                await Task.Delay(1500);
-            }
-            if (!Player.Cell.Equals(Cell)) Player.MoveToCell(Cell, Pad);
-            //await Task.Delay(1000);
+            await join.Execute(instance);
         }
 
         public override string ToString()
@@ -241,7 +257,7 @@ namespace Grimoire.Botting.Commands.Combat
                     if (!string.IsNullOrEmpty(item))
                         _parts.Add(item);
                     else if (!string.IsNullOrEmpty(mob))
-                        _parts.Add(mob);
+                        _parts.Add($"{mob}*");
                 }
                 return $"Quest-{QID} items:{string.Join(" | ", _parts)}";
             }
