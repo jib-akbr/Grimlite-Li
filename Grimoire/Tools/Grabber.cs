@@ -80,7 +80,7 @@ namespace Grimoire.Tools
                     treeNode.Nodes.Add($"ID: {item.Id}");
                     if (item.ISlot > 0) treeNode.Nodes.Add($"iSlot: {item.ISlot}");
                     if (item.IValue > 0) treeNode.Nodes.Add($"iValue: {item.IValue}");
-                    treeNode.Nodes.Add($"Description: {item.Description}");
+                    treeNode.Nodes.Add($"Description: {Shorten(item.Description, 32)}");
                     treeNode.ContextMenuStrip = MenuQuest(item.Id);
                     //List<InventoryItem> requiredItems = new List<InventoryItem>();
                     List<InventoryItem> requiredItems = item.RequiredItems;
@@ -95,7 +95,7 @@ namespace Grimoire.Tools
                             treeNode3.Nodes.Add($"ID: {req.Id}");
                             treeNode3.Nodes.Add($"Quantity: {req.Quantity}");
                             treeNode3.Nodes.Add("Temporary: " + (req.IsTemporary ? "Yes" : "No"));
-                            treeNode3.Nodes.Add($"Description: {req.Description}");
+                            treeNode3.Nodes.Add($"Description: {Shorten(req.Description, 32)}");
                         }
                     }
                     List<InventoryItem> rewards = item.Rewards;
@@ -112,7 +112,7 @@ namespace Grimoire.Tools
                             treeNode5.Nodes.Add(string.Concat($"Drop chance: ", reward.DropChance.Contains("100") ? "Guaranteed" : reward.DropChance + "%"));
                             ItemBase reward2 = item.oRewards.Find(x => x.Name == reward.Name);
                             treeNode5.Nodes.Add($"Category: {reward2.Category}");
-                            treeNode5.Nodes.Add($"Description: {reward2.Description}");
+                            treeNode5.Nodes.Add($"Description: {Shorten(reward2.Description,32)}");
                             if (!string.IsNullOrEmpty(reward2.File))
                             {
                                 treeNode5.ContextMenuStrip = MenuItem(reward2);
@@ -124,7 +124,12 @@ namespace Grimoire.Tools
                 }
             }
         }
-
+        
+        private static string Shorten(string s, int max)
+        { 
+            if (string.IsNullOrEmpty(s)) return "";
+            return s.Length > max ? s.Substring(0, max) + "..." : s;
+        }
         public static void GrabShopItems(TreeView tree)
         {
             List<ShopInfo> list = World.LoadedShops?.OrderBy((ShopInfo s) => s.Name).ToList();
@@ -149,7 +154,7 @@ namespace Grimoire.Tools
                             treeNode3.Nodes.Add(string.Format("Cost: {0} {1}", item2.Cost, item2.IsAcItem ? "AC" : "Gold"));
                             treeNode3.Nodes.Add($"Category: {item2.Category}");
                             treeNode3.Nodes.Add($"Level: {item2.Level}");
-                            treeNode3.Nodes.Add($"Description: {item2.Description}");
+                            treeNode3.Nodes.Add($"Description: {Shorten(item2.Description, 32)}");
                             if (item2.IsEquippableNonItem || item2.IsWeapon)
                             {
                                 treeNode3.Nodes.Add($"sFile: {item2.File}");
@@ -167,10 +172,10 @@ namespace Grimoire.Tools
             switch (orderBy)
             {
                 case OrderBy.Name:
-                    list = Player.Quests.QuestTree?.OrderBy((Quest q) => q.Name).ToList();
+                    list = list.OrderBy((Quest q) => q.Name).ToList();
                     break;
                 case OrderBy.Id:
-                    list = Player.Quests.QuestTree?.OrderBy((Quest q) => q.Id).ToList();
+                    list = list.OrderBy((Quest q) => q.Id).ToList();
                     break;
             }
             if (list != null && list.Count > 0)
@@ -207,7 +212,7 @@ namespace Grimoire.Tools
                     treeNode.Nodes.Add($"AC tagged: {item.IsAcItem}");
                     treeNode.Nodes.Add($"Category: {item.Category}");
                     treeNode.Nodes.Add($"Level: {item.Level}");
-                    treeNode.Nodes.Add($"Description: {item.Description}");
+                    treeNode.Nodes.Add($"Description: {Shorten(item.Description, 32)}");
                     if (item.IsEquippableNonItem || item.IsWeapon)
                     {
                         treeNode.Nodes.Add($"sFile: {item.File}");
@@ -237,7 +242,7 @@ namespace Grimoire.Tools
                     TreeNode treeNode = tree.Nodes.Add(item.Name);
                     treeNode.ContextMenuStrip = Wiki(item.Name);
                     treeNode.Nodes.Add($"ID: {item.Id}");
-                    treeNode.Nodes.Add($"Quantity: {item.Quantity}");
+                    treeNode.Nodes.Add($"Quantity: {item.Quantity}/{item.MaxStack}");
                 }
             }
         }
