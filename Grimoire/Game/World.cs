@@ -205,6 +205,24 @@ namespace Grimoire.Game
                 return Flash.Call<bool>("IsMonsterAvailable", new string[1] { name });
             }
         }
+		
+		public static bool MonstersAvailable(string[] monsters, out string monster)
+		{
+			monster = null;
+
+			if (monsters == null || monsters.Length == 0)
+				return false;
+			
+			foreach (string m in monsters)
+			{
+				if (!string.IsNullOrWhiteSpace(m) && World.IsMonsterAvailable(m))
+				{
+					monster = m;
+					return true;
+				}
+			}
+			return false;
+		}
 
         static World()
         {

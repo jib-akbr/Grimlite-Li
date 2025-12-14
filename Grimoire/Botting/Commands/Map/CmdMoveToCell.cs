@@ -76,8 +76,15 @@ namespace Grimoire.Botting.Commands.Map
                 cts?.Cancel();
                 cts = new CancellationTokenSource();
                 CancellationToken token = cts.Token;
+				string[] monsters = new string[]{"*"};
 				if (!string.IsNullOrEmpty(target) && target != "*" )
+				{
 					Cell = World.GetMonsterCells(target);
+                    monsters = target
+                        .Split('&')
+                        .Select(t => t.Trim())
+                        .ToArray();
+				}
                 int _maxcell;
                 if (Cell.Count >= maxcell)
                     _maxcell = maxcell;
@@ -89,10 +96,11 @@ namespace Grimoire.Botting.Commands.Map
                     int botdelay = instance.Configuration.BotDelay;
                     while (!token.IsCancellationRequested && instance.IsRunning)
                     {
-                        if (World.IsMonsterAvailable(target))
+						if (World.MonstersAvailable(monsters, out target))
                         {
                             // while monster is Alive within ur cell
                             // checks every 50ms up to 15 times then back to top loop
+                            // variable is reused but it doesnt matter, im just lazy to create a new one
                             await instance.WaitUntil(() => !World.IsMonsterAvailable(target), interval: Math.Max(botdelay,50));
                             continue;
                         }
@@ -106,7 +114,7 @@ namespace Grimoire.Botting.Commands.Map
 
                         // This loop is needed to wait init monster loaded from clientside
                         // Otherwise it will keep jumping nonstop
-                        await instance.WaitUntil(() => World.IsMonsterAvailable(target), interval: 50);
+                        await instance.WaitUntil(() => World.IsMonsterAvailable("*"), interval: 50);
                         if (++i >= _maxcell)
                             i = 0;
                     }
@@ -120,7 +128,7 @@ namespace Grimoire.Botting.Commands.Map
 				return $"Stop Cell Jump";
             if (!string.IsNullOrEmpty(target) & target != "*")
 				return $"Start Jump and Find : {target}";
-            return $"Start Jump between : {string.Join("|", Cell)}";
+            return $"Start Jump between : {Cell.Replace(",", "|")}";
         }
     }
 }

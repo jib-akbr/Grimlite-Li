@@ -7,7 +7,6 @@ using Grimoire.UI;
 using System;
 using System.Linq;
 using Grimoire.Networking;
-using System.Text.RegularExpressions;
 
 namespace Grimoire.Botting.Commands.Combat
 {
@@ -107,17 +106,26 @@ namespace Grimoire.Botting.Commands.Combat
             #endregion
         }
         private static InventoryItem req = null; //used only for doQuest 
-        async Task hunt(string item, string qty, string monster, IBotEngine instance)
+        async Task hunt(string item, string qty, string target, IBotEngine instance)
         {
-            List<string> targetCell = World.GetMonsterCells(monster);
+            List<string> targetCell = World.GetMonsterCells(target);
+            
             int _maxcell;
             if (targetCell.Count >= maxcell)
                 _maxcell = maxcell;
             else
                 _maxcell = targetCell.Count;
+
+            string[] _monsters = new string[]{"*"};
+            if (target != "*")
+                _monsters = target
+                        .Split('&')
+                        .Select(t => t.Trim())
+                        .ToArray();
+
             CmdKill kill = new CmdKill
             {
-                Monster = monster,
+                Monster = target,
             };
             if (targetCell.Count > 0)
             {
@@ -125,9 +133,11 @@ namespace Grimoire.Botting.Commands.Combat
                 while (!itemCollected(item, qty) && instance.IsRunning)
                 {
                     //LogForm.Instance.devDebug("is it bugging??");
-                    if (World.IsMonsterAvailable(monster))
+                    //Variable is reused but it doesnt matter, im just lazy to create a new one
+                    if (World.MonstersAvailable(_monsters, out target))
                     {
-                        Player.AttackMonster(monster);
+                        kill.Monster = target;
+                        Player.AttackMonster(target);
                         await kill.Execute(instance);
                         continue;
                     }
@@ -136,7 +146,7 @@ namespace Grimoire.Botting.Commands.Combat
                         Player.MoveToCell(targetCell[i], "Left");
                         LogForm.Instance.devDebug($"Cell : {targetCell[i]} [{i + 1}/{_maxcell}]");
                     }
-                    await instance.WaitUntil(() => World.IsMonsterAvailable(monster), interval: 50);
+                    await instance.WaitUntil(() => World.IsMonsterAvailable("*"), interval: 50);
                     if (++i >= _maxcell)
                         i = 0;
                 }
