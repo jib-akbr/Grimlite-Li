@@ -153,6 +153,7 @@ namespace Grimoire.Networking.Handlers
                     // until the Focus target aura is applied or attempts are exhausted.
                     if (hasOrb)
                     {
+                        UI.BotManager.Instance.ActiveBotEngine.paused = true;
                         Player.AttackMonster(orbTarget);
                         Task.Run(async () =>
                         {
@@ -177,12 +178,17 @@ namespace Grimoire.Networking.Handlers
                                 }
                             }
                             catch { }
+                            finally
+                            {
+                                UI.BotManager.Instance.ActiveBotEngine.paused = false;
+                            }
                         });
                     }
                     else if (hasGramiel && !hasGrace)
                     {
                         if (Player.GetAuras(true, "Vendetta") == 0)
                         {
+                            UI.BotManager.Instance.ActiveBotEngine.paused = true;
                             Player.AttackMonster("Gramiel");
                             Task.Run(async () =>
                             {
@@ -205,6 +211,10 @@ namespace Grimoire.Networking.Handlers
                                     }
                                 }
                                 catch { }
+                                finally
+                                {
+                                    UI.BotManager.Instance.ActiveBotEngine.paused = false;
+                                }
                             });
                         }
                     }
@@ -311,6 +321,7 @@ namespace Grimoire.Networking.Handlers
                     // concurrently; each will naturally stop once it has the aura.
                     if (Player.GetAuras(true, "Vendetta") == 0)
                     {
+                        UI.BotManager.Instance.ActiveBotEngine.paused = true;
                         Player.AttackMonster("Gramiel");
 
                         // Strong taunt sequence with cooldown wait, similar to the
@@ -336,6 +347,10 @@ namespace Grimoire.Networking.Handlers
                                 }
                             }
                             catch { }
+                            finally
+                            {
+                                UI.BotManager.Instance.ActiveBotEngine.paused = false;
+                            }
                         });
                     }
 
