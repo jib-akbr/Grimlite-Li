@@ -128,6 +128,13 @@ namespace Grimoire.Networking.Handlers
 
                 // Attack and trigger strong taunt sequence (Gramiel-style)
                 Player.AttackMonster("Astral Empyrean");
+                
+                // Pause bot script to prevent skill command interference
+                if (Grimoire.UI.BotManager.Instance?.ActiveBotEngine != null)
+                {
+                    Grimoire.UI.BotManager.Instance.ActiveBotEngine.paused = true;
+                }
+                
                 Task.Run(async () =>
                 {
                     try
@@ -155,6 +162,14 @@ namespace Grimoire.Networking.Handlers
                     }
                     catch
                     {
+                    }
+                    finally
+                    {
+                        // Resume bot script
+                        if (Grimoire.UI.BotManager.Instance?.ActiveBotEngine != null)
+                        {
+                            Grimoire.UI.BotManager.Instance.ActiveBotEngine.paused = false;
+                        }
                     }
                 });
             }
