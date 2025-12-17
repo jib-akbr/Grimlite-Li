@@ -13,7 +13,7 @@ namespace Grimoire.Game.Data
             set;
         }
 
-        [JsonProperty("bCount")]
+        [JsonProperty("iCount")]
         public int PlayerCount
         {
             get;
@@ -52,6 +52,13 @@ namespace Grimoire.Game.Data
 
         [JsonProperty("sIP")]
         public string Ip
+        {
+            get;
+            set;
+        }
+
+        [JsonProperty("sLang")]
+        public string Language
         {
             get;
             set;

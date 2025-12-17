@@ -25,6 +25,10 @@ namespace Grimoire.Game.Data
 
         public void TransferFromBank(string itemName) => Flash.Call("TransferToInventory", itemName);
 
+        public void TransferToBankByID(int charItemId) => Flash.Call("TransferToBankByID", charItemId);
+
+        public void TransferFromBankByID(int charItemId) => Flash.Call("TransferFromBankByID", charItemId);
+
         public void Swap(string invItemName, string bankItemName) => Flash.Call("BankSwap", invItemName, bankItemName);
 
         public bool ContainsItemX(string itemName, string quantity = "*")

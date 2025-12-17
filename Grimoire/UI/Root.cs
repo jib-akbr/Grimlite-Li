@@ -12,6 +12,7 @@ using Grimoire.Game.Data;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Diagnostics;
 using DarkUI.Controls;
 using System.Reflection;
 using System.Linq;
@@ -34,6 +35,7 @@ namespace Grimoire.UI
         private Button btnMin;
         private ToolStripMenuItem managerToolStripMenuItem;
         private ToolStripMenuItem loadBotToolStripMenuItem;
+        private ToolStripMenuItem accountManagerToolStripMenuItem;
         private Panel panel1;
         public MenuStrip MenuMain;
         private DarkComboBox cbPads;
@@ -113,6 +115,176 @@ namespace Grimoire.UI
             LoadPlugins();
             LoadCharSelect();
             //auraClearer();
+
+            // If started with args (spawned instance), process them (auto-login + optional script)
+            try
+            {
+                if (Program.StartupArgs != null && Program.StartupArgs.Length > 0)
+                {
+                    _ = ProcessStartupArgs(Program.StartupArgs);
+                }
+            }
+            catch { }
+        }
+
+        private async System.Threading.Tasks.Task ProcessStartupArgs(string[] args)
+        {
+            try
+            {
+                // Check if credentials were set by Program.Main
+                string user = OptionsManager.LoginUsername;
+                string pass = OptionsManager.LoginPassword;
+                string script = OptionsManager.AutoLoadScriptPath;
+
+            LogForm.Instance.AppendDebug($"[Startup Args] Checking credentials...\r\n");
+            LogForm.Instance.AppendDebug($"[Startup Args] Username from OptionsManager: {user ?? "(null)"}\r\n");
+            LogForm.Instance.AppendDebug($"[Startup Args] Password from OptionsManager: {(string.IsNullOrEmpty(pass) ? "(null)" : new string('*', pass.Length))}\r\n");
+
+                LogForm.Instance.AppendDebug($"[Startup Args] Waiting for Flash initialization...\r\n");
+
+                // Wait for Flash to initialize (increased from 2s to 3s)
+                await System.Threading.Tasks.Task.Delay(3000);
+
+                // Check if server override was set by Program.Main
+                Server serverObj = Proxy.Instance.DestinationServerOverride;
+
+                if (serverObj != null)
+                {
+                    LogForm.Instance.AppendDebug($"[Startup Args] Using server: {serverObj.Name}\r\n");
+
+                    try
+                    {
+                        // Attempt login with specified server
+                        await AutoRelogin.Login(serverObj, 15000, new System.Threading.CancellationTokenSource(), ensureSuccess: false);
+
+                        // Wait for login to complete (30s timeout)
+                        int waited = 0;
+                        while (!Player.IsLoggedIn && waited < 30000)
+                        {
+                            await System.Threading.Tasks.Task.Delay(500);
+                            waited += 500;
+
+                            if (waited % 5000 == 0)
+                            {
+                                LogForm.Instance.AppendDebug($"[Startup Args] Waiting for login... ({waited}ms elapsed)\r\n");
+                            }
+                        }
+
+                        if (Player.IsLoggedIn)
+                        {
+                            LogForm.Instance.AppendDebug($"[Startup Args] ✓ Login successful! ({waited}ms)\r\n");
+                        }
+                        else
+                        {
+                            LogForm.Instance.AppendDebug($"[Startup Args] ✗ Login timeout after {waited}ms\r\n");
+                            return;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogForm.Instance.AppendDebug($"[Startup Args] ✗ Login error: {ex.Message}\r\n");
+                        return;
+                    }
+                }
+                else
+                {
+                    // No server specified, use default login
+                    LogForm.Instance.AppendDebug($"[Startup Args] No server specified, using default login\r\n");
+                    AutoRelogin.Login(user, pass);
+
+                    int waited = 0;
+                    while (!Player.IsLoggedIn && waited < 15000)
+                    {
+                        await System.Threading.Tasks.Task.Delay(500);
+                        waited += 500;
+                    }
+
+                    if (!Player.IsLoggedIn)
+                    {
+                        LogForm.Instance.AppendDebug($"[Startup Args] ✗ Login timeout\r\n");
+                        return;
+                    }
+
+                    LogForm.Instance.AppendDebug($"[Startup Args] ✓ Login successful!\r\n");
+                }
+
+                // Load and start script if specified
+                if (!string.IsNullOrEmpty(script) && File.Exists(script))
+                {
+                    try
+                    {
+                        LogForm.Instance.AppendDebug($"[Startup Args] Waiting for character load complete...\r\n");
+                        
+                        // More aggressive character load detection
+                        bool charLoaded = false;
+                        for (int i = 0; i < 30; i++)  // Max 15 seconds (30 × 500ms)
+                        {
+                            // Check multiple indicators of successful load
+                            if (!string.IsNullOrEmpty(Player.Cell) && 
+                                Player.Health > 0 && 
+                                Player.HealthMax > 0 &&
+                                !World.IsMapLoading)
+                            {
+                                charLoaded = true;
+                                LogForm.Instance.AppendDebug($"[Startup Args] Character loaded! (took {i * 500}ms)\r\n");
+                                break;
+                            }
+                            
+                            await System.Threading.Tasks.Task.Delay(500);
+                            
+                            // Log progress every 2 seconds
+                            if ((i + 1) % 4 == 0)
+                            {
+                                LogForm.Instance.AppendDebug($"[Startup Args] Still waiting... Cell: {Player.Cell ?? "null"}, HP: {Player.Health}, MaxHP: {Player.HealthMax}, MapLoading: {World.IsMapLoading}\r\n");
+                            }
+                        }
+
+                        if (!charLoaded)
+                        {
+                            LogForm.Instance.AppendDebug($"[Startup Args] Character load timeout - attempting to load script anyway\r\n");
+                        }
+
+                        LogForm.Instance.AppendDebug($"[Startup Args] Loading script: {script}\r\n");
+
+                        string txt = File.ReadAllText(script);
+                        Configuration cfg = null;
+
+                        if (Path.GetExtension(script).Equals(".gbot", StringComparison.OrdinalIgnoreCase) ||
+                            txt.TrimStart().StartsWith("{"))
+                        {
+                            cfg = Newtonsoft.Json.JsonConvert.DeserializeObject<Configuration>(txt,
+                                new Newtonsoft.Json.JsonSerializerSettings
+                                {
+                                    TypeNameHandling = Newtonsoft.Json.TypeNameHandling.All
+                                });
+                        }
+
+                        if (cfg != null)
+                        {
+                            // Show BotManager
+                            this.ShowForm(BotManager.Instance);
+                            await System.Threading.Tasks.Task.Delay(250);  // Reduced from 500ms
+
+                            // Load config
+                            BotManager.Instance.ApplyConfiguration(cfg);
+                            await System.Threading.Tasks.Task.Delay(250);  // Reduced from 500ms
+
+                            // Start bot
+                            this.chkStartBot.Checked = true;
+
+                            LogForm.Instance.AppendDebug($"[Startup Args] ✓ Script loaded and started!\r\n");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogForm.Instance.AppendDebug($"[Startup Args] Failed to start script: {ex.Message}\r\n");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogForm.Instance.AppendDebug($"[Startup Args] Error: {ex.Message}\r\n");
+            }
         }
 
         private void LoadPlugins()
@@ -467,6 +639,7 @@ namespace Grimoire.UI
             this.pluginsStrip = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuCharSelect = new System.Windows.Forms.ToolStripMenuItem();
+            this.accountManagerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -717,7 +890,8 @@ namespace Grimoire.UI
             this.maidStrip,
             this.pluginsStrip,
             this.aboutToolStripMenuItem,
-            this.menuCharSelect});
+            this.menuCharSelect,
+            this.accountManagerToolStripMenuItem});
             this.darkMenuStrip1.Location = new System.Drawing.Point(0, 0);
             this.darkMenuStrip1.Name = "darkMenuStrip1";
             this.darkMenuStrip1.Padding = new System.Windows.Forms.Padding(2);
@@ -1117,6 +1291,15 @@ namespace Grimoire.UI
             this.menuCharSelect.Size = new System.Drawing.Size(78, 23);
             this.menuCharSelect.Text = "Char Select";
             // 
+            // accountManagerToolStripMenuItem
+            // 
+            this.accountManagerToolStripMenuItem.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(36)))), ((int)(((byte)(36)))), ((int)(((byte)(46)))));
+            this.accountManagerToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+            this.accountManagerToolStripMenuItem.Name = "accountManagerToolStripMenuItem";
+            this.accountManagerToolStripMenuItem.Size = new System.Drawing.Size(120, 23);
+            this.accountManagerToolStripMenuItem.Text = "Account Manager";
+            this.accountManagerToolStripMenuItem.Click += new System.EventHandler(this.accountManagerToolStripMenuItem_Click);
+            // 
             // Root
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1439,6 +1622,11 @@ namespace Grimoire.UI
         private void managerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowForm(botManager);
+        }
+
+        private void accountManagerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowForm(AccountManager.Instance);
         }
 
         private void Root_KeyPress(object sender, KeyPressEventArgs e)

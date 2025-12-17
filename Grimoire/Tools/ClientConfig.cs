@@ -8,6 +8,7 @@ namespace Grimoire.Tools
 		public static Config Config = Config.Load(Application.StartupPath + "\\ClientConfig.cfg");
 		public const string C_SKILL_PRESET_PREFIX = "SS.";
 		public const string C_BOTS_DIR = "botsDir";
+		public const string C_SCRIPT_DIR = "scriptDir";
 		public const string C_FLASH = "flash";
 		public const string C_LOG_DEBUG_SWF = "logDebugSwf";
 		public const string C_SAFE_CELL = "safeCell";

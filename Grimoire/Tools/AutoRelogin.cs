@@ -74,6 +74,11 @@ namespace Grimoire.Tools
             {
                 return;
             }
+            if (!AreServersLoaded)
+            {
+                try { LogForm.Instance.AppendDebug("[AutoRelogin] Server list not loaded from SWF; Connect may fail.\r\n"); } catch { }
+                try { Console.WriteLine("[AutoRelogin] Server list not loaded from SWF; Connect may fail."); } catch { }
+            }
             Connect(server);
             await BotManager.Instance.ActiveBotEngine.WaitUntil(() => !World.IsMapLoading, () => !cts.IsCancellationRequested, 40);
             if (!cts.IsCancellationRequested)

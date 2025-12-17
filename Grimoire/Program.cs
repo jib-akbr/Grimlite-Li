@@ -15,10 +15,22 @@ namespace Grimoire
 		public static readonly string ReleaseDate = "02-12-2025";
 		public static string PluginsPath { get; private set; }
 		public static Tools.Plugins.PluginManager PluginsManager { get; private set; }
+		
+		// Store command-line arguments for spawned instances
+		public static string[] StartupArgs { get; private set; }
 
 		[STAThread]
-		private static void Main()
+		private static void Main(string[] args)
 		{
+			// Store arguments immediately
+			StartupArgs = args;
+			
+			// Process command-line arguments if provided
+			if (args != null && args.Length > 0)
+			{
+				ParseAndSetupAutoLogin(args);
+			}
+			
 			try
 			{
 				Program.TryCreateDirectory(Program.PluginsPath = Path.Combine(Application.StartupPath, "Plugins"));
@@ -40,6 +52,73 @@ namespace Grimoire
 					"Grimlite Li",
 					MessageBoxButtons.OK,
 					MessageBoxIcon.Error);
+			}
+		}
+		
+		private static void ParseAndSetupAutoLogin(string[] args)
+		{
+			try
+			{
+				string username = null;
+				string password = null;
+				string server = null;
+				string script = null;
+
+				// Parse command-line arguments
+				for (int i = 0; i < args.Length; i++)
+				{
+					if (args[i].StartsWith("--username="))
+						username = args[i].Substring("--username=".Length).Trim('"');
+					else if (args[i].StartsWith("--password="))
+						password = args[i].Substring("--password=".Length).Trim('"');
+					else if (args[i].StartsWith("--server="))
+						server = args[i].Substring("--server=".Length).Trim('"');
+					else if (args[i].StartsWith("--script="))
+						script = args[i].Substring("--script=".Length).Trim('"');
+				}
+
+				// Log what we received for debugging
+				System.Diagnostics.Debug.WriteLine($"[ParseAndSetupAutoLogin] Received arguments:");
+				System.Diagnostics.Debug.WriteLine($"[ParseAndSetupAutoLogin]   Username: {username ?? "(null)"}");
+				System.Diagnostics.Debug.WriteLine($"[ParseAndSetupAutoLogin]   Password: {(string.IsNullOrEmpty(password) ? "(null)" : new string('*', password.Length))}");
+				System.Diagnostics.Debug.WriteLine($"[ParseAndSetupAutoLogin]   Server: {server ?? "(null)"}");
+				System.Diagnostics.Debug.WriteLine($"[ParseAndSetupAutoLogin]   Script: {script ?? "(null)"}");
+
+				// Set credentials in OptionsManager (static properties)
+				if (!string.IsNullOrEmpty(username))
+				{
+					Botting.OptionsManager.LoginUsername = username;
+				}
+
+				if (!string.IsNullOrEmpty(password))
+				{
+					Botting.OptionsManager.LoginPassword = password;
+				}
+
+				if (!string.IsNullOrEmpty(script))
+				{
+					Botting.OptionsManager.AutoLoadScriptPath = script;
+				}
+
+				// Set server override if specified
+				if (!string.IsNullOrEmpty(server))
+				{
+					// Create a Server object with the name
+					// The IP will be resolved by the game when connecting
+					Networking.Proxy.Instance.DestinationServerOverride = new Game.Data.Server
+					{
+						Name = server,
+						Ip = "game.aq.com",
+						Port = 443,
+						IsOnline = true,
+						IsMemberOnly = false,
+						PlayerCount = 0
+					};
+				}
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"[ParseAndSetupAutoLogin] Error: {ex.Message}");
 			}
 		}
 

@@ -18,7 +18,7 @@ namespace Grimoire.Botting.Commands.Quest
 
         public async Task Execute(IBotEngine instance)
         {
-            await instance.WaitUntil(() => World.IsActionAvailable(LockActions.TryQuestComplete));
+            await instance.WaitUntil(() => World.IsActionAvailable(LockActions.TryQuestComplete), timeout: 10);
             bool provokeMons = instance.Configuration.ProvokeMonsters;
 
             //if (!Player.Quests.AcceptedQuests.Contains(Quest)) Quest.Accept();

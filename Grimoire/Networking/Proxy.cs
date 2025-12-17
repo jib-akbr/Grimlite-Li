@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Grimoire.Game;
+using Grimoire.Game.Data;
 using Grimoire.Networking.Handlers;
 using Grimoire.Tools;
 
@@ -22,6 +23,9 @@ namespace Grimoire.Networking
 		public event Receive ReceivedFromServer;
 
 		public int ListenerPort { get; set; }
+
+		// Optional override used when the SWF does not provide a RealAddress/RealPort.
+		public Server DestinationServerOverride { get; set; }
 
 		private static readonly CancellationTokenSource AppClosingToken = new CancellationTokenSource();
 
@@ -109,7 +113,26 @@ namespace Grimoire.Networking
 			{
 				this._client = new GrimoireClient(this._listener.EndAcceptTcpClient(result));
 				string address = Flash.Call<string>("RealAddress", new string[0]);
-				int port = int.Parse(Flash.Call<string>("RealPort", new string[0]));
+				string portStr = Flash.Call<string>("RealPort", new string[0]);
+				int port = 0;
+				if (string.IsNullOrWhiteSpace(address) || string.IsNullOrWhiteSpace(portStr))
+				{
+					// Fallback to DestinationServerOverride if SWF didn't provide mapping
+					if (this.DestinationServerOverride != null)
+					{
+						address = this.DestinationServerOverride.Ip ?? this.DestinationServerOverride.Name;
+						port = this.DestinationServerOverride.Port;
+					}
+					else
+					{
+						// Last resort: try parse portStr even if empty (will throw later)
+						int.TryParse(portStr, out port);
+					}
+				}
+				else
+				{
+					int.TryParse(portStr, out port);
+				}
 				this._server = new GrimoireClient(address, port);
 				this._client.Disconnected += this.OnClientDisconnect;
 				this._server.Disconnected += this.OnServerDisconnect;

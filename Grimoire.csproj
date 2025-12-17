@@ -6,7 +6,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>WinExe</OutputType>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>Default</LangVersion>
     <AssemblyName>Grimoire</AssemblyName>
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
@@ -54,11 +54,11 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>Default</LangVersion>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>Default</LangVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>true</Prefer32Bit>
     <DocumentationFile>
@@ -76,27 +76,8 @@
     <Win32Resource>
     </Win32Resource>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
+  <!-- x86 build configurations disabled due to GenerateResource/MSBuild x86 task host compatibility -->
+  <!-- Use AnyCPU for all builds instead -->
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
@@ -244,6 +225,7 @@
     <Compile Include="Grimoire\UI\SkillPreset.Designer.cs">
       <DependentUpon>SkillPreset.cs</DependentUpon>
     </Compile>
+    <Compile Include="Grimoire\UI\AccountManager.cs" />
     <Compile Include="Grimoire\Tools\ClientConfig.cs" />
     <Compile Include="Hook\EoLHook.cs" />
     <Compile Include="Grimoire\Botting\Bot.cs" />

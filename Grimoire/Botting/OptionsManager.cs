@@ -35,6 +35,12 @@ namespace Grimoire.Botting
             set;
         }
 
+        public static string AutoLoadScriptPath
+        {
+            get;
+            set;
+        }
+
         public static bool InfMana
         {
             get => _infMana;

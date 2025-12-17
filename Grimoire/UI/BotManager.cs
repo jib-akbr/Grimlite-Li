@@ -219,6 +219,8 @@ namespace Grimoire.UI
                 cbServers.SelectedIndex = 0;
                 Root.Instance.changeServerList.Items.AddRange(servers);
                 Root.Instance.changeServerList.SelectedIndex = 0;
+                // Also notify AccountManager
+                AccountManager.Instance.OnServersLoaded(servers);
             }
         }
 
