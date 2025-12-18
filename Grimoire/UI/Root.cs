@@ -121,169 +121,150 @@ namespace Grimoire.UI
             {
                 if (Program.StartupArgs != null && Program.StartupArgs.Length > 0)
                 {
-                    _ = ProcessStartupArgs(Program.StartupArgs);
+                    ProcessStartupArgs(Program.StartupArgs);
                 }
             }
             catch { }
         }
 
-        private async System.Threading.Tasks.Task ProcessStartupArgs(string[] args)
+        private void ProcessStartupArgs(string[] args)
         {
             try
             {
-                // Check if credentials were set by Program.Main
-                string user = OptionsManager.LoginUsername;
-                string pass = OptionsManager.LoginPassword;
                 string script = OptionsManager.AutoLoadScriptPath;
-
-            LogForm.Instance.AppendDebug($"[Startup Args] Checking credentials...\r\n");
-            LogForm.Instance.AppendDebug($"[Startup Args] Username from OptionsManager: {user ?? "(null)"}\r\n");
-            LogForm.Instance.AppendDebug($"[Startup Args] Password from OptionsManager: {(string.IsNullOrEmpty(pass) ? "(null)" : new string('*', pass.Length))}\r\n");
-
-                LogForm.Instance.AppendDebug($"[Startup Args] Waiting for Flash initialization...\r\n");
-
-                // Wait for Flash to initialize (increased from 2s to 3s)
-                await System.Threading.Tasks.Task.Delay(3000);
-
-                // Check if server override was set by Program.Main
                 Server serverObj = Proxy.Instance.DestinationServerOverride;
+                string username = OptionsManager.LoginUsername;
+                string password = OptionsManager.LoginPassword;
 
-                if (serverObj != null)
+                Debug.WriteLine($"[SPAWNED] ProcessStartupArgs called - User: {username}, Script: {script}");
+
+                if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 {
-                    LogForm.Instance.AppendDebug($"[Startup Args] Using server: {serverObj.Name}\r\n");
+                    Debug.WriteLine($"[SPAWNED] ERROR: Missing credentials!");
+                    return;
+                }
 
+                // DO EVERYTHING IN A BACKGROUND TASK WITH PROPER WAITS
+                Task.Run(async () =>
+                {
                     try
                     {
-                        // Attempt login with specified server
-                        await AutoRelogin.Login(serverObj, 15000, new System.Threading.CancellationTokenSource(), ensureSuccess: false);
-
-                        // Wait for login to complete (30s timeout)
+                        Debug.WriteLine($"[SPAWNED] Step 1: Waiting for Flash initialization...");
+                        
+                        // STEP 1: Wait for Flash to initialize (max 30 seconds)
                         int waited = 0;
-                        while (!Player.IsLoggedIn && waited < 30000)
+                        while (Flash.flash == null && waited < 30000)
                         {
-                            await System.Threading.Tasks.Task.Delay(500);
+                            await Task.Delay(500);
                             waited += 500;
-
                             if (waited % 5000 == 0)
-                            {
-                                LogForm.Instance.AppendDebug($"[Startup Args] Waiting for login... ({waited}ms elapsed)\r\n");
-                            }
+                                Debug.WriteLine($"[SPAWNED] Still waiting for Flash... ({waited}ms elapsed)");
                         }
 
-                        if (Player.IsLoggedIn)
+                        if (Flash.flash == null)
                         {
-                            LogForm.Instance.AppendDebug($"[Startup Args] ✓ Login successful! ({waited}ms)\r\n");
+                            Debug.WriteLine($"[SPAWNED] ERROR: Flash failed to initialize after 30 seconds!");
+                            return;
+                        }
+
+                        Debug.WriteLine($"[SPAWNED] Step 1 COMPLETE: Flash initialized after {waited}ms");
+
+                        // STEP 2: Extra delay to ensure Flash is fully ready
+                        await Task.Delay(2000);
+                        Debug.WriteLine($"[SPAWNED] Step 2 COMPLETE: Post-Flash delay done");
+
+                        // STEP 3: Set credentials and trigger login
+                        Debug.WriteLine($"[SPAWNED] Step 3: Setting credentials and triggering login...");
+                        OptionsManager.LoginUsername = username;
+                        OptionsManager.LoginPassword = password;
+                        
+                        AutoRelogin.Login(serverObj, 15000, new System.Threading.CancellationTokenSource(), ensureSuccess: false);
+                        Debug.WriteLine($"[SPAWNED] Login triggered");
+
+                        // STEP 4: Wait for login to complete (max 30 seconds)
+                        Debug.WriteLine($"[SPAWNED] Step 4: Waiting for login to complete...");
+                        waited = 0;
+                        while (!Player.IsLoggedIn && waited < 30000)
+                        {
+                            await Task.Delay(500);
+                            waited += 500;
+                            if (waited % 5000 == 0)
+                                Debug.WriteLine($"[SPAWNED] Still waiting for login... ({waited}ms elapsed)");
+                        }
+
+                        if (!Player.IsLoggedIn)
+                        {
+                            Debug.WriteLine($"[SPAWNED] ERROR: Login failed or timed out after 30 seconds!");
+                            return;
+                        }
+
+                        Debug.WriteLine($"[SPAWNED] Step 4 COMPLETE: Login successful after {waited}ms");
+
+                        // STEP 5: Wait for character to fully load (max 20 seconds)
+                        Debug.WriteLine($"[SPAWNED] Step 5: Waiting for character to load...");
+                        waited = 0;
+                        while ((string.IsNullOrEmpty(Player.Cell) || Player.Health == 0) && waited < 20000)
+                        {
+                            await Task.Delay(500);
+                            waited += 500;
+                            if (waited % 5000 == 0)
+                                Debug.WriteLine($"[SPAWNED] Still waiting for character load... ({waited}ms elapsed)");
+                        }
+
+                        if (string.IsNullOrEmpty(Player.Cell) || Player.Health == 0)
+                        {
+                            Debug.WriteLine($"[SPAWNED] ERROR: Character failed to load properly!");
+                            return;
+                        }
+
+                        Debug.WriteLine($"[SPAWNED] Step 5 COMPLETE: Character loaded after {waited}ms (Cell: {Player.Cell}, HP: {Player.Health})");
+
+                        // STEP 6: Load script if specified
+                        if (!string.IsNullOrEmpty(script) && File.Exists(script))
+                        {
+                            Debug.WriteLine($"[SPAWNED] Step 6: Loading script from {script}...");
+                            
+                            try
+                            {
+                                var scriptContent = File.ReadAllText(script);
+                                Configuration cfg = Newtonsoft.Json.JsonConvert.DeserializeObject<Configuration>(
+                                    scriptContent,
+                                    new Newtonsoft.Json.JsonSerializerSettings { TypeNameHandling = Newtonsoft.Json.TypeNameHandling.All }
+                                );
+
+                                Root.Instance.Invoke((MethodInvoker)delegate
+                                {
+                                    Root.Instance.ShowForm(BotManager.Instance);
+                                    BotManager.Instance.ApplyConfiguration(cfg);
+                                    Root.Instance.chkStartBot.Checked = true;
+                                    Debug.WriteLine($"[SPAWNED] Script applied and bot started!");
+                                });
+
+                                Debug.WriteLine($"[SPAWNED] Step 6 COMPLETE: Script loaded successfully!");
+                                Debug.WriteLine($"[SPAWNED] ========== ALL STEPS COMPLETE - BOT RUNNING ==========");
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"[SPAWNED] ERROR in Step 6 (script loading): {ex.Message}");
+                                Debug.WriteLine($"[SPAWNED] Stack trace: {ex.StackTrace}");
+                            }
                         }
                         else
                         {
-                            LogForm.Instance.AppendDebug($"[Startup Args] ✗ Login timeout after {waited}ms\r\n");
-                            return;
+                            Debug.WriteLine($"[SPAWNED] No script to load, login complete!");
+                            Debug.WriteLine($"[SPAWNED] ========== LOGIN COMPLETE ==========");
                         }
                     }
                     catch (Exception ex)
                     {
-                        LogForm.Instance.AppendDebug($"[Startup Args] ✗ Login error: {ex.Message}\r\n");
-                        return;
+                        Debug.WriteLine($"[SPAWNED] ERROR in Task.Run: {ex.Message}");
+                        Debug.WriteLine($"[SPAWNED] Stack trace: {ex.StackTrace}");
                     }
-                }
-                else
-                {
-                    // No server specified, use default login
-                    LogForm.Instance.AppendDebug($"[Startup Args] No server specified, using default login\r\n");
-                    AutoRelogin.Login(user, pass);
-
-                    int waited = 0;
-                    while (!Player.IsLoggedIn && waited < 15000)
-                    {
-                        await System.Threading.Tasks.Task.Delay(500);
-                        waited += 500;
-                    }
-
-                    if (!Player.IsLoggedIn)
-                    {
-                        LogForm.Instance.AppendDebug($"[Startup Args] ✗ Login timeout\r\n");
-                        return;
-                    }
-
-                    LogForm.Instance.AppendDebug($"[Startup Args] ✓ Login successful!\r\n");
-                }
-
-                // Load and start script if specified
-                if (!string.IsNullOrEmpty(script) && File.Exists(script))
-                {
-                    try
-                    {
-                        LogForm.Instance.AppendDebug($"[Startup Args] Waiting for character load complete...\r\n");
-                        
-                        // More aggressive character load detection
-                        bool charLoaded = false;
-                        for (int i = 0; i < 40; i++)  // Max 8 seconds (40 × 200ms)
-                        {
-                            // Check multiple indicators of successful load
-                            if (!string.IsNullOrEmpty(Player.Cell) && 
-                                Player.Health > 0 && 
-                                Player.HealthMax > 0 &&
-                                !World.IsMapLoading)
-                            {
-                                charLoaded = true;
-                                LogForm.Instance.AppendDebug($"[Startup Args] Character loaded! (took {i * 200}ms)\r\n");
-                                break;
-                            }
-                            
-                            await System.Threading.Tasks.Task.Delay(200);  // Changed from 500ms to 200ms
-                            
-                            // Log progress every 2 seconds (10 × 200ms)
-                            if ((i + 1) % 10 == 0)
-                            {
-                                LogForm.Instance.AppendDebug($"[Startup Args] Still waiting... Cell: {Player.Cell ?? "null"}, HP: {Player.Health}, MaxHP: {Player.HealthMax}, MapLoading: {World.IsMapLoading}\r\n");
-                            }
-                        }
-
-                        if (!charLoaded)
-                        {
-                            LogForm.Instance.AppendDebug($"[Startup Args] Character load timeout - attempting to load script anyway\r\n");
-                        }
-
-                        LogForm.Instance.AppendDebug($"[Startup Args] Loading script: {script}\r\n");
-
-                        string txt = File.ReadAllText(script);
-                        Configuration cfg = null;
-
-                        if (Path.GetExtension(script).Equals(".gbot", StringComparison.OrdinalIgnoreCase) ||
-                            txt.TrimStart().StartsWith("{"))
-                        {
-                            cfg = Newtonsoft.Json.JsonConvert.DeserializeObject<Configuration>(txt,
-                                new Newtonsoft.Json.JsonSerializerSettings
-                                {
-                                    TypeNameHandling = Newtonsoft.Json.TypeNameHandling.All
-                                });
-                        }
-
-                        if (cfg != null)
-                        {
-                            // Show BotManager
-                            this.ShowForm(BotManager.Instance);
-                            await System.Threading.Tasks.Task.Delay(250);  // Reduced from 500ms
-
-                            // Load config
-                            BotManager.Instance.ApplyConfiguration(cfg);
-                            await System.Threading.Tasks.Task.Delay(250);  // Reduced from 500ms
-
-                            // Start bot
-                            this.chkStartBot.Checked = true;
-
-                            LogForm.Instance.AppendDebug($"[Startup Args] ✓ Script loaded and started!\r\n");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        LogForm.Instance.AppendDebug($"[Startup Args] Failed to start script: {ex.Message}\r\n");
-                    }
-                }
+                });
             }
             catch (Exception ex)
             {
-                LogForm.Instance.AppendDebug($"[Startup Args] Error: {ex.Message}\r\n");
+                Debug.WriteLine($"[SPAWNED] Startup args error: {ex.Message}");
             }
         }
 
