@@ -217,7 +217,7 @@ namespace Grimoire.UI
                         
                         // More aggressive character load detection
                         bool charLoaded = false;
-                        for (int i = 0; i < 30; i++)  // Max 15 seconds (30 × 500ms)
+                        for (int i = 0; i < 40; i++)  // Max 8 seconds (40 × 200ms)
                         {
                             // Check multiple indicators of successful load
                             if (!string.IsNullOrEmpty(Player.Cell) && 
@@ -226,14 +226,14 @@ namespace Grimoire.UI
                                 !World.IsMapLoading)
                             {
                                 charLoaded = true;
-                                LogForm.Instance.AppendDebug($"[Startup Args] Character loaded! (took {i * 500}ms)\r\n");
+                                LogForm.Instance.AppendDebug($"[Startup Args] Character loaded! (took {i * 200}ms)\r\n");
                                 break;
                             }
                             
-                            await System.Threading.Tasks.Task.Delay(500);
+                            await System.Threading.Tasks.Task.Delay(200);  // Changed from 500ms to 200ms
                             
-                            // Log progress every 2 seconds
-                            if ((i + 1) % 4 == 0)
+                            // Log progress every 2 seconds (10 × 200ms)
+                            if ((i + 1) % 10 == 0)
                             {
                                 LogForm.Instance.AppendDebug($"[Startup Args] Still waiting... Cell: {Player.Cell ?? "null"}, HP: {Player.Health}, MaxHP: {Player.HealthMax}, MapLoading: {World.IsMapLoading}\r\n");
                             }
