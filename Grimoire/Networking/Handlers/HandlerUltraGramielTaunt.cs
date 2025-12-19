@@ -163,7 +163,10 @@ namespace Grimoire.Networking.Handlers
                                 {
                                     // If target already has Focus, stop retrying.
                                     if (Player.GetAuras(false, "Focus") > 0)
+                                    {
+                                        UI.BotManager.Instance.ActiveBotEngine.paused = false;
                                         break;
+                                    }
 
                                     int wait = Player.SkillAvailable("5");
                                     if (wait > 0)
@@ -197,7 +200,10 @@ namespace Grimoire.Networking.Handlers
                                     for (int attempt = 0; attempt < 3; attempt++)
                                     {
                                         if (Player.GetAuras(false, "Focus") > 0)
+                                        {
+                                            UI.BotManager.Instance.ActiveBotEngine.paused = false;
                                             break;
+                                        }
 
                                         int wait = Player.SkillAvailable("5");
                                         if (wait > 0)
@@ -332,8 +338,11 @@ namespace Grimoire.Networking.Handlers
                             {
                                 for (int attempt = 0; attempt < 3; attempt++)
                                 {
-                                    if (Player.GetAuras(true, "Vendetta") > 0)
+                                    if (Player.GetAuras(false, "Focus") > 0)
+                                    {
+                                        UI.BotManager.Instance.ActiveBotEngine.paused = false;
                                         break;
+                                    }
 
                                     int wait = Player.SkillAvailable("5");
                                     if (wait > 0)
