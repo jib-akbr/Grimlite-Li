@@ -254,9 +254,8 @@ namespace Grimoire.Networking.Handlers
             const int cycle = 4;
             const int second = 20;
 
-            // NOTE: The original Maid-style per-preset taunt cycle is no longer used
-            // for Gramiel. Instead, each account will spam taunt on Gramiel until it
-            // obtains the Vendetta aura, then stop taunting.
+            // Maid-style cycle-based taunting: each preset takes turns based on position
+            // P1=0, P2=1, P3=2, P4=3 - each gets a turn every 20 seconds
             int count = (int)_preset;
 
             // Side-specific orb identifiers. The main taunt logic for orbs happens
@@ -322,16 +321,15 @@ namespace Grimoire.Networking.Handlers
                         continue;
                     }
 
-                    // New behaviour: spam taunt on Gramiel until this account has
-                    // Vendetta, then stop taunting. All accounts can run this logic
-                    // concurrently; each will naturally stop once it has the aura.
-                    if (Player.GetAuras(true, "Vendetta") == 0)
+                    // Maid-style cycle taunting: when it's this preset's turn, taunt
+                    if (count <= 0)
                     {
+                        count = cycle; // Reset count for next rotation
+                        
                         UI.BotManager.Instance.ActiveBotEngine.paused = true;
                         Player.AttackMonster("Gramiel");
 
-                        // Strong taunt sequence with cooldown wait, similar to the
-                        // defence-shattering taunt logic.
+                        // Strong taunt sequence with cooldown wait
                         Task.Run(async () =>
                         {
                             try
@@ -363,6 +361,7 @@ namespace Grimoire.Networking.Handlers
                         });
                     }
 
+                    count--; // Decrement cycle counter
                     int delayMs = (int)(second / (double)cycle * 1000);
                     await Task.Delay(delayMs, token);
                 }
