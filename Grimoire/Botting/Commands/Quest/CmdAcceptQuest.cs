@@ -14,6 +14,7 @@ namespace Grimoire.Botting.Commands.Quest
             get;
             set;
         }
+
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Include)]
         public bool ghostAccept
         {
@@ -24,30 +25,87 @@ namespace Grimoire.Botting.Commands.Quest
         public async Task Execute(IBotEngine instance)
         {
             BotData.BotState = BotData.State.Quest;
-            await instance.WaitUntil(() => Player.Quests.QuestTree.Any((Game.Data.Quest q) => q.Id == this.Quest.Id));
-            await instance.WaitUntil(() => World.IsActionAvailable(LockActions.AcceptQuest));
-            var Quest = Player.Quests.Quest(this.Quest.Id);
-            int i = 0;
-            if (Quest.IValue <= Player.Quests.progress(Quest.Id) && Quest.ISlot != 0 && Quest.IsNotRepeatable)
+            int id = this.Quest.Id;
+
+            // Ensure quest is loaded
+            if (!Player.Quests.QuestTree.Any(q => q.Id == id))
+            {
+                Player.Quests.Load(id);
+                
+                // Wait for quest to load with timeout
+                await instance.WaitUntil(() => Player.Quests.QuestTree.Any(q => q.Id == id), timeout: 3);
+                
+                if (!Player.Quests.QuestTree.Any(q => q.Id == id))
+                {
+                    LogForm.Instance.devDebug($"[Quest] Timeout: Quest {id} failed to load within 3 seconds");
+                    return;
+                }
+            }
+
+            // Get quest reference with null safety
+            var Quest = Player.Quests.Quest(id);
+            if (Quest == null)
+            {
+                LogForm.Instance.devDebug($"[Quest] Failed to accept: Quest {id} not found after loading");
                 return;
+            }
+
+            // Skip if quest is already completed (non-repeatable quests only)
+            if (Quest.IValue <= Player.Quests.progress(Quest.Id) && Quest.ISlot != 0 && Quest.IsNotRepeatable)
+            {
+                LogForm.Instance.devDebug($"[Quest] Skipping quest {id} - already completed ({Quest.ISlot}): {Player.Quests.progress(id)}/{Quest.IValue}");
+                return;
+            }
+
+            // Skip if quest is already in progress
+            if (Player.Quests.IsInProgress(Quest.Id))
+            {
+                LogForm.Instance.devDebug($"[Quest] Quest {id} already in progress");
+                return;
+            }
+
+            // Wait for action to be available
+            await instance.WaitUntil(() => World.IsActionAvailable(LockActions.AcceptQuest), timeout: 5);
+            
+            if (!World.IsActionAvailable(LockActions.AcceptQuest))
+            {
+                LogForm.Instance.devDebug($"[Quest] Warning: AcceptQuest action not available after 5 seconds, attempting anyway...");
+            }
+
+            // Handle ghost accept
             if (ghostAccept)
             {
                 Quest.GhostAccept();
                 await Task.Delay(600);
+                LogForm.Instance.devDebug($"[Quest] Ghost accepted: {id}");
                 return;
             }
-            while (!Player.Quests.IsInProgress(Quest.Id) && Player.IsLoggedIn && instance.IsRunning && i < 2)
+
+            // Try to accept quest with retry logic
+            int attempts = 0;
+            int maxAttempts = 3;
+
+            while (!Player.Quests.IsInProgress(Quest.Id) && Player.IsLoggedIn && instance.IsRunning && attempts < maxAttempts)
             {
                 Quest.Accept();
                 await Task.Delay(600);
-                i++;
+                attempts++;
+
+                if (attempts == maxAttempts && !Player.Quests.IsInProgress(Quest.Id))
+                {
+                    LogForm.Instance.devDebug($"[Quest] Failed to accept quest {id} after {maxAttempts} attempts");
+                }
             }
-            //await instance.WaitUntil(() => Player.Quests.IsInProgress(Quest.Id));
+
+            if (Player.Quests.IsInProgress(Quest.Id))
+            {
+                LogForm.Instance.devDebug($"[Quest] Successfully accepted: {id}");
+            }
         }
 
         public override string ToString()
         {
-            return (ghostAccept ? $"Ghost Accept: " : $"Accept Quest: ")+Quest.Id;
+            return (ghostAccept ? "Ghost Accept: " : "Accept Quest: ") + Quest.Id;
         }
     }
 }
