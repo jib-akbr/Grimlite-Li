@@ -24,8 +24,8 @@ namespace Grimoire.Botting.Commands.Quest
         public async Task Execute(IBotEngine instance)
         {
             BotData.BotState = BotData.State.Quest;
-            await instance.WaitUntil(() => Player.Quests.QuestTree.Any((Game.Data.Quest q) => q.Id == this.Quest.Id), timeout: 10);
-            await instance.WaitUntil(() => World.IsActionAvailable(LockActions.AcceptQuest), timeout: 10);
+            await instance.WaitUntil(() => Player.Quests.QuestTree.Any((Game.Data.Quest q) => q.Id == this.Quest.Id));
+            await instance.WaitUntil(() => World.IsActionAvailable(LockActions.AcceptQuest));
             var Quest = Player.Quests.Quest(this.Quest.Id);
             int i = 0;
             if (Quest.IValue <= Player.Quests.progress(Quest.Id) && Quest.ISlot != 0 && Quest.IsNotRepeatable)
