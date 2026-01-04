@@ -28,6 +28,18 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             set;
         }
 
+        public string TauntOrder
+        {
+            get;
+            set;
+        }
+
+        public string Delay
+        {
+            get;
+            set;
+        }
+
         public string Description1
         {
             get;

@@ -18,12 +18,18 @@ namespace Grimoire
 		
 		// Store command-line arguments for spawned instances
 		public static string[] StartupArgs { get; private set; }
+		
+		// Flag to indicate if this is a spawned instance
+		public static bool IsSpawnedInstance { get; private set; }
 
 		[STAThread]
 		private static void Main(string[] args)
 		{
 			// Store arguments immediately
 			StartupArgs = args;
+			
+			// Check if this is a spawned instance
+			IsSpawnedInstance = (args != null && args.Length > 0);
 			
 			// Process command-line arguments if provided
 			if (args != null && args.Length > 0)

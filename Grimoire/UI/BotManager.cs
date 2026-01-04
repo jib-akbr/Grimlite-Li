@@ -1951,6 +1951,12 @@ namespace Grimoire.UI
                     if (cmbSpecials.SelectedIndex != -1 && !chkSpecial.Checked)
                     {
                         chkSpecial.Checked = true;
+                        UpdateSpecialHandler(); // Ensure handler is properly initialized
+                    }
+                    else if (chkSpecial.Checked && SpecialJsonHandler == null)
+                    {
+                        // Handler was cleared but checkbox is still checked - reinitialize it
+                        UpdateSpecialHandler();
                     }
 
                     setPresetsSkills();

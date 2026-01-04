@@ -105,11 +105,15 @@ namespace Grimoire.UI
             this.CenterToScreen();
             Instance = this;
             this.Text = title;
+            
+            // Ensure window is visible when created (important for spawned instances)
+            this.Visible = true;
+            this.ShowInTaskbar = true;
         }
 
         private void Root_Load(object sender, EventArgs e)
         {
-            //Task.Factory.StartNew(Proxy.Instance.Start, TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(Proxy.Instance.Start, TaskCreationOptions.LongRunning);
             InitFlashMovie(ClientConfig.GetValue(ClientConfig.C_FLASH));
             Hotkeys.Instance.LoadHotkeys();
             LoadPlugins();
@@ -121,6 +125,13 @@ namespace Grimoire.UI
             {
                 if (Program.StartupArgs != null && Program.StartupArgs.Length > 0)
                 {
+                    // Ensure window is visible and shown in taskbar for spawned instances
+                    this.Visible = true;
+                    this.Show();
+                    this.WindowState = FormWindowState.Normal;
+                    this.BringToFront();
+                    Debug.WriteLine($"[SPAWNED] Root window made visible and brought to front");
+                    
                     ProcessStartupArgs(Program.StartupArgs);
                 }
             }
@@ -200,10 +211,10 @@ namespace Grimoire.UI
 
                         Debug.WriteLine($"[SPAWNED] Step 4 COMPLETE: Login successful after {waited}ms");
 
-                        // STEP 5: Wait for character to fully load (max 20 seconds)
+                        // STEP 5: Wait for character to fully load (max 40 seconds)
                         Debug.WriteLine($"[SPAWNED] Step 5: Waiting for character to load...");
                         waited = 0;
-                        while ((string.IsNullOrEmpty(Player.Cell) || Player.Health == 0) && waited < 20000)
+                        while ((string.IsNullOrEmpty(Player.Cell) || Player.Health <= 0) && waited < 40000)
                         {
                             await Task.Delay(500);
                             waited += 500;
@@ -211,13 +222,28 @@ namespace Grimoire.UI
                                 Debug.WriteLine($"[SPAWNED] Still waiting for character load... ({waited}ms elapsed)");
                         }
 
-                        if (string.IsNullOrEmpty(Player.Cell) || Player.Health == 0)
+                        if (string.IsNullOrEmpty(Player.Cell) || Player.Health <= 0)
                         {
                             Debug.WriteLine($"[SPAWNED] ERROR: Character failed to load properly!");
                             return;
                         }
 
                         Debug.WriteLine($"[SPAWNED] Step 5 COMPLETE: Character loaded after {waited}ms (Cell: {Player.Cell}, HP: {Player.Health})");
+
+                        // STEP 5B: Wait for quests to load from server (CRITICAL - up to 15 seconds additional wait)
+                        Debug.WriteLine($"[SPAWNED] Step 5B: Waiting for quests and game data to load from server...");
+                        int questWait = 0;
+                        while (Player.Quests == null && questWait < 15000)
+                        {
+                            await Task.Delay(500);
+                            questWait += 500;
+                            if (questWait % 5000 == 0)
+                                Debug.WriteLine($"[SPAWNED] Still waiting for quests... ({questWait}ms elapsed)");
+                        }
+                        
+                        // Extra delay to ensure quest list is fully populated
+                        await Task.Delay(2000);
+                        Debug.WriteLine($"[SPAWNED] Step 5B COMPLETE: Quests loaded after {questWait}ms");
 
                         // STEP 6: Load script if specified
                         if (!string.IsNullOrEmpty(script) && File.Exists(script))
@@ -236,8 +262,20 @@ namespace Grimoire.UI
                                 {
                                     Root.Instance.ShowForm(BotManager.Instance);
                                     BotManager.Instance.ApplyConfiguration(cfg);
-                                    Root.Instance.chkStartBot.Checked = true;
-                                    Debug.WriteLine($"[SPAWNED] Script applied and bot started!");
+                                    
+                                    // Delay before starting bot to allow configuration and quest initialization
+                                    Task.Delay(2000).ContinueWith(_ =>
+                                    {
+                                        Root.Instance.Invoke((MethodInvoker)delegate
+                                        {
+                                            if (Root.Instance != null && !Root.Instance.IsDisposed)
+                                            {
+                                                Root.Instance.chkStartBot.Checked = true;
+                                                Debug.WriteLine($"[SPAWNED] Bot started!");
+                                            }
+                                        });
+                                    });
+                                    Debug.WriteLine($"[SPAWNED] Script applied, waiting 2 seconds before bot start...");
                                 });
 
                                 Debug.WriteLine($"[SPAWNED] Step 6 COMPLETE: Script loaded successfully!");
