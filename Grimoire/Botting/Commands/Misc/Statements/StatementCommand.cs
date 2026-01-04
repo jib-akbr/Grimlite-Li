@@ -51,5 +51,19 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             get;
             set;
         }
+
+        /// <summary>
+        /// Called when the bot starts. Override to initialize state.
+        /// </summary>
+        public virtual void OnBotStarted()
+        {
+        }
+
+        /// <summary>
+        /// Called when the bot stops. Override to clean up state.
+        /// </summary>
+        public virtual void OnBotStopped()
+        {
+        }
     }
 }

@@ -1967,6 +1967,14 @@ namespace Grimoire.UI
                     ActiveBotEngine.IsRunningChanged += OnIsRunningChanged;
                     ActiveBotEngine.IndexChanged += OnIndexChanged;
                     ActiveBotEngine.ConfigurationChanged += OnConfigurationChanged;
+                    
+                    // Call OnBotStarted on all statement commands
+                    foreach (var cmd in lstCommands.Items)
+                    {
+                        if (cmd is StatementCommand stmtCmd)
+                            stmtCmd.OnBotStarted();
+                    }
+                    
                     ActiveBotEngine.Start(GenerateConfiguration());
                     BotStateChanged(IsRunning: true);
                     Root.Instance.BotStateChanged(IsRunning: true);
@@ -1989,6 +1997,13 @@ namespace Grimoire.UI
                 }
                 else
                 {
+                    // Call OnBotStopped on all statement commands
+                    foreach (var cmd in lstCommands.Items)
+                    {
+                        if (cmd is StatementCommand stmtCmd)
+                            stmtCmd.OnBotStopped();
+                    }
+                    
                     ActiveBotEngine.Stop();
                     selectionMode(SelectionMode.MultiExtended);
                     BotStateChanged(IsRunning: false);
