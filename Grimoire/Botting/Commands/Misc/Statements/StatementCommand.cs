@@ -40,6 +40,12 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             set;
         }
 
+        public string Label
+        {
+            get;
+            set;
+        }
+
         public string Description1
         {
             get;

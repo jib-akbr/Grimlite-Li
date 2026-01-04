@@ -76,19 +76,36 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                 }
             }
 
-            // If Index is specified, only trigger when message count matches the pattern (cyclically)
+            // Handle Account Total (Label)
+            int accountTotal = 0;
+            if (!string.IsNullOrWhiteSpace(Label))
+            {
+                string resolvedLabel = instance.ResolveVars(Label);
+                if (!string.IsNullOrWhiteSpace(resolvedLabel) && int.TryParse(resolvedLabel, out int parsedLabel))
+                {
+                    accountTotal = parsedLabel;
+                }
+            }
+
+            // If Index is specified, only trigger when it's this account's turn in the rotation
             if (matched && targetIndex > 0)
             {
                 _messageCount++;
-                // Cyclic triggering: Index 1 = odd (1,3,5...), Index 2 = even (2,4,6...), etc.
-                if (targetIndex == 1)
-                    matched = (_messageCount % 2 == 1); // Odd
-                else if (targetIndex == 2)
-                    matched = (_messageCount % 2 == 0); // Even
-                else
-                    matched = (_messageCount % targetIndex == 0); // Every Nth
                 
-                LogForm.Instance.AppendDebug($"[SpecialAnims] Message #{_messageCount}, Index={targetIndex}, matched={matched}");
+                if (accountTotal > 0)
+                {
+                    // Rotation mode: Player N triggers when (_messageCount - 1) % accountTotal + 1 == targetIndex
+                    // E.g., with accountTotal=4: P1 on 1,5,9... P2 on 2,6,10... P3 on 3,7,11... P4 on 4,8,12...
+                    matched = ((_messageCount - 1) % accountTotal + 1 == targetIndex);
+                    LogForm.Instance.AppendDebug($"[SpecialAnims] Message #{_messageCount}, TauntOrder={targetIndex}, AccountTotal={accountTotal}, matched={matched}");
+                }
+                else
+                {
+                    // No account total specified: simple cyclic triggering
+                    // Index 1 triggers on all messages, Index 2 every 2nd, Index 3 every 3rd, etc.
+                    matched = (_messageCount % targetIndex == 0);
+                    LogForm.Instance.AppendDebug($"[SpecialAnims] Message #{_messageCount}, TauntOrder={targetIndex}, matched={matched}");
+                }
             }
             else if (matched && targetIndex <= 0)
             {

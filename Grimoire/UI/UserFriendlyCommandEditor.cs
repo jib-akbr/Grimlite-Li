@@ -118,6 +118,9 @@ namespace Grimoire.UI
                             case "TauntOrder":
                                 lblText = "Taunt Order";
                                 break;
+                            case "Label":
+                                lblText = "Account Total";
+                                break;
                             case "Quest":
                                 var qObj = JsonConvert.DeserializeObject<Quest>(item.Value.ToString());
                                 lblText = "Quest ID"; 
