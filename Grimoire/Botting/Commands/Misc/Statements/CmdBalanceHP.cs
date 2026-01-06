@@ -17,6 +17,9 @@ namespace Grimoire.Botting.Commands.Misc.Statements
         
         // Cached thresholds
         private int[] _thresholds = new int[0];
+        
+        // Track last logged HP to only log when crossing 10% boundaries
+        private int _lastLoggedHP = -1;
 
         public CmdBalanceHP()
         {
@@ -33,6 +36,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             _currentPhaseIndex = 0;
             _onSecondBoss = false;
             _thresholds = new int[0];
+            _lastLoggedHP = -1;
         }
 
         public override void OnBotStopped()
@@ -41,6 +45,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             _currentPhaseIndex = 0;
             _onSecondBoss = false;
             _thresholds = new int[0];
+            _lastLoggedHP = -1;
         }
 
         public async Task Execute(IBotEngine instance)
@@ -197,7 +202,15 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                     ? (currentHP / (double)maxHP) * 100.0 
                     : 100.0;
 
-                LogForm.Instance.AppendDebug($"[BalanceHP] Phase {_currentPhaseIndex}, Threshold {currentThreshold}%, {targetBossLabel} ({targetBoss}) HP: {hpPercent:F1}%");
+                // Only log when HP crosses a 10% boundary (100%, 90%, 80%, etc.)
+                int roundedHP = (int)(hpPercent / 10) * 10;
+                bool hpChanged = roundedHP != _lastLoggedHP;
+                
+                if (hpChanged)
+                {
+                    LogForm.Instance.AppendDebug($"[BalanceHP] Phase {_currentPhaseIndex}, Threshold {currentThreshold}%, {targetBossLabel} ({targetBoss}) HP: {hpPercent:F0}%");
+                    _lastLoggedHP = roundedHP;
+                }
 
                 // Check if we've reached the threshold
                 if (hpPercent <= currentThreshold)

@@ -45,9 +45,6 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             string raw = instance.ResolveVars(Value1);
             string lastMessage = Configuration.LastAnimationMessage?.ToLower();
 
-            // DEBUG: Log what message we're checking
-            LogForm.Instance.AppendDebug($"[SpecialAnims] Checking for '{raw}' | LastAnimationMessage: '{lastMessage ?? "NULL"}'");
-
             // Normalise and support comma-separated search terms like Maid does
             string[] message = string.IsNullOrWhiteSpace(raw)
                 ? Array.Empty<string>()
@@ -60,9 +57,9 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             bool matched = !string.IsNullOrEmpty(lastMessage) && message.Length > 0 &&
                            Array.Exists(message, t => lastMessage.Contains(t));
 
-            // If we have an initial match, consume the message immediately so other statements don't see it
-            bool initialMatch = matched;
-            if (initialMatch)
+            // Always consume the message if it exists (whether it matched or not)
+            // This prevents the same message from being checked repeatedly
+            if (!string.IsNullOrEmpty(lastMessage))
             {
                 Configuration.LastAnimationMessage = string.Empty;
                 Configuration.AnimationTriggered = false;
@@ -100,21 +97,23 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                     // Rotation mode: Player N triggers when (_messageCount - 1) % accountTotal + 1 == targetIndex
                     // E.g., with accountTotal=4: P1 on 1,5,9... P2 on 2,6,10... P3 on 3,7,11... P4 on 4,8,12...
                     matched = ((_messageCount - 1) % accountTotal + 1 == targetIndex);
-                    LogForm.Instance.AppendDebug($"[SpecialAnims] Message #{_messageCount}, TauntOrder={targetIndex}, AccountTotal={accountTotal}, matched={matched}");
+                    if (matched)
+                        LogForm.Instance.AppendDebug($"[SpecialAnims] Message #{_messageCount}, TauntOrder={targetIndex}, AccountTotal={accountTotal}, matched=True");
                 }
                 else
                 {
                     // No account total specified: simple cyclic triggering
                     // Index 1 triggers on all messages, Index 2 every 2nd, Index 3 every 3rd, etc.
                     matched = (_messageCount % targetIndex == 0);
-                    LogForm.Instance.AppendDebug($"[SpecialAnims] Message #{_messageCount}, TauntOrder={targetIndex}, matched={matched}");
+                    if (matched)
+                        LogForm.Instance.AppendDebug($"[SpecialAnims] Message #{_messageCount}, TauntOrder={targetIndex}, matched=True");
                 }
             }
             else if (matched && targetIndex <= 0)
             {
                 // No index specified - increment counter for reference but always match
                 _messageCount++;
-                LogForm.Instance.AppendDebug($"[SpecialAnims] Message #{_messageCount} received (no index filter)");
+                LogForm.Instance.AppendDebug($"[SpecialAnims] Message #{_messageCount} received: '{lastMessage}'");
             }
 
             // Two modes:
@@ -191,44 +190,32 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                         }
                     }
 
-                    // Fire off the skill cast in background if there's a delay, otherwise execute immediately
+                    // Now handle the skill cast with optional delay
                     if (delayMs > 0)
                     {
-                        LogForm.Instance.AppendDebug($"[SpecialAnims] Message matched, will cast skill {resolvedSkillIndex} after {delayMs}ms delay");
-                        // Fire and forget - don't await, so bot continues immediately
-                        _ = Task.Run(async () => await DelayedCastSkill(resolvedSkillIndex, delayMs));
+                        LogForm.Instance.AppendDebug($"[SpecialAnims] Message matched, waiting {delayMs}ms before pausing and casting skill {resolvedSkillIndex}");
+                        // Fire off in background: wait for delay, THEN pause and cast
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(delayMs);
+                            instance.paused = true;
+                            await CastSkillImmediate(resolvedSkillIndex);
+                            instance.paused = false;
+                        });
                     }
                     else
                     {
-                        // No delay - cast immediately
+                        // No delay - pause and cast immediately
+                        instance.paused = true;
                         try
                         {
-                            // Wait for skill to be off cooldown (if necessary), but don't stall forever
-                            int attempts = 3;
-                            while (attempts-- > 0)
-                            {
-                                int cd = Player.SkillAvailable(resolvedSkillIndex);
-                                if (cd <= 0)
-                                    break;
-
-                                await Task.Delay(Math.Min(cd, 1000));
-                            }
-
-                            // First attempt to force-cast
-                            Player.ForceUseSkill(resolvedSkillIndex);
-
-                            // Short delay, then verify by checking if the skill went on cooldown
-                            await Task.Delay(150);
-                            if (Player.SkillAvailable(resolvedSkillIndex) <= 0)
-                            {
-                                // If it's still instantly available, try one more time
-                                LogForm.Instance.AppendDebug($"[SpecialAnims] Skill {resolvedSkillIndex} appears not to have fired, retrying once.");
-                                Player.ForceUseSkill(resolvedSkillIndex);
-                            }
+                            await CastSkillImmediate(resolvedSkillIndex);
+                            instance.paused = false;
                         }
                         catch (Exception ex)
                         {
                             LogForm.Instance.AppendDebug($"[SpecialAnims] Error while forcing skill {resolvedSkillIndex}: {ex.Message}");
+                            instance.paused = false;
                         }
                     }
                 }
@@ -261,6 +248,39 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             return result;
         }
 
+        private async Task CastSkillImmediate(string skillIndex)
+        {
+            try
+            {
+                // Wait for skill to be off cooldown (if necessary), but don't stall forever
+                int attempts = 3;
+                while (attempts-- > 0)
+                {
+                    int cd = Player.SkillAvailable(skillIndex);
+                    if (cd <= 0)
+                        break;
+
+                    await Task.Delay(Math.Min(cd, 1000));
+                }
+
+                // First attempt to force-cast
+                Player.ForceUseSkill(skillIndex);
+
+                // Short delay, then verify by checking if the skill went on cooldown
+                await Task.Delay(150);
+                if (Player.SkillAvailable(skillIndex) <= 0)
+                {
+                    // If it's still instantly available, try one more time
+                    LogForm.Instance.AppendDebug($"[SpecialAnims] Skill {skillIndex} appears not to have fired, retrying once.");
+                    Player.ForceUseSkill(skillIndex);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogForm.Instance.AppendDebug($"[SpecialAnims] Error during skill cast {skillIndex}: {ex.Message}");
+            }
+        }
+
         private async Task DelayedCastSkill(string skillIndex, int delayMs)
         {
             try
@@ -289,6 +309,11 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                     // If it's still instantly available, try one more time
                     LogForm.Instance.AppendDebug($"[SpecialAnims] Skill {skillIndex} appears not to have fired, retrying once.");
                     Player.ForceUseSkill(skillIndex);
+                }
+                else
+                {
+                    // Skill didn't fire - pause the bot for user attention
+                    LogForm.Instance.AppendDebug($"[SpecialAnims] Delayed skill {skillIndex} failed to fire, pausing bot.");
                 }
             }
             catch (Exception ex)
