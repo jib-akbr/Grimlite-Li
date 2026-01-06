@@ -96,7 +96,25 @@ namespace Grimoire.UI
             {
                 int currentY = 13;
                 int count = 0;
-                string[] skip = { "Tag", "Description1", "Description2", "$type" };
+                // Skip these fields by default, but include them for commands that use them
+                List<string> skipList = new List<string> { "Tag", "Description1", "Description2", "$type", "Value3", "TauntOrder", "Delay", "Label" };
+                
+                // CmdSpecialAnims needs Value3, TauntOrder, Delay, and Label
+                if (obj.GetType().Name == "CmdSpecialAnims")
+                {
+                    skipList.Remove("Value3");
+                    skipList.Remove("TauntOrder");
+                    skipList.Remove("Delay");
+                    skipList.Remove("Label");
+                }
+                
+                // CmdBalanceHP needs Label for thresholds
+                if (obj.GetType().Name == "CmdBalanceHP")
+                {
+                    skipList.Remove("Label");
+                }
+                
+                string[] skip = skipList.ToArray();
                 Dictionary<string, KeyValuePair<DarkLabel, DarkTextBox>> currentVars = new Dictionary<string, KeyValuePair<DarkLabel, DarkTextBox>>();
                 foreach (KeyValuePair<string, JToken> item in content)
                 {
@@ -122,7 +140,7 @@ namespace Grimoire.UI
                                 lblText = "Taunt Order";
                                 break;
                             case "Label":
-                                lblText = "Account Total";
+                                lblText = obj.GetType().Name == "CmdBalanceHP" ? "HP Thresholds" : "Account Total";
                                 break;
                             case "Quest":
                                 var qObj = JsonConvert.DeserializeObject<Quest>(item.Value.ToString());

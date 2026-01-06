@@ -530,5 +530,13 @@
       "Description1": "Animation message",
       "Description2": "Skill to use"
     },
+    {
+      "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdBalanceHP, Grimoire",
+      "Tag": "Monster",
+      "Text": "Balance HP",
+      "Description1": "Boss 1 name",
+      "Description2": "Boss 2 name",
+      "DescriptionLabel": "HP thresholds (comma-separated)"
+    },
   ]
 }
