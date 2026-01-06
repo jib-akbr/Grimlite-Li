@@ -28,6 +28,12 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             set;
         }
 
+        public string Value3
+        {
+            get;
+            set;
+        }
+
         public string TauntOrder
         {
             get;

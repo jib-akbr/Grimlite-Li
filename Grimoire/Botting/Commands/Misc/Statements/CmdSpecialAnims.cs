@@ -1,6 +1,7 @@
 using Grimoire.Game;
 using Grimoire.UI;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -36,8 +37,10 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             // Value1 = animation message(s) to check for (e.g., "sun converges", "shattering", or "resist")
             //        You can separate multiple keys with commas: "resist,shattering"
             // Value2 = optional skill index to cast immediately when matched (like Maid's message skill)
-            // Index = optional occurrence number to taunt on (e.g., 1 = first message, 2 = second message, etc.)
+            // Value3 = optional attack priority (monmapid, monster name, etc.) to target before casting the skill
+            // TauntOrder (Index) = optional occurrence number to taunt on (e.g., 1 = first message, 2 = second message, etc.)
             //         If not specified or <= 0, taunt on every message
+            // Label (Account Total) = optional account rotation count
 
             string raw = instance.ResolveVars(Value1);
             string lastMessage = Configuration.LastAnimationMessage?.ToLower();
@@ -129,6 +132,14 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                     resolvedSkillIndex = null;
             }
 
+            string resolvedAttackPriority = null;
+            if (!string.IsNullOrWhiteSpace(Value3))
+            {
+                resolvedAttackPriority = instance.ResolveVars(Value3);
+                if (string.IsNullOrWhiteSpace(resolvedAttackPriority))
+                    resolvedAttackPriority = null;
+            }
+
             int delayMs = 0;
             if (!string.IsNullOrWhiteSpace(Delay))
             {
@@ -144,6 +155,42 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                 // Skill mode: never skip, only react when the message matches
                 if (matched)
                 {
+                    // First, target the attack priority if specified
+                    if (!string.IsNullOrWhiteSpace(resolvedAttackPriority))
+                    {
+                        try
+                        {
+                            // Handle comma-separated list of attack priorities (like CmdKill does)
+                            List<string> priorities = new List<string>();
+                            if (resolvedAttackPriority.Contains(","))
+                            {
+                                foreach (string p in resolvedAttackPriority.Split(','))
+                                {
+                                    priorities.Add(p.Trim());
+                                }
+                            }
+                            else
+                            {
+                                priorities.Add(resolvedAttackPriority.Trim());
+                            }
+
+                            // Attack the first available priority target
+                            foreach (string p in priorities)
+                            {
+                                if (World.IsMonsterAvailable(p))
+                                {
+                                    LogForm.Instance.AppendDebug($"[SpecialAnims] Attacking priority: {p}");
+                                    Player.AttackMonster(p);
+                                    break;
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LogForm.Instance.AppendDebug($"[SpecialAnims] Error while setting attack priority {resolvedAttackPriority}: {ex.Message}");
+                        }
+                    }
+
                     // Fire off the skill cast in background if there's a delay, otherwise execute immediately
                     if (delayMs > 0)
                     {
@@ -205,6 +252,8 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             string result = $"Special Anims: {Value1}";
             if (!string.IsNullOrEmpty(Value2))
                 result += $" | Skill: {Value2}";
+            if (!string.IsNullOrEmpty(Value3))
+                result += $" | Attack Priority: {Value3}";
             if (!string.IsNullOrEmpty(TauntOrder))
                 result += $" | TauntOrder: {TauntOrder}";
             if (!string.IsNullOrEmpty(Delay))

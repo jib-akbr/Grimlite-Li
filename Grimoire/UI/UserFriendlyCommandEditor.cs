@@ -115,6 +115,9 @@ namespace Grimoire.UI
                                 lblText = commandEditor.statementCommands.Find((StatementCommand s) => s.GetType() == obj.GetType()).Description2;
                                 tbText = tbText == lblText ? "" : tbText;
                                 break;
+                            case "Value3":
+                                lblText = "Attack Priority";
+                                break;
                             case "TauntOrder":
                                 lblText = "Taunt Order";
                                 break;
