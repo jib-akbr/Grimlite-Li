@@ -269,7 +269,11 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 
         public override string ToString()
         {
-            string result = $"Balance HP: {Value1}, {Value2}";
+            string result = $"Balance HP:";
+            if (!string.IsNullOrEmpty(Value1))
+                result += $" {Value1}";
+            if (!string.IsNullOrEmpty(Value2))
+                result += $", {Value2}";
             if (!string.IsNullOrEmpty(Label))
                 result += $" | Thresholds: {Label}";
             return result;
