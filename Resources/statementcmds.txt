@@ -535,7 +535,8 @@
       "Tag": "Monster",
       "Text": "Balance HP",
       "Description1": "Boss 1 name",
-      "Description2": "Boss 2 name",
+      "Description2": "Boss 2 name (optional)",
+      "Description3": "Skill index (optional)",
       "DescriptionLabel": "HP thresholds (comma-separated)"
     },
   ]

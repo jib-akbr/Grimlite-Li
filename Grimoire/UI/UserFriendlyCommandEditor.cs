@@ -108,10 +108,11 @@ namespace Grimoire.UI
                     skipList.Remove("Label");
                 }
                 
-                // CmdBalanceHP needs Label for thresholds
+                // CmdBalanceHP needs Label for thresholds and Value3 for skill
                 if (obj.GetType().Name == "CmdBalanceHP")
                 {
                     skipList.Remove("Label");
+                    skipList.Remove("Value3");
                 }
                 
                 string[] skip = skipList.ToArray();
@@ -134,7 +135,7 @@ namespace Grimoire.UI
                                 tbText = tbText == lblText ? "" : tbText;
                                 break;
                             case "Value3":
-                                lblText = "Attack Priority";
+                                lblText = obj.GetType().Name == "CmdBalanceHP" ? "Skill Index (optional)" : "Attack Priority";
                                 break;
                             case "TauntOrder":
                                 lblText = "Taunt Order";
