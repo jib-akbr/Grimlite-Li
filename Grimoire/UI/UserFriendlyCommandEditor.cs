@@ -115,6 +115,14 @@ namespace Grimoire.UI
                     skipList.Remove("Value3");
                 }
                 
+                // Aura commands need Value3 for skill field
+                if (obj.GetType().Name == "CmdPlayerAuraGreaterThan" || obj.GetType().Name == "CmdPlayerAuraLessThan" || 
+                    obj.GetType().Name == "CmdPlayerAuraEquals" || obj.GetType().Name == "CmdTargetAuraGreaterThan" ||
+                    obj.GetType().Name == "CmdTargetAuraLessThan" || obj.GetType().Name == "CmdTargetAuraEquals")
+                {
+                    skipList.Remove("Value3");
+                }
+                
                 string[] skip = skipList.ToArray();
                 Dictionary<string, KeyValuePair<DarkLabel, DarkTextBox>> currentVars = new Dictionary<string, KeyValuePair<DarkLabel, DarkTextBox>>();
                 foreach (KeyValuePair<string, JToken> item in content)
@@ -135,7 +143,14 @@ namespace Grimoire.UI
                                 tbText = tbText == lblText ? "" : tbText;
                                 break;
                             case "Value3":
-                                lblText = obj.GetType().Name == "CmdBalanceHP" ? "Skill Index (optional)" : "Attack Priority";
+                                if (obj.GetType().Name == "CmdBalanceHP")
+                                    lblText = "Skill Index (optional)";
+                                else if (obj.GetType().Name == "CmdPlayerAuraGreaterThan" || obj.GetType().Name == "CmdPlayerAuraLessThan" || 
+                                         obj.GetType().Name == "CmdPlayerAuraEquals" || obj.GetType().Name == "CmdTargetAuraGreaterThan" ||
+                                         obj.GetType().Name == "CmdTargetAuraLessThan" || obj.GetType().Name == "CmdTargetAuraEquals")
+                                    lblText = "Skill";
+                                else
+                                    lblText = "Attack Priority";
                                 break;
                             case "TauntOrder":
                                 lblText = "Taunt Order";
