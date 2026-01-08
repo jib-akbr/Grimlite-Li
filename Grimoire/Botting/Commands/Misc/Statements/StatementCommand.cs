@@ -34,6 +34,24 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             set;
         }
 
+        public string Value4
+        {
+            get;
+            set;
+        }
+
+        public string Value5
+        {
+            get;
+            set;
+        }
+
+        public string Value6
+        {
+            get;
+            set;
+        }
+
         public string TauntOrder
         {
             get;
