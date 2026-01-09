@@ -22,7 +22,6 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 			string Operator = instance.IsVar(Value6) ? Configuration.Tempvariable[instance.GetVar(Value6)] : Value6;
 
 			int auraValue = Player.GetAuras(true, Aura);
-			LogForm.Instance.AppendDebug($"[PlayerAuraEquals] Aura '{Aura}': {auraValue}");
 			
 			int x = 0;
 			int.TryParse(AuraValue, out x);
@@ -34,7 +33,6 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 			if (!string.IsNullOrEmpty(Aura2))
 			{
 				int auraValue2 = Player.GetAuras(true, Aura2);
-				LogForm.Instance.AppendDebug($"[PlayerAuraEquals] Aura2 '{Aura2}': {auraValue2}");
 				
 				int y = 0;
 				int.TryParse(AuraValue2, out y);

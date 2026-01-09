@@ -97,7 +97,7 @@ namespace Grimoire.UI
                 int currentY = 13;
                 int count = 0;
                 // Skip these fields by default, but include them for commands that use them
-                List<string> skipList = new List<string> { "Tag", "Description1", "Description2", "$type", "Value3", "TauntOrder", "Delay", "Label", "Value4", "Value5", "Value6" };
+                List<string> skipList = new List<string> { "Tag", "Description1", "Description2", "$type", "Value3", "TauntOrder", "Delay", "Label", "Value4", "Value5", "Value6", "ExtraAuras" };
                 
                 // CmdSpecialAnims needs Value3, TauntOrder, Delay, and Label
                 if (obj.GetType().Name == "CmdSpecialAnims")
@@ -206,13 +206,22 @@ namespace Grimoire.UI
                                 Size = new System.Drawing.Size(290, 0),
                                 Location = new System.Drawing.Point(15, currentY),
                                 BackColor = System.Drawing.Color.FromArgb(36, 36, 46),
-                                BorderStyle = BorderStyle.FixedSingle,
+                                BorderStyle = BorderStyle.None,
                                 Visible = false,
                                 Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right
                             };
                             commandEditor.Controls.Add(pnlMultipleAuras);
                             
-                            int targetHeight = 120;
+                            // Calculate target height based on extra auras stored
+                            int targetHeight = 130; // Base height for Aura 2 fields + button
+                            try
+                            {
+                                string extraAurasJson = content["ExtraAuras"]?.ToString() ?? "[]";
+                                JArray extraAuras = JArray.Parse(extraAurasJson);
+                                targetHeight += extraAuras.Count * 100; // Each additional aura takes ~100px
+                            }
+                            catch { }
+                            
                             int animationSpeed = 8;
                             int currentHeight = 0;
                             Timer animationTimer = new Timer();
@@ -221,6 +230,48 @@ namespace Grimoire.UI
                             chkMultipleAuras.CheckedChanged += (s, e) =>
                             {
                                 animationTimer.Stop();
+                                
+                                // Sync textbox values back to ExtraAuras before refresh
+                                if (chkMultipleAuras.Checked)
+                                {
+                                    try
+                                    {
+                                        JArray extraAuras = new JArray();
+                                        // Collect all aura 3+ data from textboxes
+                                        for (int i = 3; i <= 20; i++)
+                                        {
+                                            var tbName = pnlMultipleAuras.Controls.OfType<DarkTextBox>()
+                                                .FirstOrDefault(t => t.Name == $"tbAuraName{i}");
+                                            var tbValue = pnlMultipleAuras.Controls.OfType<DarkTextBox>()
+                                                .FirstOrDefault(t => t.Name == $"tbAuraValue{i}");
+                                            var cbOp = pnlMultipleAuras.Controls.OfType<DarkUI.Controls.DarkComboBox>()
+                                                .FirstOrDefault(c => c.Name == $"cbOperator{i}");
+                                            
+                                            // If this aura's Name control exists, save all its data (even if fields are empty)
+                                            if (tbName != null)
+                                            {
+                                                var auraObj = new JObject();
+                                                auraObj["Name"] = tbName.Text ?? "";
+                                                auraObj["Value"] = tbValue?.Text ?? "";
+                                                auraObj["Operator"] = cbOp?.SelectedItem?.ToString() ?? "AND";
+                                                extraAuras.Add(auraObj);
+                                            }
+                                        }
+                                        content["ExtraAuras"] = extraAuras.Count > 0 ? extraAuras.ToString() : "[]";
+                                    }
+                                    catch { }
+                                }
+                                
+                                // Recalculate target height based on current extra auras
+                                int newTargetHeight = 130;
+                                try
+                                {
+                                    string extraAurasJson = content["ExtraAuras"]?.ToString() ?? "[]";
+                                    JArray extraAuras = JArray.Parse(extraAurasJson);
+                                    newTargetHeight += extraAuras.Count * 100;
+                                }
+                                catch { }
+                                targetHeight = newTargetHeight;
                                 
                                 // Remove old tick handler if it exists
                                 if (tickHandler != null)
@@ -274,13 +325,7 @@ namespace Grimoire.UI
                                 }
                             };
                             
-                            // If the checkbox should start checked, expand the panel immediately
-                            if (chkMultipleAuras.Checked)
-                            {
-                                pnlMultipleAuras.Visible = true;
-                                pnlMultipleAuras.Height = 120;
-                                currentY += 120;
-                            }
+
                         }
                         
                         // Skip Value4, Value5, Value6 as they're handled specially
@@ -322,79 +367,302 @@ namespace Grimoire.UI
                     pnlMultipleAuras.Controls.Clear();
                     
                     int panelY = 10;
+                    List<Control> dynamicAuraControls = new List<Control>();
                     
-                    // Aura Name 2
-                    pnlMultipleAuras.Controls.Add(new DarkLabel()
+                    // Declare attachRemoveHandler first so it can be used in addAuraPair
+                    Action<int> attachRemoveHandler = null;
+                    
+                    // Helper function to add an aura pair at the given Y position
+                    Func<int, string, string, string, int, bool, int> addAuraPair = (yPos, auraNameValue, auraValueValue, operatorValue, auraIndex, showRemoveBtn) =>
                     {
-                        Name = "lblAuraName2",
-                        Text = "Aura Name 2",
-                        Size = new System.Drawing.Size(80, 20),
+                        // Aura Name Label
+                        var lblAuraName = new DarkLabel()
+                        {
+                            Name = $"lblAuraName{auraIndex}",
+                            Text = showRemoveBtn ? $"Aura Name {auraIndex} -" : $"Aura Name {auraIndex}",
+                            Size = new System.Drawing.Size(90, 20),
+                            Location = new System.Drawing.Point(10, yPos + 2),
+                            Anchor = AnchorStyles.Left | AnchorStyles.Top
+                        };
+                        pnlMultipleAuras.Controls.Add(lblAuraName);
+                        
+                        // Aura Name TextBox
+                        var tbAuraName = new DarkTextBox()
+                        {
+                            Name = $"tbAuraName{auraIndex}",
+                            Text = auraNameValue,
+                            Size = new System.Drawing.Size(160, 20),
+                            Location = new System.Drawing.Point(110, yPos),
+                            Anchor = AnchorStyles.Left | AnchorStyles.Top
+                        };
+                        pnlMultipleAuras.Controls.Add(tbAuraName);
+                        dynamicAuraControls.Add(tbAuraName);
+                        
+                        // Make label clickable for remove functionality
+                        if (showRemoveBtn)
+                        {
+                            lblAuraName.Cursor = Cursors.Hand;
+                            lblAuraName.Click += (s, e) =>
+                            {
+                                attachRemoveHandler(auraIndex);
+                            };
+                        }
+                        
+                        yPos += 30;
+                        
+                        // Aura Value Label
+                        pnlMultipleAuras.Controls.Add(new DarkLabel()
+                        {
+                            Name = $"lblAuraValue{auraIndex}",
+                            Text = $"Aura Value {auraIndex}",
+                            Size = new System.Drawing.Size(90, 20),
+                            Location = new System.Drawing.Point(10, yPos + 2),
+                            Anchor = AnchorStyles.Left | AnchorStyles.Top
+                        });
+                        
+                        // Aura Value TextBox
+                        var tbAuraValue = new DarkTextBox()
+                        {
+                            Name = $"tbAuraValue{auraIndex}",
+                            Text = auraValueValue,
+                            Size = new System.Drawing.Size(160, 20),
+                            Location = new System.Drawing.Point(110, yPos),
+                            Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left
+                        };
+                        pnlMultipleAuras.Controls.Add(tbAuraValue);
+                        dynamicAuraControls.Add(tbAuraValue);
+                        
+                        yPos += 30;
+                        
+                        // Operator ComboBox
+                        pnlMultipleAuras.Controls.Add(new DarkLabel()
+                        {
+                            Name = $"lblOperator{auraIndex}",
+                            Text = "Operator",
+                            Size = new System.Drawing.Size(90, 20),
+                            Location = new System.Drawing.Point(10, yPos + 2),
+                            Anchor = AnchorStyles.Left | AnchorStyles.Top
+                        });
+                        
+                        var cbOperator = new DarkUI.Controls.DarkComboBox()
+                        {
+                            Name = $"cbOperator{auraIndex}",
+                            Size = new System.Drawing.Size(160, 24),
+                            Location = new System.Drawing.Point(110, yPos - 2),
+                            Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left,
+                            DropDownStyle = ComboBoxStyle.DropDownList,
+                            BackColor = System.Drawing.Color.FromArgb(45, 45, 48),
+                            ForeColor = System.Drawing.Color.FromArgb(220, 220, 220)
+                        };
+                        cbOperator.Items.Add("AND");
+                        cbOperator.Items.Add("OR");
+                        if (!string.IsNullOrEmpty(operatorValue) && (operatorValue == "AND" || operatorValue == "OR"))
+                            cbOperator.SelectedItem = operatorValue;
+                        else
+                            cbOperator.SelectedIndex = 0;
+                        pnlMultipleAuras.Controls.Add(cbOperator);
+                        dynamicAuraControls.Add(cbOperator);
+                        
+                        return yPos + 30;
+                    };
+                    
+                    // Add Aura 2 (always shown when multiple auras is enabled)
+                    panelY = addAuraPair(panelY, content["Value4"]?.ToString() ?? "", content["Value5"]?.ToString() ?? "", 
+                                        content["Value6"]?.ToString() ?? "AND", 2, false);
+                    
+                    // Parse and add any stored additional auras
+                    string extraAurasJson = content["ExtraAuras"]?.ToString() ?? "[]";
+                    try
+                    {
+                        JArray extraAuras = JArray.Parse(extraAurasJson);
+                        for (int i = 0; i < extraAuras.Count; i++)
+                        {
+                            var aura = extraAuras[i];
+                            panelY = addAuraPair(panelY, aura["Name"]?.ToString() ?? "", aura["Value"]?.ToString() ?? "", 
+                                               aura["Operator"]?.ToString() ?? "AND", 3 + i, true);
+                        }
+                    }
+                    catch
+                    {
+                        // If JSON parse fails, just skip extra auras
+                    }
+                    
+                    // Add "+" button to add more auras
+                    var btnAddAura = new DarkUI.Controls.DarkButton()
+                    {
+                        Name = "btnAddAura",
+                        Text = "+",
+                        Size = new System.Drawing.Size(30, 25),
                         Location = new System.Drawing.Point(10, panelY),
                         Anchor = AnchorStyles.Left | AnchorStyles.Top
-                    });
-                    var tbAuraName2 = new DarkTextBox()
-                    {
-                        Name = "tbValue4",
-                        Text = content["Value4"]?.ToString() ?? "",
-                        Size = new System.Drawing.Size(180, 20),
-                        Location = new System.Drawing.Point(100, panelY),
-                        Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left
                     };
-                    pnlMultipleAuras.Controls.Add(tbAuraName2);
-                    currentVars.Add("Value4", new KeyValuePair<DarkLabel, DarkTextBox>(null, tbAuraName2));
+                    pnlMultipleAuras.Controls.Add(btnAddAura);
                     
-                    panelY += 30;
+                    // Store aura index for adding new auras
+                    int currentAuraIndex = 3 + (extraAurasJson != "[]" ? (JArray.Parse(extraAurasJson).Count) : 0);
                     
-                    // Aura Value 2
-                    pnlMultipleAuras.Controls.Add(new DarkLabel()
+                    // Helper function to refresh the entire panel UI
+                    Action refreshPanelUI = null;
+                    refreshPanelUI = () =>
                     {
-                        Name = "lblAuraValue2",
-                        Text = "Aura Value 2",
-                        Size = new System.Drawing.Size(80, 20),
-                        Location = new System.Drawing.Point(10, panelY),
-                        Anchor = AnchorStyles.Left | AnchorStyles.Top
-                    });
-                    var tbAuraValue2 = new DarkTextBox()
-                    {
-                        Name = "tbValue5",
-                        Text = content["Value5"]?.ToString() ?? "",
-                        Size = new System.Drawing.Size(180, 20),
-                        Location = new System.Drawing.Point(100, panelY),
-                        Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left
+                        pnlMultipleAuras.Controls.Clear();
+                        int panelY = 10;
+                        
+                        // Aura 2 (always show)
+                        panelY = addAuraPair(panelY, content["Value4"]?.ToString() ?? "", content["Value5"]?.ToString() ?? "", 
+                                            content["Value6"]?.ToString() ?? "AND", 2, false);
+                        
+                        // Extra auras
+                        string extraAurasJson = content["ExtraAuras"]?.ToString() ?? "[]";
+                        try
+                        {
+                            JArray extraAuras = JArray.Parse(extraAurasJson);
+                            for (int i = 0; i < extraAuras.Count; i++)
+                            {
+                                var aura = extraAuras[i];
+                                panelY = addAuraPair(panelY, aura["Name"]?.ToString() ?? "", aura["Value"]?.ToString() ?? "", 
+                                                   aura["Operator"]?.ToString() ?? "AND", 3 + i, true);
+                            }
+                        }
+                        catch { }
+                        
+                        // Add + button
+                        var btnAddAura = new DarkUI.Controls.DarkButton()
+                        {
+                            Name = "btnAddAura",
+                            Text = "+",
+                            Size = new System.Drawing.Size(30, 25),
+                            Location = new System.Drawing.Point(10, panelY),
+                            Anchor = AnchorStyles.Left | AnchorStyles.Top
+                        };
+                        pnlMultipleAuras.Controls.Add(btnAddAura);
+                        
+                        // Set panel height to fit all content - add button height + padding
+                        pnlMultipleAuras.Height = panelY + 40;
+                        
+                        // Reattach add button handler
+                        btnAddAura.Click += (s, e) =>
+                        {
+                            // Store old height BEFORE making changes
+                            int oldPanelHeight = pnlMultipleAuras.Height;
+                            
+                            var existingExtra = content["ExtraAuras"]?.ToString() ?? "[]";
+                            JArray extraAuras = null;
+                            try
+                            {
+                                extraAuras = JArray.Parse(existingExtra);
+                            }
+                            catch
+                            {
+                                extraAuras = new JArray();
+                            }
+                            
+                            var newAura = new JObject();
+                            newAura["Name"] = "";
+                            newAura["Value"] = "";
+                            newAura["Operator"] = "AND";
+                            extraAuras.Add(newAura);
+                            content["ExtraAuras"] = extraAuras.ToString();
+                            
+                            // Rebuild the panel - this will calculate the correct new height
+                            refreshPanelUI();
+                            
+                            // Adjust window based on actual height change
+                            int newPanelHeight = pnlMultipleAuras.Height;
+                            int heightIncrease = newPanelHeight - oldPanelHeight;
+                            commandEditor.Size = new Size(commandEditor.Size.Width, commandEditor.Size.Height + heightIncrease);
+                        };
                     };
-                    pnlMultipleAuras.Controls.Add(tbAuraValue2);
-                    currentVars.Add("Value5", new KeyValuePair<DarkLabel, DarkTextBox>(null, tbAuraValue2));
                     
-                    panelY += 30;
-                    
-                    // Operator
-                    pnlMultipleAuras.Controls.Add(new DarkLabel()
+                    // Now define the remove handler
+                    attachRemoveHandler = (auraIndex) =>
                     {
-                        Name = "lblOperator",
-                        Text = "Operator",
-                        Size = new System.Drawing.Size(80, 20),
-                        Location = new System.Drawing.Point(10, panelY),
-                        Anchor = AnchorStyles.Left | AnchorStyles.Top
-                    });
-                    var cbOperator = new DarkUI.Controls.DarkComboBox()
-                    {
-                        Name = "cbValue6",
-                        Size = new System.Drawing.Size(180, 24),
-                        Location = new System.Drawing.Point(100, panelY - 2),
-                        Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left,
-                        DropDownStyle = ComboBoxStyle.DropDownList,
-                        BackColor = System.Drawing.Color.FromArgb(45, 45, 48),
-                        ForeColor = System.Drawing.Color.FromArgb(220, 220, 220)
+                        int index = auraIndex - 3;
+                        
+                        // Remove from ExtraAuras array
+                        var existingExtra = content["ExtraAuras"]?.ToString() ?? "[]";
+                        JArray extraAuras = null;
+                        try
+                        {
+                            extraAuras = JArray.Parse(existingExtra);
+                            if (index >= 0 && index < extraAuras.Count)
+                            {
+                                extraAuras.RemoveAt(index);
+                                content["ExtraAuras"] = extraAuras.Count > 0 ? extraAuras.ToString() : "[]";
+                            }
+                        }
+                        catch { }
+                        
+                        // Store old height before refresh
+                        int oldPanelHeight = pnlMultipleAuras.Height;
+                        
+                        // Rebuild the panel - this will calculate the correct new height
+                        refreshPanelUI();
+                        
+                        // Now adjust the command editor window based on the actual height change
+                        int newPanelHeight = pnlMultipleAuras.Height;
+                        int heightReduction = oldPanelHeight - newPanelHeight;
+                        commandEditor.Size = new Size(commandEditor.Size.Width, commandEditor.Size.Height - heightReduction);
                     };
-                    cbOperator.Items.Add("AND");
-                    cbOperator.Items.Add("OR");
-                    string operatorValue = content["Value6"]?.ToString() ?? "AND";
-                    if (!string.IsNullOrEmpty(operatorValue) && (operatorValue == "AND" || operatorValue == "OR"))
-                        cbOperator.SelectedItem = operatorValue;
+                    
+                    // Attach initial + button handler
+                    btnAddAura.Click += (s, e) =>
+                    {
+                        // Store old height BEFORE making changes
+                        int oldPanelHeight = pnlMultipleAuras.Height;
+                        
+                        var existingExtra = content["ExtraAuras"]?.ToString() ?? "[]";
+                        JArray extraAuras = null;
+                        try
+                        {
+                            extraAuras = JArray.Parse(existingExtra);
+                        }
+                        catch
+                        {
+                            extraAuras = new JArray();
+                        }
+                        
+                        var newAura = new JObject();
+                        newAura["Name"] = "";
+                        newAura["Value"] = "";
+                        newAura["Operator"] = "AND";
+                        extraAuras.Add(newAura);
+                        content["ExtraAuras"] = extraAuras.ToString();
+                        
+                        // Rebuild the panel - this will calculate the correct new height
+                        refreshPanelUI();
+                        
+                        // Adjust window based on actual height change
+                        int newPanelHeight = pnlMultipleAuras.Height;
+                        int heightIncrease = newPanelHeight - oldPanelHeight;
+                        commandEditor.Size = new Size(commandEditor.Size.Width, commandEditor.Size.Height + heightIncrease);
+                    };
+                    
+                    // Store currentVars references for Value4, Value5, Value6 (Aura 2)
+                    var tbAuraName2 = pnlMultipleAuras.Controls.OfType<DarkTextBox>().FirstOrDefault(t => t.Name == "tbAuraName2");
+                    var tbAuraValue2 = pnlMultipleAuras.Controls.OfType<DarkTextBox>().FirstOrDefault(t => t.Name == "tbAuraValue2");
+                    var cbOperator2 = pnlMultipleAuras.Controls.OfType<DarkUI.Controls.DarkComboBox>().FirstOrDefault(c => c.Name == "cbOperator2");
+
+                    if (tbAuraName2 != null)
+                        currentVars.Add("Value4", new KeyValuePair<DarkLabel, DarkTextBox>(null, tbAuraName2));
+                    if (tbAuraValue2 != null)
+                        currentVars.Add("Value5", new KeyValuePair<DarkLabel, DarkTextBox>(null, tbAuraValue2));
+                    if (cbOperator2 != null)
+                        currentVars.Add("Value6", new KeyValuePair<DarkLabel, DarkTextBox>(null, new DarkTextBox() { Name = "dummyValue6", Text = cbOperator2.SelectedItem?.ToString() ?? "AND" }));
+
+                    // If checkbox is checked on load, make panel visible and adjust currentY
+                    if (chkMultipleAuras.Checked)
+                    {
+                        pnlMultipleAuras.Visible = true;
+                        // The panel is positioned at a specific Y location, so set currentY to the bottom of the panel
+                        currentY = pnlMultipleAuras.Location.Y + pnlMultipleAuras.Height;
+                    }
                     else
-                        cbOperator.SelectedIndex = 0;
-                    pnlMultipleAuras.Controls.Add(cbOperator);
-                    currentVars.Add("Value6", new KeyValuePair<DarkLabel, DarkTextBox>(null, new DarkTextBox() { Name = "dummyValue6", Text = cbOperator.SelectedItem?.ToString() ?? "AND" }));
+                    {
+                        // If checkbox isn't checked, keep panel hidden with 0 height
+                        pnlMultipleAuras.Visible = false;
+                        pnlMultipleAuras.Height = 0;
+                    }
                 }
                 bool hasMapProps = currentVars.Keys.Any(k =>
     k.IndexOf("cell", StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -430,7 +698,7 @@ namespace Grimoire.UI
                             if (item.Key == "Value6")
                             {
                                 var cbOperator = commandEditor.Controls.OfType<DarkUI.Controls.DarkComboBox>()
-                                    .FirstOrDefault(c => c.Name == "cbValue6");
+                                    .FirstOrDefault(c => c.Name == "cbOperator2");
                                 if (cbOperator != null && cbOperator.SelectedItem != null)
                                     content[item.Key] = cbOperator.SelectedItem.ToString();
                                 else
@@ -443,9 +711,43 @@ namespace Grimoire.UI
                         }
                     }
                     
-                    // If Multiple Auras is checked but Value4 is empty, set a placeholder to preserve state
+                    // If Multiple Auras is checked, collect all extra auras
                     if (chkMultiple != null && chkMultiple.Checked)
                     {
+                        var pnlMultiAuras = commandEditor.Controls.OfType<Panel>()
+                            .FirstOrDefault(p => p.Name == "pnlMultipleAuras");
+                        
+                        if (pnlMultiAuras != null)
+                        {
+                            // Collect aura 3+ data
+                            JArray extraAuras = new JArray();
+                            
+                            for (int i = 3; i <= 20; i++) // Support up to aura 20
+                            {
+                                var tbName = pnlMultiAuras.Controls.OfType<DarkTextBox>()
+                                    .FirstOrDefault(t => t.Name == $"tbAuraName{i}");
+                                var tbValue = pnlMultiAuras.Controls.OfType<DarkTextBox>()
+                                    .FirstOrDefault(t => t.Name == $"tbAuraValue{i}");
+                                var cbOp = pnlMultiAuras.Controls.OfType<DarkUI.Controls.DarkComboBox>()
+                                    .FirstOrDefault(c => c.Name == $"cbOperator{i}");
+                                
+                                if (tbName != null && !string.IsNullOrEmpty(tbName.Text))
+                                {
+                                    var auraObj = new JObject();
+                                    auraObj["Name"] = tbName.Text;
+                                    auraObj["Value"] = tbValue?.Text ?? "";
+                                    auraObj["Operator"] = cbOp?.SelectedItem?.ToString() ?? "AND";
+                                    extraAuras.Add(auraObj);
+                                }
+                            }
+                            
+                            // Store extra auras in the command
+                            if (extraAuras.Count > 0)
+                                content["ExtraAuras"] = extraAuras.ToString();
+                            else
+                                content["ExtraAuras"] = "[]";
+                        }
+                        
                         // Ensure Value4 has at least a space so the checkbox stays checked on reload
                         if (string.IsNullOrEmpty(content["Value4"]?.ToString()))
                             content["Value4"] = " ";
@@ -456,6 +758,7 @@ namespace Grimoire.UI
                         content["Value4"] = "";
                         content["Value5"] = "";
                         content["Value6"] = "";
+                        content["ExtraAuras"] = "[]";
                     }
                     
                     if (currentVars.ContainsKey("Quest"))

@@ -781,7 +781,8 @@ namespace Grimoire.UI
     {
         Dock = DockStyle.Top,
         Height = 26,
-        BackColor = bgDark
+        BackColor = bgDark,
+        BorderStyle = BorderStyle.None
     };
     cbHost.Controls.Add(cbStartWithScript);
 
