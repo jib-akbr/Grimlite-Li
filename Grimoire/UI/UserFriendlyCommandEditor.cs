@@ -277,7 +277,6 @@ namespace Grimoire.UI
                                 if (tickHandler != null)
                                     animationTimer.Tick -= tickHandler;
                                 
-                                currentHeight = pnlMultipleAuras.Height;
                                 animationTimer.Interval = 30;
                                 
                                 tickHandler = (sender, args) =>
@@ -320,7 +319,7 @@ namespace Grimoire.UI
                                 }
                                 else
                                 {
-                                    currentHeight = targetHeight;
+                                    currentHeight = pnlMultipleAuras.Height;
                                     animationTimer.Start();
                                 }
                             };
@@ -654,6 +653,8 @@ namespace Grimoire.UI
                     if (chkMultipleAuras.Checked)
                     {
                         pnlMultipleAuras.Visible = true;
+                        // Calculate the actual height from the populated controls
+                        pnlMultipleAuras.Height = pnlMultipleAuras.Controls.Cast<Control>().Max(c => c.Bottom) + 10;
                         // The panel is positioned at a specific Y location, so set currentY to the bottom of the panel
                         currentY = pnlMultipleAuras.Location.Y + pnlMultipleAuras.Height;
                     }
