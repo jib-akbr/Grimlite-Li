@@ -17,7 +17,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             Tag = "Monster";
             Text = "Special Anims";
             Description1 = "Animation message (or messages, comma-separated)";
-            Description2 = "Skill index to use (optional)";
+            Description2 = "Skill";
         }
 
         public override void OnBotStarted()

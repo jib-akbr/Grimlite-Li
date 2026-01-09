@@ -2658,6 +2658,9 @@ namespace Grimoire.UI
 
         private Region DrawString(Graphics g, string s, Font font, Brush brush, RectangleF layoutRectangle, StringFormat format)
         {
+            if (string.IsNullOrEmpty(s))
+                return new Region(layoutRectangle);
+            
             format.SetMeasurableCharacterRanges(new[] { new CharacterRange(0, s.Length) });
             format.Alignment = StringAlignment.Near;
             g.DrawString(s, font, brush, layoutRectangle, format);

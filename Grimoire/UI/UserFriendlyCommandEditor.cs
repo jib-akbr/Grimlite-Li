@@ -155,7 +155,7 @@ namespace Grimoire.UI
                                 break;
                             case "Value3":
                                 if (obj.GetType().Name == "CmdBalanceHP")
-                                    lblText = "Skill Index (optional)";
+                                    lblText = "Skill";
                                 else if (isAuraCommand)
                                     lblText = "Skill";
                                 else
@@ -378,7 +378,7 @@ namespace Grimoire.UI
                         var lblAuraName = new DarkLabel()
                         {
                             Name = $"lblAuraName{auraIndex}",
-                            Text = showRemoveBtn ? $"Aura Name {auraIndex} -" : $"Aura Name {auraIndex}",
+                            Text = $"Aura Name {auraIndex}",
                             Size = new System.Drawing.Size(90, 20),
                             Location = new System.Drawing.Point(10, yPos + 2),
                             Anchor = AnchorStyles.Left | AnchorStyles.Top
@@ -397,7 +397,7 @@ namespace Grimoire.UI
                         pnlMultipleAuras.Controls.Add(tbAuraName);
                         dynamicAuraControls.Add(tbAuraName);
                         
-                        // Make label clickable for remove functionality
+                        // Make label clickable for remove functionality (for removable auras)
                         if (showRemoveBtn)
                         {
                             lblAuraName.Cursor = Cursors.Hand;
@@ -449,9 +449,7 @@ namespace Grimoire.UI
                             Size = new System.Drawing.Size(160, 24),
                             Location = new System.Drawing.Point(110, yPos - 2),
                             Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left,
-                            DropDownStyle = ComboBoxStyle.DropDownList,
-                            BackColor = System.Drawing.Color.FromArgb(45, 45, 48),
-                            ForeColor = System.Drawing.Color.FromArgb(220, 220, 220)
+                            DropDownStyle = ComboBoxStyle.DropDownList
                         };
                         cbOperator.Items.Add("AND");
                         cbOperator.Items.Add("OR");

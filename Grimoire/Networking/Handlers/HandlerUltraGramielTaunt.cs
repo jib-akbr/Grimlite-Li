@@ -33,6 +33,11 @@ namespace Grimoire.Networking.Handlers
         // logic on each client independently for Gramiel L1/L2/R1/R2.
         private int _defenseShatteringCount;
 
+        // Shared static tracking for cascading taunts: records the last time any preset taunted
+        // so that other presets know not to taunt in the same slot window
+        private static long _lastTauntTimestamp = 0;
+        private const long TAUNT_WINDOW_MS = 500; // Window in which only one taunt should happen (prevents multiple simultaneous taunts)
+
         // Listen to "ct" (combat/animation) packets so we can inspect the boss
         // text like Maid's AnimsMsgHandler (e.g., "shattering").
         public string[] HandledCommands { get; } = new[] { "ct" };
@@ -126,6 +131,10 @@ namespace Grimoire.Networking.Handlers
                     }
 
                     if (!act)
+                        continue;
+
+                    // Check if this preset has Vendetta; if so, don't taunt during shattering
+                    if (Player.GetAuras(true, "Vendetta") > 0)
                         continue;
 
                     // Decide our orb side based on preset.
@@ -232,6 +241,19 @@ namespace Grimoire.Networking.Handlers
             }
         }
 
+        /// <summary>
+        /// Determines if this preset can taunt based on Vendetta aura status.
+        /// </summary>
+        private bool CanTauntThisTurn()
+        {
+            // Check if this preset has Vendetta; if so, cannot taunt
+            if (Player.GetAuras(true, "Vendetta") > 0)
+                return false;
+
+            // This preset doesn't have Vendetta, so it can taunt
+            return true;
+        }
+
         // Legacy shatter helper is no longer used; the defense shattering logic
         // is implemented inline in Handle based on _defenseShatteringCount.
         private bool ShouldActOnShattering()
@@ -321,44 +343,57 @@ namespace Grimoire.Networking.Handlers
                         continue;
                     }
 
-                    // Maid-style cycle taunting: when it's this preset's turn, taunt
+                    // Cascading cycle taunting: when a slot opens (count <= 0), check if anyone
+                    // has taunted recently. If not, and this preset doesn't have Vendetta, taunt.
+                    // This allows P2 to immediately jump in if P1 has Vendetta, rather than waiting.
                     if (count <= 0)
                     {
                         count = cycle; // Reset count for next rotation
                         
-                        UI.BotManager.Instance.ActiveBotEngine.paused = true;
-                        Player.AttackMonster("Gramiel");
-
-                        // Strong taunt sequence with cooldown wait
-                        Task.Run(async () =>
+                        long currentTime = System.DateTime.UtcNow.Ticks / 10000; // milliseconds
+                        long timeSinceLastTaunt = currentTime - _lastTauntTimestamp;
+                        
+                        // Only taunt if:
+                        // 1. No one has taunted in this slot window (timeSinceLastTaunt > TAUNT_WINDOW_MS)
+                        // 2. This preset doesn't have Vendetta
+                        if (timeSinceLastTaunt > TAUNT_WINDOW_MS && CanTauntThisTurn())
                         {
-                            try
+                            _lastTauntTimestamp = currentTime;
+                            
+                            UI.BotManager.Instance.ActiveBotEngine.paused = true;
+                            Player.AttackMonster("Gramiel");
+
+                            // Strong taunt sequence with cooldown wait
+                            Task.Run(async () =>
                             {
-                                for (int attempt = 0; attempt < 3; attempt++)
+                                try
                                 {
-                                    if (Player.GetAuras(false, "Focus") > 0)
+                                    for (int attempt = 0; attempt < 3; attempt++)
                                     {
-                                        UI.BotManager.Instance.ActiveBotEngine.paused = false;
-                                        break;
+                                        if (Player.GetAuras(false, "Focus") > 0)
+                                        {
+                                            UI.BotManager.Instance.ActiveBotEngine.paused = false;
+                                            break;
+                                        }
+
+                                        int wait = Player.SkillAvailable("5");
+                                        if (wait > 0)
+                                            await Task.Delay(wait);
+
+                                        Player.ForceUseSkill("5");
+                                        await Task.Delay(500);
+                                        Player.UseSkill("5");
+
+                                        await Task.Delay(300);
                                     }
-
-                                    int wait = Player.SkillAvailable("5");
-                                    if (wait > 0)
-                                        await Task.Delay(wait);
-
-                                    Player.ForceUseSkill("5");
-                                    await Task.Delay(500);
-                                    Player.UseSkill("5");
-
-                                    await Task.Delay(300);
                                 }
-                            }
-                            catch { }
-                            finally
-                            {
-                                UI.BotManager.Instance.ActiveBotEngine.paused = false;
-                            }
-                        });
+                                catch { }
+                                finally
+                                {
+                                    UI.BotManager.Instance.ActiveBotEngine.paused = false;
+                                }
+                            });
+                        }
                     }
 
                     count--; // Decrement cycle counter
