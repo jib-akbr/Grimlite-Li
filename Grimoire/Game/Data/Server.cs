@@ -20,6 +20,13 @@ namespace Grimoire.Game.Data
             set;
         }
 
+        [JsonProperty("iMax")]
+        public int MaxPlayers
+        {
+            get;
+            set;
+        }
+
         [JsonProperty("sName")]
         public string Name
         {

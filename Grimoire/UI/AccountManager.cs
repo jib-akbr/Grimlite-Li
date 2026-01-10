@@ -889,19 +889,19 @@ namespace Grimoire.UI
     {
         try
         {
-            Console.WriteLine("[FORM LOAD] Starting server load on form load");
+            //LogForm.Instance.AppendDebug("[FORM LOAD] Starting server load on form load");
             
             // Show loading state while fetching
             if (cbServers != null) cbServers.Text = "Loading servers...";
             
             // Fetch servers immediately and wait for result
             bool ok = await TryFetchServersAsync();
-            Console.WriteLine($"[FORM LOAD] API fetch result: {ok}");
+            //LogForm.Instance.AppendDebug($"[FORM LOAD] API fetch result: {ok}");
             
             if (!ok)
             {
                 // Only load defaults if API fetch failed
-                Console.WriteLine("[FORM LOAD] API fetch failed, loading defaults");
+                //LogForm.Instance.AppendDebug("[FORM LOAD] API fetch failed, loading defaults");
                 LoadDefaultServers();
             }
             
@@ -911,12 +911,12 @@ namespace Grimoire.UI
                 try { AutoRelogin.ResetServers(); } catch { }
             });
             
-            Console.WriteLine("[FORM LOAD] Server load completed");
+            //LogForm.Instance.AppendDebug("[FORM LOAD] Server load completed");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[FORM LOAD] Exception during server fetch: {ex.Message}");
-            Console.WriteLine($"[FORM LOAD] Stack: {ex.StackTrace}");
+            //LogForm.Instance.AppendDebug($"[FORM LOAD] Exception during server fetch: {ex.Message}");
+            //LogForm.Instance.AppendDebug($"[FORM LOAD] Stack: {ex.StackTrace}");
             // Load defaults on exception too
             try { LoadDefaultServers(); } catch { }
         }
@@ -1346,19 +1346,19 @@ namespace Grimoire.UI
                 try
                 {
                     var url = "http://content.aq.com/game/api/data/servers";
-                    Console.WriteLine($"[SERVER FETCH] Starting fetch from: {url} (Attempt {retryCount + 1}/{maxRetries})");
+                    //LogForm.Instance.AppendDebug($"[SERVER FETCH] Starting fetch from: {url} (Attempt {retryCount + 1}/{maxRetries})");
                     
                     var resp = await _httpClient.GetAsync(url);
-                    Console.WriteLine($"[SERVER FETCH] Response status: {resp.StatusCode}");
+                    //LogForm.Instance.AppendDebug($"[SERVER FETCH] Response status: {resp.StatusCode}");
                     
                     if (!resp.IsSuccessStatusCode)
                     {
-                        Console.WriteLine($"[SERVER FETCH] Failed with status: {resp.StatusCode}");
+                        //LogForm.Instance.AppendDebug($"[SERVER FETCH] Failed with status: {resp.StatusCode}");
                         retryCount++;
                         
                         if (retryCount < maxRetries)
                         {
-                            Console.WriteLine($"[SERVER FETCH] Retrying in {delayMs}ms...");
+                            //LogForm.Instance.AppendDebug($"[SERVER FETCH] Retrying in {delayMs}ms...");
                             await Task.Delay(delayMs);
                             delayMs *= 2; // Exponential backoff
                         }
@@ -1366,16 +1366,16 @@ namespace Grimoire.UI
                     }
 
                     var txt = await resp.Content.ReadAsStringAsync();
-                    Console.WriteLine($"[SERVER FETCH] Response length: {txt?.Length ?? 0} characters");
+                    //LogForm.Instance.AppendDebug($"[SERVER FETCH] Response length: {txt?.Length ?? 0} characters");
                     
                     if (string.IsNullOrWhiteSpace(txt))
                     {
-                        Console.WriteLine("[SERVER FETCH] Response was empty or whitespace");
+                        //LogForm.Instance.AppendDebug("[SERVER FETCH] Response was empty or whitespace");
                         retryCount++;
                         
                         if (retryCount < maxRetries)
                         {
-                            Console.WriteLine($"[SERVER FETCH] Retrying in {delayMs}ms...");
+                            //LogForm.Instance.AppendDebug($"[SERVER FETCH] Retrying in {delayMs}ms...");
                             await Task.Delay(delayMs);
                             delayMs *= 2;
                         }
@@ -1383,18 +1383,18 @@ namespace Grimoire.UI
                     }
 
                     // Show first 300 chars of response
-                    Console.WriteLine($"[SERVER FETCH] Response preview: {txt.Substring(0, Math.Min(300, txt.Length))}");
+                    //LogForm.Instance.AppendDebug($"[SERVER FETCH] Response preview: {txt.Substring(0, Math.Min(300, txt.Length))}");
 
                     try
                     {
                         var apiServers = JsonConvert.DeserializeObject<List<ServerApiResponse>>(txt);
-                        Console.WriteLine($"[SERVER FETCH] Parsed {apiServers?.Count ?? 0} servers");
+                        //LogForm.Instance.AppendDebug($"[SERVER FETCH] Parsed {apiServers?.Count ?? 0} servers");
                         
                         if (apiServers != null && apiServers.Count > 0)
                         {
                             // Log first server details
                             var first = apiServers[0];
-                            Console.WriteLine($"[SERVER FETCH] First server - Name: {first.Name}, Players: {first.PlayerCount}, Online: {first.IsOnline}");
+                            //LogForm.Instance.AppendDebug($"[SERVER FETCH] First server - Name: {first.Name}, Players: {first.PlayerCount}, Online: {first.IsOnline}");
                             
                             // Convert to Server objects
                             var servers = apiServers.Select(s => new Server
@@ -1409,22 +1409,22 @@ namespace Grimoire.UI
                                 Language = s.Language
                             }).ToArray();
 
-                            Console.WriteLine($"[SERVER FETCH] Converted {servers.Length} servers");
-                            Console.WriteLine($"[SERVER FETCH] First converted server - Name: {servers[0].Name}, Players: {servers[0].PlayerCount}");
+                            //LogForm.Instance.AppendDebug($"[SERVER FETCH] Converted {servers.Length} servers");
+                            //LogForm.Instance.AppendDebug($"[SERVER FETCH] First converted server - Name: {servers[0].Name}, Players: {servers[0].PlayerCount}");
                             
                             OnServersLoaded(servers);
                             UpdateLastRefreshTime();
-                            Console.WriteLine("[SERVER FETCH] Successfully loaded servers");
+                            //LogForm.Instance.AppendDebug("[SERVER FETCH] Successfully loaded servers");
                             return true;
                         }
                         else
                         {
-                            Console.WriteLine("[SERVER FETCH] API servers list was null or empty");
+                            //LogForm.Instance.AppendDebug("[SERVER FETCH] API servers list was null or empty");
                             retryCount++;
                             
                             if (retryCount < maxRetries)
                             {
-                                Console.WriteLine($"[SERVER FETCH] Retrying in {delayMs}ms...");
+                                //LogForm.Instance.AppendDebug($"[SERVER FETCH] Retrying in {delayMs}ms...");
                                 await Task.Delay(delayMs);
                                 delayMs *= 2;
                             }
@@ -1432,13 +1432,13 @@ namespace Grimoire.UI
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[SERVER FETCH] Parse error: {ex.Message}");
-                        Console.WriteLine($"[SERVER FETCH] Stack trace: {ex.StackTrace}");
+                        //LogForm.Instance.AppendDebug($"[SERVER FETCH] Parse error: {ex.Message}");
+                        //LogForm.Instance.AppendDebug($"[SERVER FETCH] Stack trace: {ex.StackTrace}");
                         retryCount++;
                         
                         if (retryCount < maxRetries)
                         {
-                            Console.WriteLine($"[SERVER FETCH] Retrying in {delayMs}ms...");
+                            //LogForm.Instance.AppendDebug($"[SERVER FETCH] Retrying in {delayMs}ms...");
                             await Task.Delay(delayMs);
                             delayMs *= 2;
                         }
@@ -1446,20 +1446,20 @@ namespace Grimoire.UI
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[SERVER FETCH] Fetch error: {ex.Message}");
-                    Console.WriteLine($"[SERVER FETCH] Stack trace: {ex.StackTrace}");
+                    //LogForm.Instance.AppendDebug($"[SERVER FETCH] Fetch error: {ex.Message}");
+                    //LogForm.Instance.AppendDebug($"[SERVER FETCH] Stack trace: {ex.StackTrace}");
                     retryCount++;
                     
                     if (retryCount < maxRetries)
                     {
-                        Console.WriteLine($"[SERVER FETCH] Retrying in {delayMs}ms...");
+                        //LogForm.Instance.AppendDebug($"[SERVER FETCH] Retrying in {delayMs}ms...");
                         await Task.Delay(delayMs);
                         delayMs *= 2;
                     }
                 }
             }
 
-            Console.WriteLine("[SERVER FETCH] All retry attempts exhausted, returning false");
+            //LogForm.Instance.AppendDebug("[SERVER FETCH] All retry attempts exhausted, returning false");
             return false;
         }
 
@@ -1562,34 +1562,34 @@ namespace Grimoire.UI
 
         public void OnServersLoaded(Server[] servers)
         {
-            Console.WriteLine($"[ON SERVERS LOADED] Called with {servers?.Length ?? 0} servers");
+            //LogForm.Instance.AppendDebug($"[ON SERVERS LOADED] Called with {servers?.Length ?? 0} servers");
             
             if (InvokeRequired)
             {
-                Console.WriteLine("[ON SERVERS LOADED] InvokeRequired - marshalling to UI thread");
+                //LogForm.Instance.AppendDebug("[ON SERVERS LOADED] InvokeRequired - marshalling to UI thread");
                 Invoke((Action)(() => OnServersLoaded(servers)));
                 return;
             }
 
             if (servers == null || servers.Length == 0)
             {
-                Console.WriteLine("[ON SERVERS LOADED] Servers null or empty, returning");
+                //LogForm.Instance.AppendDebug("[ON SERVERS LOADED] Servers null or empty, returning");
                 return;
             }
 
             try
             {
-                Console.WriteLine($"[ON SERVERS LOADED] Clearing {cbServers.Items.Count} combo items and {flowServers.Controls.Count} flow items");
+                //LogForm.Instance.AppendDebug($"[ON SERVERS LOADED] Clearing {cbServers.Items.Count} combo items and {flowServers.Controls.Count} flow items");
                 
                 cbServers.Items.Clear();
                 flowServers.Controls.Clear();
 
                 cbServers.Items.AddRange(servers);
-                Console.WriteLine($"[ON SERVERS LOADED] Added {cbServers.Items.Count} items to combo");
+                //LogForm.Instance.AppendDebug($"[ON SERVERS LOADED] Added {cbServers.Items.Count} items to combo");
 
                 foreach (var s in servers)
                 {
-                    Console.WriteLine($"[ON SERVERS LOADED] Creating item for: {s.Name} - {s.PlayerCount} players");
+                    //LogForm.Instance.AppendDebug($"[ON SERVERS LOADED] Creating item for: {s.Name} - {s.PlayerCount} players");
                     var item = CreateServerItem(s);
                     flowServers.Controls.Add(item);
                 }
@@ -1600,11 +1600,11 @@ namespace Grimoire.UI
                 // Delay UpdateServerSizes to allow layout engine to calculate proper panel size
                 BeginInvoke((Action)(() => UpdateServerSizes()));
                 
-                Console.WriteLine($"[ON SERVERS LOADED] Flow panel now has {flowServers.Controls.Count} controls");
+                //LogForm.Instance.AppendDebug($"[ON SERVERS LOADED] Flow panel now has {flowServers.Controls.Count} controls");
 
                 if (cbServers.SelectedIndex < 0 && cbServers.Items.Count > 0)
                 {
-                    Console.WriteLine("[ON SERVERS LOADED] Setting selected index to 0");
+                    //LogForm.Instance.AppendDebug("[ON SERVERS LOADED] Setting selected index to 0");
                     cbServers.SelectedIndex = 0;
                 }
 
@@ -1614,18 +1614,18 @@ namespace Grimoire.UI
                         c.BackColor = (c.Tag as Server) == sel ? System.Drawing.Color.FromArgb(60, 80, 120) : System.Drawing.Color.FromArgb(50, 50, 62);
                 }
                 
-                Console.WriteLine("[ON SERVERS LOADED] Completed successfully");
+                //LogForm.Instance.AppendDebug("[ON SERVERS LOADED] Completed successfully");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ON SERVERS LOADED] Error: {ex.Message}");
-                Console.WriteLine($"[ON SERVERS LOADED] Stack: {ex.StackTrace}");
+                //LogForm.Instance.AppendDebug($"[ON SERVERS LOADED] Error: {ex.Message}");
+                //LogForm.Instance.AppendDebug($"[ON SERVERS LOADED] Stack: {ex.StackTrace}");
             }
         }
 
         private Control CreateServerItem(Server s)
         {
-            Console.WriteLine($"[CREATE SERVER ITEM] Creating for {s.Name} - {s.PlayerCount} players");
+            //LogForm.Instance.AppendDebug($"[CREATE SERVER ITEM] Creating for {s.Name} - {s.PlayerCount} players");
             
             var panel = new DarkPanel
             {
@@ -1642,7 +1642,7 @@ namespace Grimoire.UI
             var statusDot = new DarkPanel
             {
                 Left = 6,
-                Top = 18,
+                Top = 12,
                 Width = 8,
                 Height = 8,
                 BackColor = s.IsOnline ? System.Drawing.Color.FromArgb(80, 200, 120) : System.Drawing.Color.FromArgb(120, 120, 120),
@@ -1707,7 +1707,7 @@ namespace Grimoire.UI
                 TextAlign = System.Drawing.ContentAlignment.MiddleLeft
             };
             
-            Console.WriteLine($"[CREATE SERVER ITEM] Label text set to: '{lblCount.Text}'");
+            //LogForm.Instance.AppendDebug($"[CREATE SERVER ITEM] Label text set to: '{lblCount.Text}'");
 
             panel.Controls.Add(lblName);
             panel.Controls.Add(lblType);
