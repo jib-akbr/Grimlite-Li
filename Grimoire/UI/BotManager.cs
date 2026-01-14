@@ -163,12 +163,110 @@ namespace Grimoire.UI
         private DarkGroupBox darkGroupBox11;
         private DarkTextBox txtSavedDesc;
         public PacketSpammer botPacketSpammer;
+        private bool _auraMonitorRunning = false;
 
         private BotManager()
         {
             InitializeComponent();
             cbSafeType.SelectedIndex = 0;
             botPacketSpammer = new PacketSpammer();
+            
+            // Wire up checkbox event for multi-aura controls
+            chkMultiAura.CheckedChanged += (s, e) => {
+                txtAuraName2.Visible = chkMultiAura.Checked;
+                numAuraValue2.Visible = chkMultiAura.Checked;
+                cbAuraOperator.Visible = chkMultiAura.Checked;
+            };
+        }
+
+        public async void StartAuraMonitoring()
+        {
+            if (_auraMonitorRunning) return;
+            
+            _auraMonitorRunning = true;
+            
+            await Task.Run(async () =>
+            {
+                while (_auraMonitorRunning)
+                {
+                    try
+                    {
+                        if (lstSkills != null && lstSkills.Items != null && lstSkills.Items.Count > 0)
+                        {
+                            foreach (var item in lstSkills.Items.Cast<Skill>())
+                            {
+                                if (item.Type == Skill.SkillType.Label && 
+                                    (item.Index.StartsWith("CmdPlayerAura") || item.Index.StartsWith("CmdTargetAura")))
+                                {
+                                    item.ExecuteSkill();
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Silently continue on errors
+                    }
+                    
+                    await Task.Delay(25);
+                }
+            });
+        }
+
+        public void StopAuraMonitoring()
+        {
+            _auraMonitorRunning = false;
+        }
+
+        private bool _skillSetMonitorRunning = false;
+
+        public async void StartSkillSetMonitoring()
+        {
+            if (_skillSetMonitorRunning) return;
+            
+            _skillSetMonitorRunning = true;
+            
+            await Task.Run(async () =>
+            {
+                while (_skillSetMonitorRunning)
+                {
+                    try
+                    {
+                        if (lstSkills != null && lstSkills.Items != null && lstSkills.Items.Count > 0)
+                        {
+                            // Ensure we have a target for regular skills
+                            if (!Player.HasTarget && World.AvailableMonsters.Count > 0)
+                            {
+                                var monster = World.AvailableMonsters[0].Name;
+                                Player.AttackMonster(monster);
+                                await Task.Delay(200); // Wait for target acquisition
+                            }
+
+                            foreach (var item in lstSkills.Items.Cast<Skill>())
+                            {
+                                if (!_skillSetMonitorRunning) break;
+                                
+                                // Execute the skill (works for both Label-type and regular skills)
+                                item.ExecuteSkill();
+                                
+                                // Small delay between skill executions
+                                await Task.Delay(50);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Silently continue on errors
+                    }
+                    
+                    await Task.Delay(25);
+                }
+            });
+        }
+
+        public void StopSkillSetMonitoring()
+        {
+            _skillSetMonitorRunning = false;
         }
 
         private void BotManager_Load(object sender, EventArgs e)
@@ -190,6 +288,8 @@ namespace Grimoire.UI
             if (font != null)
                 this.Font = new Font(font, 8.25f, FontStyle.Regular, GraphicsUnit.Point, 0);
             lstCommands.ItemHeight = int.Parse(c.Get("CommandsSize") ?? "60");
+            // Initialize saved skillsets dropdown
+            RefreshSavedSkillSets();
             lstCommands.Font = new Font(font, lstCommands.ItemHeight / 4 - (float)6.5, FontStyle.Regular, GraphicsUnit.Point, 0);
             lstCommands.ItemHeight = lstCommands.ItemHeight / 4;
         }
@@ -197,7 +297,7 @@ namespace Grimoire.UI
         private void TextboxEnter(object sender, EventArgs e)
         {
             TextBox t = (TextBox)sender;
-            if (t.Text == _defaultControlText[t.Name])
+            if (_defaultControlText.TryGetValue(t.Name, out string def) && t.Text == def)
                 t.Clear();
         }
 
@@ -1263,6 +1363,28 @@ namespace Grimoire.UI
             }, (ModifierKeys & Keys.Control) == Keys.Control);
         }
 
+        private void btnStartSkillSetCmd_Click(object sender, EventArgs e)
+        {
+            if (cbSavedSkillSets.SelectedItem == null) return;
+            
+            string selectedSkillSetName = cbSavedSkillSets.SelectedItem.ToString();
+            AddCommand(new CmdSkillSet { Name = selectedSkillSetName }, (ModifierKeys & Keys.Control) == Keys.Control);
+            AddCommand(new CmdStartSkillSet(), (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void btnSwitchSkillSetCmd_Click(object sender, EventArgs e)
+        {
+            if (cbSavedSkillSets.SelectedItem == null) return;
+            
+            string selectedSkillSetName = cbSavedSkillSets.SelectedItem.ToString();
+            AddCommand(new CmdSkillSet { Name = selectedSkillSetName }, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void btnStopSkillSetCmd_Click(object sender, EventArgs e)
+        {
+            AddCommand(new CmdStopSkillSet(), (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
         private void btnDelay_Click(object sender, EventArgs e)
         {
             int delay = (int)numDelay.Value;
@@ -2003,6 +2125,10 @@ namespace Grimoire.UI
                         if (cmd is StatementCommand stmtCmd)
                             stmtCmd.OnBotStopped();
                     }
+                    
+                    // Stop skill set and aura monitoring
+                    StopSkillSetMonitoring();
+                    StopAuraMonitoring();
                     
                     ActiveBotEngine.Stop();
                     selectionMode(SelectionMode.MultiExtended);
@@ -3457,24 +3583,138 @@ namespace Grimoire.UI
 
         private void btnAddSkillSet_Click(object sender, EventArgs e)
         {
-            if (txtSkillSet.TextLength > 0)
+            if (txtSkillsSkillSet.Text == "Skill Set Name" || string.IsNullOrEmpty(txtSkillsSkillSet.Text)) return;
+            
+            // Extract SavedSkill objects from the current lstSkills
+            List<SavedSkill> skillsToSave = new List<SavedSkill>();
+            foreach (var item in lstSkills.Items)
             {
-                AddSkill(new Skill
+                if (item is Skill skill)
                 {
-                    Text = "[" + txtSkillSet.Text.ToUpper() + "]",
-                    Type = Skill.SkillType.Label
-                }, (ModifierKeys & Keys.Control) == Keys.Control);
+                    skillsToSave.Add(new SavedSkill
+                    {
+                        Index = skill.Index,
+                        Text = skill.Text,
+                        Type = (int)skill.Type,
+                        SafeType = (int)skill.SType,
+                        IsSafeMp = skill.IsSafeMp,
+                        SafeValue = skill.SafeValue,
+                        SafeType2 = (int)skill.SType2,
+                        IsSafeMp2 = skill.IsSafeMp2,
+                        SafeValue2 = skill.SafeValue2,
+                        WaitCooldown = skill.waitCd
+                    });
+                }
             }
+            
+            // Save the skillset
+            SkillSetManager.Instance.SaveSkillSet(txtSkillsSkillSet.Text, skillsToSave);
+            
+            // Refresh the dropdown
+            RefreshSavedSkillSets();
+            Root.Instance?.RefreshAutoAttackDropdown();
+            
+            // Clear the textbox
+            txtSkillsSkillSet.Text = "Skill Set Name";
         }
 
         private void btnUseSkillSet_Click(object sender, EventArgs e)
         {
-            if (txtSkillSet.TextLength > 0)
+            if (cbSavedSkillSets.SelectedItem == null) return;
+            
+            string selectedSkillSetName = cbSavedSkillSets.SelectedItem.ToString();
+            var skillSetData = SkillSetManager.Instance.LoadSkillSet(selectedSkillSetName);
+            
+            if (skillSetData == null || skillSetData.Skills == null) return;
+            
+            // Clear the current skills list
+            lstSkills.Items.Clear();
+            
+            // Load the saved skills
+            foreach (var savedSkill in skillSetData.Skills)
             {
-                AddCommand(new CmdSkillSet
+                var skill = new Skill
                 {
-                    Name = txtSkillSet.Text.ToUpper()
-                }, (ModifierKeys & Keys.Control) == Keys.Control);
+                    Index = savedSkill.Index,
+                    Text = savedSkill.Text,
+                    Type = (Skill.SkillType)savedSkill.Type,
+                    SType = (Skill.SafeType)savedSkill.SafeType,
+                    IsSafeMp = savedSkill.IsSafeMp,
+                    SafeValue = savedSkill.SafeValue,
+                    SType2 = (Skill.SafeType)savedSkill.SafeType2,
+                    IsSafeMp2 = savedSkill.IsSafeMp2,
+                    SafeValue2 = savedSkill.SafeValue2,
+                    waitCd = savedSkill.WaitCooldown
+                };
+                lstSkills.Items.Add(skill);
+            }
+        }
+
+        private void btnDeleteSkillSet_Click(object sender, EventArgs e)
+        {
+            if (cbSavedSkillSets.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a skill set to delete", "Error");
+                return;
+            }
+
+            string skillSetName = cbSavedSkillSets.SelectedItem.ToString();
+            var result = MessageBox.Show($"Are you sure you want to delete '{skillSetName}'?", "Confirm Delete", MessageBoxButtons.YesNo);
+
+            if (result == DialogResult.Yes)
+            {
+                if (SkillSetManager.Instance.DeleteSkillSet(skillSetName))
+                {
+                    MessageBox.Show($"Skill set '{skillSetName}' deleted", "Success");
+                    RefreshSavedSkillSets();
+                    Root.Instance?.RefreshAutoAttackDropdown();
+                }
+                else
+                {
+                    MessageBox.Show("Failed to delete skill set", "Error");
+                }
+            }
+        }
+
+        private void cbSavedSkillSets_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cbSavedSkillSets.SelectedItem == null) return;
+            
+            string selectedSkillSetName = cbSavedSkillSets.SelectedItem.ToString();
+            var skillSetData = SkillSetManager.Instance.LoadSkillSet(selectedSkillSetName);
+            
+            if (skillSetData == null || skillSetData.Skills == null) return;
+            
+            // Clear the current skills list
+            lstSkills.Items.Clear();
+            
+            // Load the saved skills
+            foreach (var savedSkill in skillSetData.Skills)
+            {
+                var skill = new Skill
+                {
+                    Index = savedSkill.Index,
+                    Text = savedSkill.Text,
+                    Type = (Skill.SkillType)savedSkill.Type,
+                    SType = (Skill.SafeType)savedSkill.SafeType,
+                    IsSafeMp = savedSkill.IsSafeMp,
+                    SafeValue = savedSkill.SafeValue,
+                    SType2 = (Skill.SafeType)savedSkill.SafeType2,
+                    IsSafeMp2 = savedSkill.IsSafeMp2,
+                    SafeValue2 = savedSkill.SafeValue2,
+                    waitCd = savedSkill.WaitCooldown
+                };
+                lstSkills.Items.Add(skill);
+            }
+        }
+
+        private void RefreshSavedSkillSets()
+        {
+            cbSavedSkillSets.Items.Clear();
+            var skillSetNames = SkillSetManager.Instance.GetAllSkillSetNames();
+            foreach (var name in skillSetNames)
+            {
+                cbSavedSkillSets.Items.Add(name);
             }
         }
 
@@ -3600,6 +3840,328 @@ namespace Grimoire.UI
             {
                 type = CmdTauntcycle.option.Stop
             }, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void btnAuraAddSkill_Click(object sender, EventArgs e)
+        {
+            int skillIndex = (int)numAuraSkillIndex.Value;
+            string skillName = Skill.GetSkillName(skillIndex.ToString());
+            
+            // Add HP/MP condition info to display text
+            if (cbAuraHpMp.SelectedIndex > 0)
+            {
+                string hpmpType = cbAuraHpMp.SelectedItem.ToString();
+                string condition = cbAuraSafeType.SelectedItem.ToString();
+                skillName += $" [{hpmpType} {condition} {numAuraSafeValue.Value}%]";
+            }
+            if (cbAuraHpMp2.SelectedIndex > 0)
+            {
+                string hpmpType2 = cbAuraHpMp2.SelectedItem.ToString();
+                string condition2 = cbAuraSafeType2.SelectedItem.ToString();
+                skillName += $" [{hpmpType2} {condition2} {numAuraSafeValue2.Value}%]";
+            }
+            
+            Skill skill = new Skill
+            {
+                Text = skillName,
+                Index = skillIndex.ToString(),
+                Type = cbAuraHpMp.SelectedIndex > 0 ? Skill.SkillType.Safe : Skill.SkillType.Normal,
+                waitCd = (ModifierKeys & Keys.Alt) == Keys.Alt
+            };
+            
+            // Add HP/MP conditions if selected
+            if (cbAuraHpMp.SelectedIndex > 0)
+            {
+                skill.SType = cbAuraSafeType.SelectedIndex == 1 ? Skill.SafeType.GreaterThan : Skill.SafeType.LowerThan;
+                skill.IsSafeMp = cbAuraHpMp.SelectedIndex == 2;
+                skill.SafeValue = (int)numAuraSafeValue.Value;
+            }
+            if (cbAuraHpMp2.SelectedIndex > 0)
+            {
+                skill.SType2 = cbAuraSafeType2.SelectedIndex == 1 ? Skill.SafeType.GreaterThan : Skill.SafeType.LowerThan;
+                skill.IsSafeMp2 = cbAuraHpMp2.SelectedIndex == 2;
+                skill.SafeValue2 = (int)numAuraSafeValue2.Value;
+            }
+            
+            AddSkill(skill, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void btnAuraEquals_Click(object sender, EventArgs e)
+        {
+            string auraName = txtAuraName.Text == "Aura name" ? "" : txtAuraName.Text;
+            if (string.IsNullOrEmpty(auraName)) return;
+            
+            bool isPlayer = cbAuraTarget.SelectedIndex == 0;
+            string prefix = isPlayer ? "Player" : "Target";
+            string cmdIndex = isPlayer ? "CmdPlayerAuraEquals" : "CmdTargetAuraEquals";
+            
+            string textValue = $"[{prefix} Aura =] {auraName}|{numAuraValue.Value}|{numAuraSkillIndex.Value}";
+            
+            if (chkMultiAura.Checked)
+            {
+                string aura2Name = txtAuraName2.Text == "Aura 2 name" ? "" : txtAuraName2.Text;
+                if (!string.IsNullOrEmpty(aura2Name))
+                {
+                    textValue += $"|{aura2Name}|{numAuraValue2.Value}|{cbAuraOperator.SelectedItem ?? "AND"}";
+                }
+            }
+            
+            // Add HP/MP condition info to display text
+            if (cbAuraHpMp.SelectedIndex > 0)
+            {
+                string hpmpType = cbAuraHpMp.SelectedItem.ToString();
+                string condition = cbAuraSafeType.SelectedItem.ToString();
+                textValue += $" [{hpmpType} {condition} {numAuraSafeValue.Value}%]";
+            }
+            if (cbAuraHpMp2.SelectedIndex > 0)
+            {
+                string hpmpType2 = cbAuraHpMp2.SelectedItem.ToString();
+                string condition2 = cbAuraSafeType2.SelectedItem.ToString();
+                textValue += $" [{hpmpType2} {condition2} {numAuraSafeValue2.Value}%]";
+            }
+            
+            Skill skill = new Skill
+            {
+                Text = textValue,
+                Index = cmdIndex,
+                Type = Skill.SkillType.Label
+            };
+            
+            // Add HP/MP conditions if selected
+            if (cbAuraHpMp.SelectedIndex > 0)
+            {
+                skill.SType = cbAuraSafeType.SelectedIndex == 1 ? Skill.SafeType.GreaterThan : Skill.SafeType.LowerThan;
+                skill.IsSafeMp = cbAuraHpMp.SelectedIndex == 2;
+                skill.SafeValue = (int)numAuraSafeValue.Value;
+            }
+            if (cbAuraHpMp2.SelectedIndex > 0)
+            {
+                skill.SType2 = cbAuraSafeType2.SelectedIndex == 1 ? Skill.SafeType.GreaterThan : Skill.SafeType.LowerThan;
+                skill.IsSafeMp2 = cbAuraHpMp2.SelectedIndex == 2;
+                skill.SafeValue2 = (int)numAuraSafeValue2.Value;
+            }
+            
+            AddSkill(skill, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void btnAuraGreater_Click(object sender, EventArgs e)
+        {
+            string auraName = txtAuraName.Text == "Aura name" ? "" : txtAuraName.Text;
+            if (string.IsNullOrEmpty(auraName)) return;
+            
+            bool isPlayer = cbAuraTarget.SelectedIndex == 0;
+            string prefix = isPlayer ? "Player" : "Target";
+            string cmdIndex = isPlayer ? "CmdPlayerAuraGreaterThan" : "CmdTargetAuraGreaterThan";
+            
+            string textValue = $"[{prefix} Aura >] {auraName}|{numAuraValue.Value}|{numAuraSkillIndex.Value}";
+            
+            if (chkMultiAura.Checked)
+            {
+                string aura2Name = txtAuraName2.Text == "Aura 2 name" ? "" : txtAuraName2.Text;
+                if (!string.IsNullOrEmpty(aura2Name))
+                {
+                    textValue += $"|{aura2Name}|{numAuraValue2.Value}|{cbAuraOperator.SelectedItem ?? "AND"}";
+                }
+            }
+            
+            // Add HP/MP condition info to display text
+            if (cbAuraHpMp.SelectedIndex > 0)
+            {
+                string hpmpType = cbAuraHpMp.SelectedItem.ToString();
+                string condition = cbAuraSafeType.SelectedItem.ToString();
+                textValue += $" [{hpmpType} {condition} {numAuraSafeValue.Value}%]";
+            }
+            if (cbAuraHpMp2.SelectedIndex > 0)
+            {
+                string hpmpType2 = cbAuraHpMp2.SelectedItem.ToString();
+                string condition2 = cbAuraSafeType2.SelectedItem.ToString();
+                textValue += $" [{hpmpType2} {condition2} {numAuraSafeValue2.Value}%]";
+            }
+            
+            Skill skill = new Skill
+            {
+                Text = textValue,
+                Index = cmdIndex,
+                Type = Skill.SkillType.Label
+            };
+            
+            // Add HP/MP conditions if selected
+            if (cbAuraHpMp.SelectedIndex > 0)
+            {
+                skill.SType = cbAuraSafeType.SelectedIndex == 1 ? Skill.SafeType.GreaterThan : Skill.SafeType.LowerThan;
+                skill.IsSafeMp = cbAuraHpMp.SelectedIndex == 2;
+                skill.SafeValue = (int)numAuraSafeValue.Value;
+            }
+            if (cbAuraHpMp2.SelectedIndex > 0)
+            {
+                skill.SType2 = cbAuraSafeType2.SelectedIndex == 1 ? Skill.SafeType.GreaterThan : Skill.SafeType.LowerThan;
+                skill.IsSafeMp2 = cbAuraHpMp2.SelectedIndex == 2;
+                skill.SafeValue2 = (int)numAuraSafeValue2.Value;
+            }
+            
+            AddSkill(skill, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void btnAuraLess_Click(object sender, EventArgs e)
+        {
+            string auraName = txtAuraName.Text == "Aura name" ? "" : txtAuraName.Text;
+            if (string.IsNullOrEmpty(auraName)) return;
+            
+            bool isPlayer = cbAuraTarget.SelectedIndex == 0;
+            string prefix = isPlayer ? "Player" : "Target";
+            string cmdIndex = isPlayer ? "CmdPlayerAuraLessThan" : "CmdTargetAuraLessThan";
+            
+            string textValue = $"[{prefix} Aura <] {auraName}|{numAuraValue.Value}|{numAuraSkillIndex.Value}";
+            
+            if (chkMultiAura.Checked)
+            {
+                string aura2Name = txtAuraName2.Text == "Aura 2 name" ? "" : txtAuraName2.Text;
+                if (!string.IsNullOrEmpty(aura2Name))
+                {
+                    textValue += $"|{aura2Name}|{numAuraValue2.Value}|{cbAuraOperator.SelectedItem ?? "AND"}";
+                }
+            }
+            
+            // Add HP/MP condition info to display text
+            if (cbAuraHpMp.SelectedIndex > 0)
+            {
+                string hpmpType = cbAuraHpMp.SelectedItem.ToString();
+                string condition = cbAuraSafeType.SelectedItem.ToString();
+                textValue += $" [{hpmpType} {condition} {numAuraSafeValue.Value}%]";
+            }
+            if (cbAuraHpMp2.SelectedIndex > 0)
+            {
+                string hpmpType2 = cbAuraHpMp2.SelectedItem.ToString();
+                string condition2 = cbAuraSafeType2.SelectedItem.ToString();
+                textValue += $" [{hpmpType2} {condition2} {numAuraSafeValue2.Value}%]";
+            }
+            
+            Skill skill = new Skill
+            {
+                Text = textValue,
+                Index = cmdIndex,
+                Type = Skill.SkillType.Label
+            };
+            
+            // Add HP/MP conditions if selected
+            if (cbAuraHpMp.SelectedIndex > 0)
+            {
+                skill.SType = cbAuraSafeType.SelectedIndex == 1 ? Skill.SafeType.GreaterThan : Skill.SafeType.LowerThan;
+                skill.IsSafeMp = cbAuraHpMp.SelectedIndex == 2;
+                skill.SafeValue = (int)numAuraSafeValue.Value;
+            }
+            if (cbAuraHpMp2.SelectedIndex > 0)
+            {
+                skill.SType2 = cbAuraSafeType2.SelectedIndex == 1 ? Skill.SafeType.GreaterThan : Skill.SafeType.LowerThan;
+                skill.IsSafeMp2 = cbAuraHpMp2.SelectedIndex == 2;
+                skill.SafeValue2 = (int)numAuraSafeValue2.Value;
+            }
+            
+            AddSkill(skill, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void btnAddSkillSetLabel_Click(object sender, EventArgs e)
+        {
+            if (txtSkillSet.Text == "Skill Set Name" || string.IsNullOrEmpty(txtSkillSet.Text)) return;
+            
+            AddSkill(new Skill
+            {
+                Text = "[" + txtSkillSet.Text.ToUpper() + "]",
+                Type = Skill.SkillType.Label
+            }, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void btnUseSkillSetCmd_Click(object sender, EventArgs e)
+        {
+            if (txtSkillSet.Text == "Skill Set Name" || string.IsNullOrEmpty(txtSkillSet.Text)) return;
+            
+            AddCommand(new CmdSkillSet
+            {
+                Name = txtSkillSet.Text.ToUpper()
+            }, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void btnSkillsAddSkillSet_Click(object sender, EventArgs e)
+        {
+            if (txtSkillsSkillSet.Text == "Skill Set Name" || string.IsNullOrEmpty(txtSkillsSkillSet.Text)) return;
+            
+            // Extract SavedSkill objects from the current lstSkills
+            List<SavedSkill> skillsToSave = new List<SavedSkill>();
+            foreach (var item in lstSkills.Items)
+            {
+                if (item is Skill skill)
+                {
+                    skillsToSave.Add(new SavedSkill
+                    {
+                        Index = skill.Index,
+                        Text = skill.Text,
+                        Type = (int)skill.Type,
+                        SafeType = (int)skill.SType,
+                        IsSafeMp = skill.IsSafeMp,
+                        SafeValue = skill.SafeValue,
+                        WaitCooldown = skill.waitCd
+                    });
+                }
+            }
+            
+            // Save the skillset
+            SkillSetManager.Instance.SaveSkillSet(txtSkillsSkillSet.Text, skillsToSave);
+            
+            // Refresh the dropdown
+            RefreshSavedSkillSets();
+            
+            // Clear the textbox
+            txtSkillsSkillSet.Text = "Skill Set Name";
+        }
+
+        private void btnAddSkillToList_Click(object sender, EventArgs e)
+        {
+            string index = numSkillIndex.Text;
+            AddSkill(new Skill
+            {
+                Text = Skill.GetSkillName(index),
+                Index = index,
+                Type = Skill.SkillType.Normal,
+                waitCd = (ModifierKeys & Keys.Alt) == Keys.Alt
+            }, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void btnAddAllSkills_Click(object sender, EventArgs e)
+        {
+            for (int i = 1; i <= 4; i++)
+            {
+                AddSkill(new Skill
+                {
+                    Text = Skill.GetSkillName(i.ToString()),
+                    Index = i.ToString(),
+                    Type = Skill.SkillType.Normal
+                }, false);
+            }
+        }
+
+        private void btnAddSafeSkill_Click(object sender, EventArgs e)
+        {
+            string index = numSkillIndex.Text;
+            int safe = (int)numSafeSkillValue.Value;
+
+            Skill.SafeType safeType = Skill.SafeType.LowerThan;
+            if (cbSafeSkillType.SelectedIndex == 0)
+            {
+                safeType = Skill.SafeType.LowerThan;
+            }
+            else if (cbSafeSkillType.SelectedIndex == 1)
+            {
+                safeType = Skill.SafeType.GreaterThan;
+            }
+            lstSkills.Items.Add(new Skill
+            {
+                Text = Skill.GetSkillName(index),
+                Index = index,
+                SafeValue = safe,
+                SType = safeType,
+                Type = Skill.SkillType.Safe,
+                IsSafeMp = chkSafeSkillMp.Checked
+            });
         }
     }
 }

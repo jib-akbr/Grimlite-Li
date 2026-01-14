@@ -18,6 +18,8 @@ namespace Grimoire.UI
 		private DarkButton btnUseSkillSet;
 		private DarkButton btnAddSkillSet;
 		private DarkTextBox txtSkillSet;
+		private DarkComboBox cbSavedSkillSets;
+		private DarkButton btnDeleteSkillSet;
 		private DarkCheckBox chkSafeMp;
 		private DarkLabel label17;
 		private DarkButton btnRest;
@@ -238,6 +240,20 @@ namespace Grimoire.UI
 		private DarkGroupBox darkGroupBox5;
 		private DarkGroupBox darkGroupBox6;
 		private TabPage tabInfo;
+		private TabPage tabSkills;
+		private DarkGroupBox grpAddSkills;
+		private DarkNumericUpDown numSkillIndex;
+		private DarkButton btnAddSkillToList;
+		private DarkButton btnAddAllSkills;
+		private DarkButton btnAddSafeSkill;
+		private DarkNumericUpDown numSafeSkillValue;
+		private DarkLabel lblSafePercent;
+		private DarkLabel lblHpOr;
+		private DarkCheckBox chkSafeSkillMp;
+		private DarkComboBox cbSafeSkillType;
+		private DarkLabel lblSkillDelay;
+		private DarkNumericUpDown numSkillDelay;
+		private DarkLabel lblSkillDelayMs;
 		private Panel panel5;
 		public RichTextBox rtbInfo;
 		private DarkGroupBox darkGroupBox7;
@@ -291,6 +307,27 @@ namespace Grimoire.UI
 		private DarkLabel darkLabel6;
 		private DarkNumericUpDown numSaveProgress;
 		private DarkCheckBox chkSaveProgress;
+		private DarkGroupBox grpAura;
+		private DarkComboBox cbAuraTarget;
+        private DarkTextBox txtAuraName;
+		private DarkNumericUpDown numAuraValue;
+		private DarkNumericUpDown numAuraSkillIndex;
+		private DarkButton btnAuraAddSkill;
+		private DarkComboBox cbAuraHpMp;
+		private DarkComboBox cbAuraSafeType;
+		private DarkNumericUpDown numAuraSafeValue;
+		private DarkLabel lblAuraSafePercent;
+		private DarkComboBox cbAuraHpMp2;
+		private DarkComboBox cbAuraSafeType2;
+		private DarkNumericUpDown numAuraSafeValue2;
+		private DarkLabel lblAuraSafePercent2;
+		private DarkButton btnAuraEquals;
+		private DarkButton btnAuraGreater;
+		private DarkButton btnAuraLess;
+		private DarkCheckBox chkMultiAura;
+        private DarkTextBox txtAuraName2;
+		private DarkNumericUpDown numAuraValue2;
+		private DarkComboBox cbAuraOperator;
 		#endregion
 
 		protected override void Dispose(bool disposing)
@@ -317,6 +354,8 @@ namespace Grimoire.UI
             this.txtSkillSet = new DarkUI.Controls.DarkTextBox();
             this.btnAddSkillSet = new DarkUI.Controls.DarkButton();
             this.btnUseSkillSet = new DarkUI.Controls.DarkButton();
+            this.cbSavedSkillSets = new DarkUI.Controls.DarkComboBox();
+            this.btnDeleteSkillSet = new DarkUI.Controls.DarkButton();
             this.darkGroupBox19 = new DarkUI.Controls.DarkGroupBox();
             this.btnRest = new DarkUI.Controls.DarkButton();
             this.chkHP = new DarkUI.Controls.DarkCheckBox();
@@ -493,6 +532,9 @@ namespace Grimoire.UI
             this.numBeepTimes = new DarkUI.Controls.DarkNumericUpDown();
             this.btnDelay = new DarkUI.Controls.DarkButton();
             this.numDelay = new DarkUI.Controls.DarkNumericUpDown();
+            this.btnStartSkillSetCmd = new DarkUI.Controls.DarkButton();
+            this.btnStopSkillSetCmd = new DarkUI.Controls.DarkButton();
+            this.btnSwitchSkillSetCmd = new DarkUI.Controls.DarkButton();
             this.btnStatementAdd = new DarkUI.Controls.DarkButton();
             this.txtStatement2 = new DarkUI.Controls.DarkTextBox();
             this.txtStatement1 = new DarkUI.Controls.DarkTextBox();
@@ -644,6 +686,44 @@ namespace Grimoire.UI
             this.btnSavedAdd = new DarkUI.Controls.DarkButton();
             this.txtSaved = new DarkUI.Controls.DarkTextBox();
             this.tabInfo = new System.Windows.Forms.TabPage();
+            this.tabSkills = new System.Windows.Forms.TabPage();
+            this.grpAura = new DarkUI.Controls.DarkGroupBox();
+            this.cbAuraTarget = new DarkUI.Controls.DarkComboBox();
+            this.btnAuraEquals = new DarkUI.Controls.DarkButton();
+            this.btnAuraGreater = new DarkUI.Controls.DarkButton();
+            this.btnAuraLess = new DarkUI.Controls.DarkButton();
+            this.txtAuraName = new DarkUI.Controls.DarkTextBox();
+            this.numAuraValue = new DarkUI.Controls.DarkNumericUpDown();
+            this.numAuraSkillIndex = new DarkUI.Controls.DarkNumericUpDown();
+            this.btnAuraAddSkill = new DarkUI.Controls.DarkButton();
+            this.cbAuraHpMp = new DarkUI.Controls.DarkComboBox();
+            this.cbAuraSafeType = new DarkUI.Controls.DarkComboBox();
+            this.numAuraSafeValue = new DarkUI.Controls.DarkNumericUpDown();
+            this.lblAuraSafePercent = new DarkUI.Controls.DarkLabel();
+            this.cbAuraHpMp2 = new DarkUI.Controls.DarkComboBox();
+            this.cbAuraSafeType2 = new DarkUI.Controls.DarkComboBox();
+            this.numAuraSafeValue2 = new DarkUI.Controls.DarkNumericUpDown();
+            this.lblAuraSafePercent2 = new DarkUI.Controls.DarkLabel();
+            this.chkMultiAura = new DarkUI.Controls.DarkCheckBox();
+            this.txtAuraName2 = new DarkUI.Controls.DarkTextBox();
+            this.numAuraValue2 = new DarkUI.Controls.DarkNumericUpDown();
+            this.cbAuraOperator = new DarkUI.Controls.DarkComboBox();
+            this.grpSkillsSpecificSkillSet = new DarkUI.Controls.DarkGroupBox();
+            this.txtSkillsSkillSet = new DarkUI.Controls.DarkTextBox();
+            this.btnSkillsAddSkillSet = new DarkUI.Controls.DarkButton();
+            this.grpAddSkills = new DarkUI.Controls.DarkGroupBox();
+            this.numSkillIndex = new DarkUI.Controls.DarkNumericUpDown();
+            this.btnAddSkillToList = new DarkUI.Controls.DarkButton();
+            this.btnAddAllSkills = new DarkUI.Controls.DarkButton();
+            this.btnAddSafeSkill = new DarkUI.Controls.DarkButton();
+            this.numSafeSkillValue = new DarkUI.Controls.DarkNumericUpDown();
+            this.lblSafePercent = new DarkUI.Controls.DarkLabel();
+            this.lblHpOr = new DarkUI.Controls.DarkLabel();
+            this.chkSafeSkillMp = new DarkUI.Controls.DarkCheckBox();
+            this.cbSafeSkillType = new DarkUI.Controls.DarkComboBox();
+            this.lblSkillDelay = new DarkUI.Controls.DarkLabel();
+            this.numSkillDelay = new DarkUI.Controls.DarkNumericUpDown();
+            this.lblSkillDelayMs = new DarkUI.Controls.DarkLabel();
             this.panel5 = new System.Windows.Forms.Panel();
             this.richTextBox2 = new System.Windows.Forms.RichTextBox();
             this.rtbInfo = new System.Windows.Forms.RichTextBox();
@@ -751,6 +831,16 @@ namespace Grimoire.UI
             this.tabHunt.SuspendLayout();
             this.tabBots.SuspendLayout();
             this.darkPanel1.SuspendLayout();
+            this.tabSkills.SuspendLayout();
+            this.grpAura.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numAuraValue)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numAuraSafeValue)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numAuraSafeValue2)).BeginInit();
+            this.grpSkillsSpecificSkillSet.SuspendLayout();
+            this.grpAddSkills.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numSkillIndex)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numSafeSkillValue)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numSkillDelay)).BeginInit();
             this.tabInfo.SuspendLayout();
             this.panel5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -885,6 +975,7 @@ namespace Grimoire.UI
             // mainTabControl
             // 
             this.mainTabControl.Controls.Add(this.tabCombat);
+            this.mainTabControl.Controls.Add(this.tabSkills);
             this.mainTabControl.Controls.Add(this.tabMap);
             this.mainTabControl.Controls.Add(this.tabItem);
             this.mainTabControl.Controls.Add(this.tabQuest);
@@ -960,7 +1051,7 @@ namespace Grimoire.UI
             this.btnAddSkillSet.Size = new System.Drawing.Size(118, 22);
             this.btnAddSkillSet.TabIndex = 64;
             this.btnAddSkillSet.Text = "Add Skill Set";
-            this.btnAddSkillSet.Click += new System.EventHandler(this.btnAddSkillSet_Click);
+            this.btnAddSkillSet.Click += new System.EventHandler(this.btnAddSkillSetLabel_Click);
             // 
             // btnUseSkillSet
             // 
@@ -970,7 +1061,7 @@ namespace Grimoire.UI
             this.btnUseSkillSet.Size = new System.Drawing.Size(118, 22);
             this.btnUseSkillSet.TabIndex = 65;
             this.btnUseSkillSet.Text = "Use Skill Set";
-            this.btnUseSkillSet.Click += new System.EventHandler(this.btnUseSkillSet_Click);
+            this.btnUseSkillSet.Click += new System.EventHandler(this.btnUseSkillSetCmd_Click);
             // 
             // darkGroupBox19
             // 
@@ -5157,6 +5248,465 @@ namespace Grimoire.UI
             this.tabInfo.Text = "Info";
             this.tabInfo.ToolTipText = "The Info about the bot you\'ve loaded";
             // 
+            // tabSkills
+            // 
+            this.tabSkills.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(36)))), ((int)(((byte)(36)))), ((int)(((byte)(46)))));
+            this.tabSkills.Controls.Add(this.grpSkillsSpecificSkillSet);
+            this.tabSkills.Controls.Add(this.grpAura);
+            this.tabSkills.ForeColor = System.Drawing.Color.Gainsboro;
+            this.tabSkills.Location = new System.Drawing.Point(4, 26);
+            this.tabSkills.Name = "tabSkills";
+            this.tabSkills.Padding = new System.Windows.Forms.Padding(3);
+            this.tabSkills.Size = new System.Drawing.Size(541, 298);
+            this.tabSkills.TabIndex = 10;
+            this.tabSkills.Text = "Skills";
+            // 
+            // grpAura
+            // 
+            this.grpAura.Controls.Add(this.cbAuraTarget);
+            this.grpAura.Controls.Add(this.txtAuraName);
+            this.grpAura.Controls.Add(this.numAuraValue);
+            this.grpAura.Controls.Add(this.numAuraSkillIndex);
+            this.grpAura.Controls.Add(this.btnAuraAddSkill);
+            this.grpAura.Controls.Add(this.cbAuraHpMp);
+            this.grpAura.Controls.Add(this.cbAuraSafeType);
+            this.grpAura.Controls.Add(this.numAuraSafeValue);
+            this.grpAura.Controls.Add(this.lblAuraSafePercent);
+            this.grpAura.Controls.Add(this.cbAuraHpMp2);
+            this.grpAura.Controls.Add(this.cbAuraSafeType2);
+            this.grpAura.Controls.Add(this.numAuraSafeValue2);
+            this.grpAura.Controls.Add(this.lblAuraSafePercent2);
+            this.grpAura.Controls.Add(this.btnAuraEquals);
+            this.grpAura.Controls.Add(this.btnAuraGreater);
+            this.grpAura.Controls.Add(this.btnAuraLess);
+            this.grpAura.Controls.Add(this.chkMultiAura);
+            this.grpAura.Controls.Add(this.txtAuraName2);
+            this.grpAura.Controls.Add(this.numAuraValue2);
+            this.grpAura.Controls.Add(this.cbAuraOperator);
+            this.grpAura.Location = new System.Drawing.Point(6, 6);
+            this.grpAura.Name = "grpAura";
+            this.grpAura.Size = new System.Drawing.Size(260, 270);
+            this.grpAura.TabIndex = 0;
+            this.grpAura.TabStop = false;
+            this.grpAura.Text = "Aura";
+            // 
+            // cbAuraTarget
+            // 
+            this.cbAuraTarget.FormattingEnabled = true;
+            this.cbAuraTarget.Items.AddRange(new object[] { "Player", "Target" });
+            this.cbAuraTarget.Location = new System.Drawing.Point(10, 20);
+            this.cbAuraTarget.Name = "cbAuraTarget";
+            this.cbAuraTarget.SelectedIndex = 0;
+            this.cbAuraTarget.Size = new System.Drawing.Size(90, 21);
+            this.cbAuraTarget.TabIndex = 0;
+            // 
+            // txtAuraName
+            // 
+            this.txtAuraName.Location = new System.Drawing.Point(10, 45);
+            this.txtAuraName.Name = "txtAuraName";
+            this.txtAuraName.Size = new System.Drawing.Size(90, 20);
+            this.txtAuraName.TabIndex = 1;
+            this.txtAuraName.Text = "Aura name";
+            // 
+            // numAuraValue
+            // 
+            this.numAuraValue.Location = new System.Drawing.Point(105, 45);
+            this.numAuraValue.Maximum = new decimal(new int[] { 999999, 0, 0, 0 });
+            this.numAuraValue.Name = "numAuraValue";
+            this.numAuraValue.Size = new System.Drawing.Size(50, 20);
+            this.numAuraValue.TabIndex = 1;
+            this.numAuraValue.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            // 
+            // numAuraSkillIndex
+            // 
+            this.numAuraSkillIndex.Location = new System.Drawing.Point(105, 20);
+            this.numAuraSkillIndex.Maximum = new decimal(new int[] { 5, 0, 0, 0 });
+            this.numAuraSkillIndex.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            this.numAuraSkillIndex.Name = "numAuraSkillIndex";
+            this.numAuraSkillIndex.Size = new System.Drawing.Size(50, 20);
+            this.numAuraSkillIndex.TabIndex = 2;
+            this.numAuraSkillIndex.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            // 
+            // btnAuraAddSkill
+            // 
+            this.btnAuraAddSkill.Checked = false;
+            this.btnAuraAddSkill.Location = new System.Drawing.Point(160, 20);
+            this.btnAuraAddSkill.Name = "btnAuraAddSkill";
+            this.btnAuraAddSkill.Size = new System.Drawing.Size(43, 20);
+            this.btnAuraAddSkill.TabIndex = 3;
+            this.btnAuraAddSkill.Text = "Add";
+            this.btnAuraAddSkill.Click += new System.EventHandler(this.btnAuraAddSkill_Click);
+            // 
+            // cbAuraHpMp
+            // 
+            this.cbAuraHpMp.FormattingEnabled = true;
+            this.cbAuraHpMp.Items.AddRange(new object[] { "None", "HP", "MP" });
+            this.cbAuraHpMp.Location = new System.Drawing.Point(10, 75);
+            this.cbAuraHpMp.Name = "cbAuraHpMp";
+            this.cbAuraHpMp.Size = new System.Drawing.Size(85, 21);
+            this.cbAuraHpMp.TabIndex = 4;
+            // 
+            // cbAuraSafeType
+            // 
+            this.cbAuraSafeType.FormattingEnabled = true;
+            this.cbAuraSafeType.Items.AddRange(new object[] { "<= Lower than", ">= Greater than" });
+            this.cbAuraSafeType.Location = new System.Drawing.Point(100, 75);
+            this.cbAuraSafeType.Name = "cbAuraSafeType";
+            this.cbAuraSafeType.Size = new System.Drawing.Size(50, 21);
+            this.cbAuraSafeType.TabIndex = 6;
+            // 
+            // numAuraSafeValue
+            // 
+            this.numAuraSafeValue.Location = new System.Drawing.Point(155, 75);
+            this.numAuraSafeValue.Maximum = new decimal(new int[] { 100, 0, 0, 0 });
+            this.numAuraSafeValue.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            this.numAuraSafeValue.Name = "numAuraSafeValue";
+            this.numAuraSafeValue.Size = new System.Drawing.Size(45, 20);
+            this.numAuraSafeValue.TabIndex = 7;
+            this.numAuraSafeValue.Value = new decimal(new int[] { 60, 0, 0, 0 });
+            // 
+            // lblAuraSafePercent
+            // 
+            this.lblAuraSafePercent.AutoSize = true;
+            this.lblAuraSafePercent.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+            this.lblAuraSafePercent.Location = new System.Drawing.Point(203, 81);
+            this.lblAuraSafePercent.Name = "lblAuraSafePercent";
+            this.lblAuraSafePercent.Size = new System.Drawing.Size(15, 13);
+            this.lblAuraSafePercent.TabIndex = 8;
+            this.lblAuraSafePercent.Text = "%";
+            // 
+            // cbAuraHpMp2
+            // 
+            this.cbAuraHpMp2.FormattingEnabled = true;
+            this.cbAuraHpMp2.Items.AddRange(new object[] { "None", "HP", "MP" });
+            this.cbAuraHpMp2.Location = new System.Drawing.Point(10, 102);
+            this.cbAuraHpMp2.Name = "cbAuraHpMp2";
+            this.cbAuraHpMp2.Size = new System.Drawing.Size(85, 21);
+            this.cbAuraHpMp2.TabIndex = 9;
+            // 
+            // cbAuraSafeType2
+            // 
+            this.cbAuraSafeType2.FormattingEnabled = true;
+            this.cbAuraSafeType2.Items.AddRange(new object[] { "<= Lower than", ">= Greater than" });
+            this.cbAuraSafeType2.Location = new System.Drawing.Point(100, 102);
+            this.cbAuraSafeType2.Name = "cbAuraSafeType2";
+            this.cbAuraSafeType2.Size = new System.Drawing.Size(50, 21);
+            this.cbAuraSafeType2.TabIndex = 10;
+            // 
+            // numAuraSafeValue2
+            // 
+            this.numAuraSafeValue2.Location = new System.Drawing.Point(155, 102);
+            this.numAuraSafeValue2.Maximum = new decimal(new int[] { 100, 0, 0, 0 });
+            this.numAuraSafeValue2.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            this.numAuraSafeValue2.Name = "numAuraSafeValue2";
+            this.numAuraSafeValue2.Size = new System.Drawing.Size(45, 20);
+            this.numAuraSafeValue2.TabIndex = 11;
+            this.numAuraSafeValue2.Value = new decimal(new int[] { 60, 0, 0, 0 });
+            // 
+            // lblAuraSafePercent2
+            // 
+            this.lblAuraSafePercent2.AutoSize = true;
+            this.lblAuraSafePercent2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+            this.lblAuraSafePercent2.Location = new System.Drawing.Point(203, 108);
+            this.lblAuraSafePercent2.Name = "lblAuraSafePercent2";
+            this.lblAuraSafePercent2.Size = new System.Drawing.Size(15, 13);
+            this.lblAuraSafePercent2.TabIndex = 12;
+            this.lblAuraSafePercent2.Text = "%";
+            // 
+            // btnAuraEquals
+            // 
+            this.btnAuraEquals.Checked = false;
+            this.btnAuraEquals.Location = new System.Drawing.Point(10, 130);
+            this.btnAuraEquals.Name = "btnAuraEquals";
+            this.btnAuraEquals.Size = new System.Drawing.Size(240, 20);
+            this.btnAuraEquals.TabIndex = 13;
+            this.btnAuraEquals.Text = "Aura Equals";
+            this.btnAuraEquals.Click += new System.EventHandler(this.btnAuraEquals_Click);
+            // 
+            // btnAuraGreater
+            // 
+            this.btnAuraGreater.Checked = false;
+            this.btnAuraGreater.Location = new System.Drawing.Point(10, 155);
+            this.btnAuraGreater.Name = "btnAuraGreater";
+            this.btnAuraGreater.Size = new System.Drawing.Size(240, 20);
+            this.btnAuraGreater.TabIndex = 12;
+            this.btnAuraGreater.Text = "Aura Greater Than";
+            this.btnAuraGreater.Click += new System.EventHandler(this.btnAuraGreater_Click);
+            // 
+            // btnAuraLess
+            // 
+            this.btnAuraLess.Checked = false;
+            this.btnAuraLess.Location = new System.Drawing.Point(10, 180);
+            this.btnAuraLess.Name = "btnAuraLess";
+            this.btnAuraLess.Size = new System.Drawing.Size(240, 20);
+            this.btnAuraLess.TabIndex = 13;
+            this.btnAuraLess.Text = "Aura Less Than";
+            this.btnAuraLess.Click += new System.EventHandler(this.btnAuraLess_Click);
+            // 
+            // chkMultiAura
+            // 
+            this.chkMultiAura.Checked = false;
+            this.chkMultiAura.Location = new System.Drawing.Point(10, 210);
+            this.chkMultiAura.Name = "chkMultiAura";
+            this.chkMultiAura.Size = new System.Drawing.Size(120, 20);
+            this.chkMultiAura.TabIndex = 14;
+            this.chkMultiAura.Text = "Multiple Auras";
+            // 
+            // txtAuraName2
+            // 
+            this.txtAuraName2.Location = new System.Drawing.Point(10, 235);
+            this.txtAuraName2.Name = "txtAuraName2";
+            this.txtAuraName2.Size = new System.Drawing.Size(90, 20);
+            this.txtAuraName2.TabIndex = 15;
+            this.txtAuraName2.Text = "Aura 2 name";
+            this.txtAuraName2.Visible = false;
+            // 
+            // numAuraValue2
+            // 
+            this.numAuraValue2.Location = new System.Drawing.Point(105, 235);
+            this.numAuraValue2.Maximum = new decimal(new int[] { 999999, 0, 0, 0 });
+            this.numAuraValue2.Name = "numAuraValue2";
+            this.numAuraValue2.Size = new System.Drawing.Size(50, 20);
+            this.numAuraValue2.TabIndex = 16;
+            this.numAuraValue2.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            this.numAuraValue2.Visible = false;
+            // 
+            // cbAuraOperator
+            // 
+            this.cbAuraOperator.FormattingEnabled = true;
+            this.cbAuraOperator.Items.AddRange(new object[] { "AND", "OR" });
+            this.cbAuraOperator.Location = new System.Drawing.Point(160, 235);
+            this.cbAuraOperator.Name = "cbAuraOperator";
+            this.cbAuraOperator.SelectedIndex = 0;
+            this.cbAuraOperator.Size = new System.Drawing.Size(60, 21);
+            this.cbAuraOperator.TabIndex = 17;
+            this.cbAuraOperator.Visible = false;
+            // 
+            // grpSkillsSpecificSkillSet
+            // 
+            this.grpSkillsSpecificSkillSet.Controls.Add(this.btnStopSkillSetCmd);
+            this.grpSkillsSpecificSkillSet.Controls.Add(this.btnSwitchSkillSetCmd);
+            this.grpSkillsSpecificSkillSet.Controls.Add(this.btnStartSkillSetCmd);
+            this.grpSkillsSpecificSkillSet.Controls.Add(this.btnDeleteSkillSet);
+            this.grpSkillsSpecificSkillSet.Controls.Add(this.cbSavedSkillSets);
+            this.grpSkillsSpecificSkillSet.Controls.Add(this.btnSkillsAddSkillSet);
+            this.grpSkillsSpecificSkillSet.Controls.Add(this.txtSkillsSkillSet);
+            this.grpSkillsSpecificSkillSet.Location = new System.Drawing.Point(272, 6);
+            this.grpSkillsSpecificSkillSet.Name = "grpSkillsSpecificSkillSet";
+            this.grpSkillsSpecificSkillSet.Size = new System.Drawing.Size(110, 190);
+            this.grpSkillsSpecificSkillSet.TabIndex = 0;
+            this.grpSkillsSpecificSkillSet.TabStop = false;
+            this.grpSkillsSpecificSkillSet.Text = "Skill Set";
+            // 
+            // txtSkillsSkillSet
+            // 
+            this.txtSkillsSkillSet.Location = new System.Drawing.Point(10, 17);
+            this.txtSkillsSkillSet.Name = "txtSkillsSkillSet";
+            this.txtSkillsSkillSet.Size = new System.Drawing.Size(90, 20);
+            this.txtSkillsSkillSet.TabIndex = 0;
+            this.txtSkillsSkillSet.Text = "Skill Set Name";
+            this.txtSkillsSkillSet.Click += new System.EventHandler(this.TextboxEnter);
+            this.txtSkillsSkillSet.Enter += new System.EventHandler(this.TextboxEnter);
+            this.txtSkillsSkillSet.Leave += new System.EventHandler(this.TextboxLeave);
+            // 
+            // btnSkillsAddSkillSet
+            // 
+            this.btnSkillsAddSkillSet.Checked = false;
+            this.btnSkillsAddSkillSet.Location = new System.Drawing.Point(10, 63);
+            this.btnSkillsAddSkillSet.Name = "btnSkillsAddSkillSet";
+            this.btnSkillsAddSkillSet.Size = new System.Drawing.Size(90, 22);
+            this.btnSkillsAddSkillSet.TabIndex = 1;
+            this.btnSkillsAddSkillSet.Text = "Save Skill Set";
+            this.btnSkillsAddSkillSet.Click += new System.EventHandler(this.btnAddSkillSet_Click);
+            // 
+            // cbSavedSkillSets
+            // 
+            this.cbSavedSkillSets.Location = new System.Drawing.Point(10, 40);
+            this.cbSavedSkillSets.Name = "cbSavedSkillSets";
+            this.cbSavedSkillSets.Size = new System.Drawing.Size(90, 20);
+            this.cbSavedSkillSets.TabIndex = 2;
+            this.cbSavedSkillSets.SelectedIndexChanged += new System.EventHandler(this.cbSavedSkillSets_SelectedIndexChanged);
+            // 
+            // btnDeleteSkillSet
+            // 
+            this.btnDeleteSkillSet.Checked = false;
+            this.btnDeleteSkillSet.Location = new System.Drawing.Point(10, 88);
+            this.btnDeleteSkillSet.Name = "btnDeleteSkillSet";
+            this.btnDeleteSkillSet.Size = new System.Drawing.Size(90, 22);
+            this.btnDeleteSkillSet.TabIndex = 3;
+            this.btnDeleteSkillSet.Text = "Delete";
+            this.btnDeleteSkillSet.Click += new System.EventHandler(this.btnDeleteSkillSet_Click);
+            // 
+            // btnStartSkillSetCmd
+            // 
+            this.btnStartSkillSetCmd.Checked = false;
+            this.btnStartSkillSetCmd.Location = new System.Drawing.Point(10, 113);
+            this.btnStartSkillSetCmd.Name = "btnStartSkillSetCmd";
+            this.btnStartSkillSetCmd.Size = new System.Drawing.Size(90, 22);
+            this.btnStartSkillSetCmd.TabIndex = 4;
+            this.btnStartSkillSetCmd.Text = "Start";
+            this.btnStartSkillSetCmd.Click += new System.EventHandler(this.btnStartSkillSetCmd_Click);
+            // 
+            // btnSwitchSkillSetCmd
+            // 
+            this.btnSwitchSkillSetCmd.Checked = false;
+            this.btnSwitchSkillSetCmd.Location = new System.Drawing.Point(10, 138);
+            this.btnSwitchSkillSetCmd.Name = "btnSwitchSkillSetCmd";
+            this.btnSwitchSkillSetCmd.Size = new System.Drawing.Size(90, 22);
+            this.btnSwitchSkillSetCmd.TabIndex = 5;
+            this.btnSwitchSkillSetCmd.Text = "Switch";
+            this.btnSwitchSkillSetCmd.Click += new System.EventHandler(this.btnSwitchSkillSetCmd_Click);
+            // 
+            // btnStopSkillSetCmd
+            // 
+            this.btnStopSkillSetCmd.Checked = false;
+            this.btnStopSkillSetCmd.Location = new System.Drawing.Point(10, 163);
+            this.btnStopSkillSetCmd.Name = "btnStopSkillSetCmd";
+            this.btnStopSkillSetCmd.Size = new System.Drawing.Size(90, 22);
+            this.btnStopSkillSetCmd.TabIndex = 6;
+            this.btnStopSkillSetCmd.Text = "Stop";
+            this.btnStopSkillSetCmd.Click += new System.EventHandler(this.btnStopSkillSetCmd_Click);
+            // 
+            // grpAddSkills
+            // 
+            this.grpAddSkills.Controls.Add(this.lblSkillDelayMs);
+            this.grpAddSkills.Controls.Add(this.numSkillIndex);
+            this.grpAddSkills.Controls.Add(this.btnAddSkillToList);
+            this.grpAddSkills.Controls.Add(this.btnAddSafeSkill);
+            this.grpAddSkills.Controls.Add(this.btnAddAllSkills);
+            this.grpAddSkills.Controls.Add(this.numSafeSkillValue);
+            this.grpAddSkills.Controls.Add(this.lblSafePercent);
+            this.grpAddSkills.Controls.Add(this.lblHpOr);
+            this.grpAddSkills.Controls.Add(this.chkSafeSkillMp);
+            this.grpAddSkills.Controls.Add(this.cbSafeSkillType);
+            this.grpAddSkills.Controls.Add(this.lblSkillDelay);
+            this.grpAddSkills.Controls.Add(this.numSkillDelay);
+            this.grpAddSkills.Location = new System.Drawing.Point(272, 132);
+            this.grpAddSkills.Name = "grpAddSkills";
+            this.grpAddSkills.Size = new System.Drawing.Size(186, 128);
+            this.grpAddSkills.TabIndex = 3;
+            this.grpAddSkills.TabStop = false;
+            this.grpAddSkills.Text = "Skill Set";
+            // 
+            // numSkillIndex
+            // 
+            this.numSkillIndex.IncrementAlternate = new decimal(new int[] { 10, 0, 0, 65536 });
+            this.numSkillIndex.Location = new System.Drawing.Point(9, 20);
+            this.numSkillIndex.LoopValues = false;
+            this.numSkillIndex.Maximum = new decimal(new int[] { 5, 0, 0, 0 });
+            this.numSkillIndex.Name = "numSkillIndex";
+            this.numSkillIndex.Size = new System.Drawing.Size(44, 20);
+            this.numSkillIndex.TabIndex = 0;
+            this.numSkillIndex.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            // 
+            // btnAddSkillToList
+            // 
+            this.btnAddSkillToList.Checked = false;
+            this.btnAddSkillToList.Location = new System.Drawing.Point(54, 20);
+            this.btnAddSkillToList.Name = "btnAddSkillToList";
+            this.btnAddSkillToList.Size = new System.Drawing.Size(58, 20);
+            this.btnAddSkillToList.TabIndex = 1;
+            this.btnAddSkillToList.Text = "Add skill";
+            this.btnAddSkillToList.Click += new System.EventHandler(this.btnAddSkillToList_Click);
+            // 
+            // btnAddAllSkills
+            // 
+            this.btnAddAllSkills.Checked = false;
+            this.btnAddAllSkills.Location = new System.Drawing.Point(114, 20);
+            this.btnAddAllSkills.Name = "btnAddAllSkills";
+            this.btnAddAllSkills.Size = new System.Drawing.Size(29, 20);
+            this.btnAddAllSkills.TabIndex = 2;
+            this.btnAddAllSkills.Text = "All";
+            this.btnAddAllSkills.Click += new System.EventHandler(this.btnAddAllSkills_Click);
+            // 
+            // btnAddSafeSkill
+            // 
+            this.btnAddSafeSkill.Checked = false;
+            this.btnAddSafeSkill.Location = new System.Drawing.Point(9, 43);
+            this.btnAddSafeSkill.Name = "btnAddSafeSkill";
+            this.btnAddSafeSkill.Size = new System.Drawing.Size(66, 22);
+            this.btnAddSafeSkill.TabIndex = 3;
+            this.btnAddSafeSkill.Text = "Safe skill";
+            this.btnAddSafeSkill.Click += new System.EventHandler(this.btnAddSafeSkill_Click);
+            // 
+            // lblHpOr
+            // 
+            this.lblHpOr.AutoSize = true;
+            this.lblHpOr.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+            this.lblHpOr.Location = new System.Drawing.Point(78, 48);
+            this.lblHpOr.Name = "lblHpOr";
+            this.lblHpOr.Size = new System.Drawing.Size(34, 13);
+            this.lblHpOr.TabIndex = 4;
+            this.lblHpOr.Text = "HP or";
+            // 
+            // chkSafeSkillMp
+            // 
+            this.chkSafeSkillMp.AutoSize = true;
+            this.chkSafeSkillMp.Location = new System.Drawing.Point(113, 46);
+            this.chkSafeSkillMp.Name = "chkSafeSkillMp";
+            this.chkSafeSkillMp.Size = new System.Drawing.Size(42, 17);
+            this.chkSafeSkillMp.TabIndex = 5;
+            this.chkSafeSkillMp.Text = "MP";
+            // 
+            // cbSafeSkillType
+            // 
+            this.cbSafeSkillType.FormattingEnabled = true;
+            this.cbSafeSkillType.Items.AddRange(new object[] { "<= Lower than", ">= Greater than" });
+            this.cbSafeSkillType.Location = new System.Drawing.Point(9, 71);
+            this.cbSafeSkillType.Name = "cbSafeSkillType";
+            this.cbSafeSkillType.Size = new System.Drawing.Size(88, 21);
+            this.cbSafeSkillType.TabIndex = 6;
+            // 
+            // numSafeSkillValue
+            // 
+            this.numSafeSkillValue.IncrementAlternate = new decimal(new int[] { 10, 0, 0, 65536 });
+            this.numSafeSkillValue.Location = new System.Drawing.Point(100, 71);
+            this.numSafeSkillValue.LoopValues = false;
+            this.numSafeSkillValue.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            this.numSafeSkillValue.Name = "numSafeSkillValue";
+            this.numSafeSkillValue.Size = new System.Drawing.Size(34, 20);
+            this.numSafeSkillValue.TabIndex = 7;
+            this.numSafeSkillValue.Value = new decimal(new int[] { 60, 0, 0, 0 });
+            // 
+            // lblSafePercent
+            // 
+            this.lblSafePercent.AutoSize = true;
+            this.lblSafePercent.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+            this.lblSafePercent.Location = new System.Drawing.Point(135, 77);
+            this.lblSafePercent.Name = "lblSafePercent";
+            this.lblSafePercent.Size = new System.Drawing.Size(15, 13);
+            this.lblSafePercent.TabIndex = 8;
+            this.lblSafePercent.Text = "%";
+            // 
+            // lblSkillDelay
+            // 
+            this.lblSkillDelay.AutoSize = true;
+            this.lblSkillDelay.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+            this.lblSkillDelay.Location = new System.Drawing.Point(9, 102);
+            this.lblSkillDelay.Name = "lblSkillDelay";
+            this.lblSkillDelay.Size = new System.Drawing.Size(54, 13);
+            this.lblSkillDelay.TabIndex = 9;
+            this.lblSkillDelay.Text = "Skill delay";
+            // 
+            // numSkillDelay
+            // 
+            this.numSkillDelay.Increment = new decimal(new int[] { 100, 0, 0, 0 });
+            this.numSkillDelay.Location = new System.Drawing.Point(70, 99);
+            this.numSkillDelay.Maximum = new decimal(new int[] { 100000, 0, 0, 0 });
+            this.numSkillDelay.Name = "numSkillDelay";
+            this.numSkillDelay.Size = new System.Drawing.Size(43, 20);
+            this.numSkillDelay.TabIndex = 10;
+            // 
+            // lblSkillDelayMs
+            // 
+            this.lblSkillDelayMs.AutoSize = true;
+            this.lblSkillDelayMs.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+            this.lblSkillDelayMs.Location = new System.Drawing.Point(117, 105);
+            this.lblSkillDelayMs.Name = "lblSkillDelayMs";
+            this.lblSkillDelayMs.Size = new System.Drawing.Size(20, 13);
+            this.lblSkillDelayMs.TabIndex = 11;
+            this.lblSkillDelayMs.Text = "ms";
+            // 
             // panel5
             // 
             this.panel5.Controls.Add(this.richTextBox2);
@@ -5575,6 +6125,19 @@ namespace Grimoire.UI
             this.tabBots.ResumeLayout(false);
             this.tabBots.PerformLayout();
             this.darkPanel1.ResumeLayout(false);
+            this.grpAura.ResumeLayout(false);
+            this.grpAura.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numAuraValue)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numAuraSafeValue)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numAuraSafeValue2)).EndInit();
+            this.grpSkillsSpecificSkillSet.ResumeLayout(false);
+            this.grpSkillsSpecificSkillSet.PerformLayout();
+            this.grpAddSkills.ResumeLayout(false);
+            this.grpAddSkills.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numSkillIndex)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numSafeSkillValue)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numSkillDelay)).EndInit();
+            this.tabSkills.ResumeLayout(false);
             this.tabInfo.ResumeLayout(false);
             this.panel5.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -5652,6 +6215,9 @@ namespace Grimoire.UI
 		private DarkButton btnSetFPSCmd;
 		private DarkButton btnStopAttack;
 		private DarkButton btnLeaveCombat;
+		private DarkButton btnStartSkillSetCmd;
+		private DarkButton btnStopSkillSetCmd;
+		private DarkButton btnSwitchSkillSetCmd;
 		public DarkCheckBox chkRestartAFK;
 		private DarkGroupBox darkGroupBox27;
 		private DarkTextBox tbLoadMap;
@@ -5663,5 +6229,8 @@ namespace Grimoire.UI
         private DarkGroupBox darkGroupBox28;
         private DarkButton ButtonTC_Start;
         private DarkButton ButtonTC_Stop;
+		private DarkGroupBox grpSkillsSpecificSkillSet;
+		private DarkTextBox txtSkillsSkillSet;
+		private DarkButton btnSkillsAddSkillSet;
     }
 }

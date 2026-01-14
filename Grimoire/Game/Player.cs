@@ -5,6 +5,7 @@ using Grimoire.Tools;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -332,6 +333,52 @@ namespace Grimoire.Game
 
         public static void ForceUseSkill(string index) => Flash.Call("ForceUseSkill", index);
 
+        /// <summary>
+        /// Detects if Skill 5 is stuck (locked/unequipped) and automatically fixes it
+        /// by switching to a temporary class and back. The workaround for the in-game bug.
+        /// </summary>
+        public static async Task ResetSkill5IfStuck()
+        {
+            try
+            {
+                // Try to use skill 5 to test if it's responsive
+                // If it fails silently (locked), we'll switch classes to force re-equip
+                int skill5Status = SkillAvailable("5");
+                
+                // If skill 5 shows extreme cooldown (>120 seconds), it's likely stuck/locked
+                // This indicates it wasn't properly equipped
+                if (skill5Status > 120000)
+                {
+                    string currentClass = EquippedClass;
+                    
+                    // Get available classes from inventory to swap to temporarily
+                    InventoryItem tempClass = Inventory.Items.FirstOrDefault(i => 
+                        i.Category == "Class" && i.Name != currentClass && i.IsEquippable);
+                    
+                    if (tempClass != null)
+                    {
+                        // Equip temporary class - forces game to re-equip all skills
+                        Equip(tempClass.Id);
+                        await Task.Delay(1000); // Wait for class switch animation
+                        
+                        // Equip original class back
+                        InventoryItem originalClass = Inventory.Items.FirstOrDefault(i => 
+                            i.Category == "Class" && i.Name == currentClass && i.IsEquippable);
+                        
+                        if (originalClass != null)
+                        {
+                            Equip(originalClass.Id);
+                            await Task.Delay(1000); // Wait for class switch to complete and re-equip skills
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Silently fail if auto-fix doesn't work
+            }
+        }
+
         public static void GetMapItem(string id) => Flash.Call("GetMapItem", id);
 
         public static void GetMapItem(int id) => Flash.Call("GetMapItem", id.ToString());
@@ -356,7 +403,10 @@ namespace Grimoire.Game
         public static int GetAuras(bool isSelf, string auraName) => Flash.Call<int>("GetAurasValue", isSelf.ToString(), auraName);
         public static bool AuraDuration(bool isSelf, string auraName, int target)
         {
-            string[] aura = (Flash.Call<string>("AuraDuration", isSelf.ToString(), auraName).Split('/'));
+            string result = Flash.Call<string>("AuraDuration", isSelf.ToString(), auraName);
+            if (string.IsNullOrEmpty(result)) return false;
+            
+            string[] aura = result.Split('/');
             if (aura.Length < 2) return false;
             int.TryParse(aura[1], out int runTime);
             runTime /= 1000;

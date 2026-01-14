@@ -42,6 +42,7 @@ namespace Grimoire.UI
         private DarkComboBox cbCells;
         private DarkButton btnBank;
         private DarkCheckBox chkAutoAttack;
+        private DarkComboBox cbAutoAttack;
         public DarkCheckBox chkStartBot;
         private DarkButton btnGetCell;
         public SplitContainer splitContainer1;
@@ -118,6 +119,7 @@ namespace Grimoire.UI
             Hotkeys.Instance.LoadHotkeys();
             LoadPlugins();
             LoadCharSelect();
+            RefreshAutoAttackDropdown();
             //auraClearer();
 
             // If started with args (spawned instance), process them (auto-login + optional script)
@@ -616,6 +618,7 @@ namespace Grimoire.UI
             this.btnGetCell = new DarkUI.Controls.DarkButton();
             this.chkStartBot = new DarkUI.Controls.DarkCheckBox();
             this.chkAutoAttack = new DarkUI.Controls.DarkCheckBox();
+            this.cbAutoAttack = new DarkUI.Controls.DarkComboBox();
             this.btnBank = new DarkUI.Controls.DarkButton();
             this.cbCells = new DarkUI.Controls.DarkComboBox();
             this.cbPads = new DarkUI.Controls.DarkComboBox();
@@ -796,6 +799,7 @@ namespace Grimoire.UI
             this.splitContainer1.Panel1.Controls.Add(this.btnGetCell);
             this.splitContainer1.Panel1.Controls.Add(this.chkStartBot);
             this.splitContainer1.Panel1.Controls.Add(this.chkAutoAttack);
+            this.splitContainer1.Panel1.Controls.Add(this.cbAutoAttack);
             this.splitContainer1.Panel1.Controls.Add(this.btnBank);
             this.splitContainer1.Panel1.Controls.Add(this.cbCells);
             this.splitContainer1.Panel1.Controls.Add(this.cbPads);
@@ -817,7 +821,7 @@ namespace Grimoire.UI
             this.btnGetCell.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(27)))), ((int)(((byte)(27)))), ((int)(((byte)(27)))));
             this.btnGetCell.Checked = false;
             this.btnGetCell.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
-            this.btnGetCell.Location = new System.Drawing.Point(899, 3);
+            this.btnGetCell.Location = new System.Drawing.Point(940, 3);
             this.btnGetCell.Name = "btnGetCell";
             this.btnGetCell.Size = new System.Drawing.Size(18, 21);
             this.btnGetCell.TabIndex = 39;
@@ -829,7 +833,7 @@ namespace Grimoire.UI
             this.chkStartBot.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.chkStartBot.AutoSize = true;
             this.chkStartBot.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(36)))));
-            this.chkStartBot.Location = new System.Drawing.Point(573, 5);
+            this.chkStartBot.Location = new System.Drawing.Point(568, 5);
             this.chkStartBot.Name = "chkStartBot";
             this.chkStartBot.Size = new System.Drawing.Size(67, 17);
             this.chkStartBot.TabIndex = 38;
@@ -841,12 +845,21 @@ namespace Grimoire.UI
             this.chkAutoAttack.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.chkAutoAttack.AutoSize = true;
             this.chkAutoAttack.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(36)))));
-            this.chkAutoAttack.Location = new System.Drawing.Point(644, 5);
+            this.chkAutoAttack.Location = new System.Drawing.Point(648, 5);
             this.chkAutoAttack.Name = "chkAutoAttack";
-            this.chkAutoAttack.Size = new System.Drawing.Size(82, 17);
+            this.chkAutoAttack.Size = new System.Drawing.Size(15, 14);
             this.chkAutoAttack.TabIndex = 37;
-            this.chkAutoAttack.Text = "Auto Attack";
             this.chkAutoAttack.CheckedChanged += new System.EventHandler(this.chkAutoAttack_CheckedChanged);
+            // 
+            // cbAutoAttack
+            // 
+            this.cbAutoAttack.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbAutoAttack.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.cbAutoAttack.FormattingEnabled = true;
+            this.cbAutoAttack.Location = new System.Drawing.Point(667, 3);
+            this.cbAutoAttack.Name = "cbAutoAttack";
+            this.cbAutoAttack.Size = new System.Drawing.Size(85, 21);
+            this.cbAutoAttack.TabIndex = 38;
             // 
             // btnBank
             // 
@@ -854,7 +867,7 @@ namespace Grimoire.UI
             this.btnBank.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(27)))), ((int)(((byte)(27)))), ((int)(((byte)(27)))));
             this.btnBank.Checked = false;
             this.btnBank.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
-            this.btnBank.Location = new System.Drawing.Point(918, 2);
+            this.btnBank.Location = new System.Drawing.Point(964, 2);
             this.btnBank.Name = "btnBank";
             this.btnBank.Size = new System.Drawing.Size(42, 23);
             this.btnBank.TabIndex = 36;
@@ -865,7 +878,7 @@ namespace Grimoire.UI
             // 
             this.cbCells.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbCells.FormattingEnabled = true;
-            this.cbCells.Location = new System.Drawing.Point(814, 3);
+            this.cbCells.Location = new System.Drawing.Point(849, 3);
             this.cbCells.MaxDropDownItems = 50;
             this.cbCells.Name = "cbCells";
             this.cbCells.Size = new System.Drawing.Size(85, 21);
@@ -886,7 +899,7 @@ namespace Grimoire.UI
             "Bottom",
             "Up",
             "Down"});
-            this.cbPads.Location = new System.Drawing.Point(729, 3);
+            this.cbPads.Location = new System.Drawing.Point(758, 3);
             this.cbPads.MaxDropDownItems = 50;
             this.cbPads.Name = "cbPads";
             this.cbPads.Size = new System.Drawing.Size(85, 21);
@@ -1766,15 +1779,48 @@ namespace Grimoire.UI
                 return;
             }
 
-            List<Skill> listSkill = getSkillPreset();
+            List<Skill> listSkill = new List<Skill>();
+            
+            // If a skillset is selected in dropdown (and not "Auto Attack"), load it
+            if (cbAutoAttack.SelectedIndex >= 0 && cbAutoAttack.SelectedItem != null)
+            {
+                string selectedSkillSet = cbAutoAttack.SelectedItem.ToString();
+                // Only load skillset if it's not the default "Auto Attack" option
+                if (selectedSkillSet != "Auto Attack")
+                {
+                    var skillSetData = SkillSetManager.Instance.LoadSkillSet(selectedSkillSet);
+                    if (skillSetData != null)
+                    {
+                        listSkill = skillSetData.Skills.Select(s => new Skill
+                        {
+                            Index = s.Index,
+                            Text = s.Text,
+                            Type = (Skill.SkillType)s.Type,
+                            SType = (Skill.SafeType)s.SafeType,
+                            IsSafeMp = s.IsSafeMp,
+                            SafeValue = s.SafeValue,
+                            SType2 = (Skill.SafeType)s.SafeType2,
+                            IsSafeMp2 = s.IsSafeMp2,
+                            SafeValue2 = s.SafeValue2,
+                            waitCd = s.WaitCooldown
+                        }).ToList();
+                    }
+                }
+            }
+
+            // If no skillset selected or empty, use default skills
             if (listSkill.Count <= 0)
             {
-                listSkill = new List<Skill> {
-                    new Skill {Type = Skill.SkillType.Normal, Index = "1"},
-                    new Skill {Type = Skill.SkillType.Normal, Index = "2"},
-                    new Skill {Type = Skill.SkillType.Normal, Index = "3"},
-                    new Skill {Type = Skill.SkillType.Normal, Index = "4"}
-                };
+                listSkill = getSkillPreset();
+                if (listSkill.Count <= 0)
+                {
+                    listSkill = new List<Skill> {
+                        new Skill {Type = Skill.SkillType.Normal, Index = "1"},
+                        new Skill {Type = Skill.SkillType.Normal, Index = "2"},
+                        new Skill {Type = Skill.SkillType.Normal, Index = "3"},
+                        new Skill {Type = Skill.SkillType.Normal, Index = "4"}
+                    };
+                }
             }
 
             int i = 0;
@@ -1787,12 +1833,24 @@ namespace Grimoire.UI
                     await SpecialClassCombo();
                     if (listSkill.Count > 0)
                     {
-						if (listSkill[i].waitCd)
-							await Task.Delay(Player.SkillAvailable(listSkill[i].Index));
-                        if (listSkill[i].Type != Skill.SkillType.Label && Player.HasTarget)
+                        if (listSkill[i].Type == Skill.SkillType.Label)
+                        {
+                            // Skip section markers entirely - don't execute, don't delay
+                            if (!string.IsNullOrEmpty(listSkill[i].Index) || 
+                                (listSkill[i].Text != null && listSkill[i].Text.Contains("|")))
+                            {
+                                // Execute aura statement commands even without target
+                                listSkill[i].ExecuteSkill();
+                                await Task.Delay(100);
+                            }
+                            // Skip to next skill immediately for section markers
+                        }
+                        else if (Player.HasTarget)
+                        {
                             listSkill[i].ExecuteSkill();
+                            await Task.Delay(100);
+                        }
                     }
-                    await Task.Delay(100);
                     i++;
                     if (i >= listSkill.Count) i = 0;
 
@@ -1826,7 +1884,6 @@ namespace Grimoire.UI
                     Player.GetAuras(true, "0 - The Fool") == 0 ||
                     Player.AuraDuration(true, "0 - The Fool",75))
                 {
-                    await Task.Delay(Player.SkillAvailable("1"));
                     useSkill("1");
                 }
             }
@@ -1839,6 +1896,24 @@ namespace Grimoire.UI
                     useSkill("4");
                     await Task.Delay(200);
                 }
+            }
+        }
+
+        public void RefreshAutoAttackDropdown()
+        {
+            cbAutoAttack.Items.Clear();
+            cbAutoAttack.Items.Add("Auto Attack");
+            
+            var skillSetNames = SkillSetManager.Instance.GetAllSkillSetNames();
+            foreach (var name in skillSetNames)
+            {
+                cbAutoAttack.Items.Add(name);
+            }
+            
+            // Set "Auto Attack" as default selection
+            if (cbAutoAttack.Items.Count > 0)
+            {
+                cbAutoAttack.SelectedIndex = 0;
             }
         }
 

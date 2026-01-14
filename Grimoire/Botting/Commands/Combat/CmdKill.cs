@@ -150,9 +150,21 @@ namespace Grimoire.Botting.Commands.Combat
                 Skill s = instance.Configuration.Skills[Index];
                 if (s.Type == Skill.SkillType.Label)
                 {
-                    //Reset back when meet with SkillLabel
-                    Index = ClassIndex;
-                    continue;
+                    // Check if it's a skill set marker (like [AM]) or an aura statement command
+                    if (string.IsNullOrEmpty(s.Index) || (!s.Index.StartsWith("Cmd")))
+                    {
+                        //Reset back when meet with SkillLabel marker
+                        Index = ClassIndex;
+                        continue;
+                    }
+                    else
+                    {
+                        // It's an aura statement command (CmdPlayerAuraLessThan, etc.) - execute it
+                        s.ExecuteSkill();
+                        Index = (Index < Count) ? Index + 1 : ClassIndex;
+                        await Task.Delay(instance.Configuration.SkillDelay);
+                        continue;
+                    }
                 }
 
                 if (instance.Configuration.WaitForSkill || s.waitCd)

@@ -76,6 +76,8 @@ namespace Grimoire.UI
 		private TabPage tabCombat;
 		private DarkButton btnUseSkillSet;
 		private DarkButton btnAddSkillSet;
+		private DarkButton btnStopSkillSetCmd;
+		private DarkButton btnStartSkillSetCmd;
 		private DarkTextBox txtSkillSet;
 		private DarkCheckBox chkSafeMp;
 		private DarkLabel label17;
@@ -2250,6 +2252,8 @@ namespace Grimoire.UI
 			this.cbSafeType = new DarkUI.Controls.DarkComboBox();
 			this.btnUseSkillSet = new DarkUI.Controls.DarkButton();
 			this.btnAddSkillSet = new DarkUI.Controls.DarkButton();
+			this.btnStopSkillSetCmd = new DarkUI.Controls.DarkButton();
+			this.btnStartSkillSetCmd = new DarkUI.Controls.DarkButton();
 			this.txtSkillSet = new DarkUI.Controls.DarkTextBox();
 			this.chkSafeMp = new DarkUI.Controls.DarkCheckBox();
 			this.label17 = new DarkUI.Controls.DarkLabel();
@@ -2786,6 +2790,8 @@ namespace Grimoire.UI
 			this.tabCombat.Controls.Add(this.darkCheckBox1);
 			this.tabCombat.Controls.Add(this.chkAddToWhiteList);
 			this.tabCombat.Controls.Add(this.cbSafeType);
+			this.tabCombat.Controls.Add(this.btnStopSkillSetCmd);
+			this.tabCombat.Controls.Add(this.btnStartSkillSetCmd);
 			this.tabCombat.Controls.Add(this.btnUseSkillSet);
 			this.tabCombat.Controls.Add(this.btnAddSkillSet);
 			this.tabCombat.Controls.Add(this.txtSkillSet);
@@ -2921,6 +2927,26 @@ namespace Grimoire.UI
 			this.btnAddSkillSet.TabIndex = 64;
 			this.btnAddSkillSet.Text = "Add Skill Set";
 			this.btnAddSkillSet.Click += new System.EventHandler(this.btnAddSkillSet_Click);
+			// 
+			// btnStopSkillSetCmd
+			// 
+			this.btnStopSkillSetCmd.Checked = false;
+			this.btnStopSkillSetCmd.Location = new System.Drawing.Point(387, 77);
+			this.btnStopSkillSetCmd.Name = "btnStopSkillSetCmd";
+			this.btnStopSkillSetCmd.Size = new System.Drawing.Size(115, 22);
+			this.btnStopSkillSetCmd.TabIndex = 66;
+			this.btnStopSkillSetCmd.Text = "Stop";
+			this.btnStopSkillSetCmd.Click += new System.EventHandler(this.btnStopSkillSetCmd_Click);
+			// 
+			// btnStartSkillSetCmd
+			// 
+			this.btnStartSkillSetCmd.Checked = false;
+			this.btnStartSkillSetCmd.Location = new System.Drawing.Point(387, 101);
+			this.btnStartSkillSetCmd.Name = "btnStartSkillSetCmd";
+			this.btnStartSkillSetCmd.Size = new System.Drawing.Size(115, 22);
+			this.btnStartSkillSetCmd.TabIndex = 67;
+			this.btnStartSkillSetCmd.Text = "Start";
+			this.btnStartSkillSetCmd.Click += new System.EventHandler(this.btnStartSkillSetCmd_Click);
 			// 
 			// txtSkillSet
 			// 

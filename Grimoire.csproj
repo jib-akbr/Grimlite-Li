@@ -238,6 +238,8 @@
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdRest.cs" />
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdShortHunt.cs" />
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdSkillSet.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Combat\CmdStartSkillSet.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Combat\CmdStopSkillSet.cs" />
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdUseSkill.cs" />
     <Compile Include="Grimoire\Botting\Commands\ItemType.cs" />
     <Compile Include="Grimoire\Botting\Commands\Item\CmdBankSwap.cs" />
@@ -268,6 +270,8 @@
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdClearTemp.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdClientMessage.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdDelay.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Misc\CmdStartAuras.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Misc\CmdStopAuras.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdGotoLabel.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdGotoPlayer.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdIndex.cs" />
@@ -398,6 +402,7 @@
     <Compile Include="Grimoire\Game\Data\Shop.cs" />
     <Compile Include="Grimoire\Game\Data\ShopInfo.cs" />
     <Compile Include="Grimoire\Game\Data\Skill.cs" />
+    <Compile Include="Grimoire\Game\Data\SkillSetData.cs" />
     <Compile Include="Grimoire\Game\Data\TempInventory.cs" />
     <Compile Include="Grimoire\Game\Data\TempItem.cs" />
     <Compile Include="Grimoire\Game\DropStack.cs" />
@@ -448,6 +453,7 @@
     <Compile Include="Grimoire\Tools\Plugins\IGrimoirePlugin.cs" />
     <Compile Include="Grimoire\Tools\QuestReqConverter.cs" />
     <Compile Include="Grimoire\Tools\QuestRewardConverter.cs" />
+    <Compile Include="Grimoire\Tools\SkillSetManager.cs" />
     <Compile Include="Grimoire\Tools\Spammer.cs" />
     <Compile Include="Grimoire\Tools\StringBoolConverter.cs" />
     <Compile Include="Grimoire\Tools\TrimConverter.cs" />

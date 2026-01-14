@@ -323,6 +323,12 @@ namespace Grimoire.UI.Maid
         }
         private async Task waitSkill(string index)
         {
+            // Auto-fix for stuck skill 5 bug
+            if (index == "5")
+            {
+                await Player.ResetSkill5IfStuck();
+            }
+            
             int cd = Player.SkillAvailable(index);
             await Task.Delay(Math.Min(cd, 1500));
             useSkill(index, true);

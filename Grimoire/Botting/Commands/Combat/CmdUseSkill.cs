@@ -26,6 +26,13 @@ namespace Grimoire.Botting.Commands.Combat
                     Player.ForceUseSkill(Index);
                 return;
             }
+            
+            // Auto-fix for stuck skill 5 bug
+            if (Index == "5")
+            {
+                await Player.ResetSkill5IfStuck();
+            }
+            
             FindTarget(target);
             if (!Force)
             {
