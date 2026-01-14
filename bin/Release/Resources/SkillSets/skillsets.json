@@ -1,0 +1,108 @@
+{
+  "skillsets": [
+    {
+      "name": "ARCANA",
+      "skills": [
+        {
+          "index": null,
+          "text": "[ARCANA]",
+          "type": 2,
+          "safeType": 0,
+          "isSafeMp": false,
+          "safeValue": 0,
+          "safeType2": 0,
+          "isSafeMp2": false,
+          "safeValue2": 0,
+          "waitCooldown": false
+        },
+        {
+          "index": "CmdPlayerAuraLessThan",
+          "text": "[Player Aura <] XXI - The World|1|1|0 - The Fool|1|AND",
+          "type": 2,
+          "safeType": 0,
+          "isSafeMp": false,
+          "safeValue": 0,
+          "safeType2": 0,
+          "isSafeMp2": false,
+          "safeValue2": 0,
+          "waitCooldown": false
+        },
+        {
+          "index": "CmdPlayerAuraGreaterThan",
+          "text": "[Player Aura >] XX - Judgement|0|1",
+          "type": 2,
+          "safeType": 0,
+          "isSafeMp": false,
+          "safeValue": 0,
+          "safeType2": 0,
+          "isSafeMp2": false,
+          "safeValue2": 0,
+          "waitCooldown": false
+        },
+        {
+          "index": "CmdPlayerAuraGreaterThan",
+          "text": "[Player Aura >] End of the World|22|1",
+          "type": 2,
+          "safeType": 0,
+          "isSafeMp": false,
+          "safeValue": 0,
+          "safeType2": 0,
+          "isSafeMp2": false,
+          "safeValue2": 0,
+          "waitCooldown": false
+        },
+        {
+          "index": "2",
+          "text": null,
+          "type": 0,
+          "safeType": 0,
+          "isSafeMp": false,
+          "safeValue": 0,
+          "safeType2": 0,
+          "isSafeMp2": false,
+          "safeValue2": 0,
+          "waitCooldown": false
+        },
+        {
+          "index": "3",
+          "text": null,
+          "type": 0,
+          "safeType": 0,
+          "isSafeMp": false,
+          "safeValue": 0,
+          "safeType2": 0,
+          "isSafeMp2": false,
+          "safeValue2": 0,
+          "waitCooldown": false
+        },
+        {
+          "index": "2",
+          "text": null,
+          "type": 0,
+          "safeType": 0,
+          "isSafeMp": false,
+          "safeValue": 0,
+          "safeType2": 0,
+          "isSafeMp2": false,
+          "safeValue2": 0,
+          "waitCooldown": false
+        },
+        {
+          "index": "4",
+          "text": null,
+          "type": 0,
+          "safeType": 0,
+          "isSafeMp": false,
+          "safeValue": 0,
+          "safeType2": 0,
+          "isSafeMp2": false,
+          "safeValue2": 0,
+          "waitCooldown": false
+        }
+      ],
+      "createdDate": "2026-01-14T13:08:11.6720714+13:00",
+      "lastModified": "2026-01-14T13:08:11.6720714+13:00"
+    }
+  ],
+  "lastUpdated": "2026-01-14T15:29:57.5182229+13:00"
+}
