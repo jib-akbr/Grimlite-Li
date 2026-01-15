@@ -1782,6 +1782,7 @@ namespace Grimoire.UI
             }
 
             List<Skill> listSkill = new List<Skill>();
+            bool isCustomSkillset = false;
             
             // If a skillset is selected in dropdown (and not "Auto Attack"), load it
             if (cbAutoAttack.SelectedIndex >= 0 && cbAutoAttack.SelectedItem != null)
@@ -1806,6 +1807,7 @@ namespace Grimoire.UI
                             SafeValue2 = s.SafeValue2,
                             waitCd = s.WaitCooldown
                         }).ToList();
+                        isCustomSkillset = true;
                     }
                 }
             }
@@ -1832,7 +1834,11 @@ namespace Grimoire.UI
                 if (BotData.BotState == BotData.State.Combat)
                 {
                     if (!Player.HasTarget) Player.AttackMonster("*");
-                    await SpecialClassCombo();
+                    // Only run SpecialClassCombo if not using a custom skillset
+                    if (!isCustomSkillset)
+                    {
+                        await SpecialClassCombo();
+                    }
                     if (listSkill.Count > 0)
                     {
                         if (listSkill[i].Type == Skill.SkillType.Label)
@@ -1881,7 +1887,7 @@ namespace Grimoire.UI
             else if (playerClass.Equals("arcana invoker"))
             {
                 if (Player.GetAuras(true, "XX - Judgement") == 1 ||
-                    Player.GetAuras(true, "End of the world") >= 18 ||
+                    Player.GetAuras(true, "End of the world") >= 20 ||
                     Player.GetAuras(true, "XXI - The World") == 0 && 
                     Player.GetAuras(true, "0 - The Fool") == 0 ||
                     Player.AuraDuration(true, "0 - The Fool",75))
