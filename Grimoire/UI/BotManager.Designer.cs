@@ -5343,21 +5343,21 @@ namespace Grimoire.UI
             this.cbAuraHpMp.Items.AddRange(new object[] { "None", "HP", "MP" });
             this.cbAuraHpMp.Location = new System.Drawing.Point(10, 75);
             this.cbAuraHpMp.Name = "cbAuraHpMp";
-            this.cbAuraHpMp.Size = new System.Drawing.Size(85, 21);
+            this.cbAuraHpMp.Size = new System.Drawing.Size(90, 21);
             this.cbAuraHpMp.TabIndex = 4;
             // 
             // cbAuraSafeType
             // 
             this.cbAuraSafeType.FormattingEnabled = true;
             this.cbAuraSafeType.Items.AddRange(new object[] { "<= Lower than", ">= Greater than" });
-            this.cbAuraSafeType.Location = new System.Drawing.Point(100, 75);
+            this.cbAuraSafeType.Location = new System.Drawing.Point(105, 75);
             this.cbAuraSafeType.Name = "cbAuraSafeType";
             this.cbAuraSafeType.Size = new System.Drawing.Size(50, 21);
             this.cbAuraSafeType.TabIndex = 6;
             // 
             // numAuraSafeValue
             // 
-            this.numAuraSafeValue.Location = new System.Drawing.Point(155, 75);
+            this.numAuraSafeValue.Location = new System.Drawing.Point(160, 75);
             this.numAuraSafeValue.Maximum = new decimal(new int[] { 100, 0, 0, 0 });
             this.numAuraSafeValue.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             this.numAuraSafeValue.Name = "numAuraSafeValue";
@@ -5369,7 +5369,7 @@ namespace Grimoire.UI
             // 
             this.lblAuraSafePercent.AutoSize = true;
             this.lblAuraSafePercent.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
-            this.lblAuraSafePercent.Location = new System.Drawing.Point(203, 81);
+            this.lblAuraSafePercent.Location = new System.Drawing.Point(208, 81);
             this.lblAuraSafePercent.Name = "lblAuraSafePercent";
             this.lblAuraSafePercent.Size = new System.Drawing.Size(15, 13);
             this.lblAuraSafePercent.TabIndex = 8;
@@ -5381,21 +5381,21 @@ namespace Grimoire.UI
             this.cbAuraHpMp2.Items.AddRange(new object[] { "None", "HP", "MP" });
             this.cbAuraHpMp2.Location = new System.Drawing.Point(10, 102);
             this.cbAuraHpMp2.Name = "cbAuraHpMp2";
-            this.cbAuraHpMp2.Size = new System.Drawing.Size(85, 21);
+            this.cbAuraHpMp2.Size = new System.Drawing.Size(90, 21);
             this.cbAuraHpMp2.TabIndex = 9;
             // 
             // cbAuraSafeType2
             // 
             this.cbAuraSafeType2.FormattingEnabled = true;
             this.cbAuraSafeType2.Items.AddRange(new object[] { "<= Lower than", ">= Greater than" });
-            this.cbAuraSafeType2.Location = new System.Drawing.Point(100, 102);
+            this.cbAuraSafeType2.Location = new System.Drawing.Point(105, 102);
             this.cbAuraSafeType2.Name = "cbAuraSafeType2";
             this.cbAuraSafeType2.Size = new System.Drawing.Size(50, 21);
             this.cbAuraSafeType2.TabIndex = 10;
             // 
             // numAuraSafeValue2
             // 
-            this.numAuraSafeValue2.Location = new System.Drawing.Point(155, 102);
+            this.numAuraSafeValue2.Location = new System.Drawing.Point(160, 102);
             this.numAuraSafeValue2.Maximum = new decimal(new int[] { 100, 0, 0, 0 });
             this.numAuraSafeValue2.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             this.numAuraSafeValue2.Name = "numAuraSafeValue2";
@@ -5407,7 +5407,7 @@ namespace Grimoire.UI
             // 
             this.lblAuraSafePercent2.AutoSize = true;
             this.lblAuraSafePercent2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
-            this.lblAuraSafePercent2.Location = new System.Drawing.Point(203, 108);
+            this.lblAuraSafePercent2.Location = new System.Drawing.Point(208, 108);
             this.lblAuraSafePercent2.Name = "lblAuraSafePercent2";
             this.lblAuraSafePercent2.Size = new System.Drawing.Size(15, 13);
             this.lblAuraSafePercent2.TabIndex = 12;
