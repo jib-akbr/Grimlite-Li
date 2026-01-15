@@ -43,9 +43,10 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 			}
 
 			if (!finalCondition)
-				return Task.FromResult<object>(null);
-
-			if (finalCondition)
+			{
+				instance.Index++;
+			}
+			else
 			{
 				LogForm.Instance.AppendDebug($"[TargetAuraEquals] Condition met");
 				if (!string.IsNullOrEmpty(Skill))

@@ -41,21 +41,25 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 			}
 
 			if (!finalCondition)
-				return Task.FromResult<object>(null);
-
-			LogForm.Instance.AppendDebug($"[TargetAuraGreaterThan] Condition met");
-			if (!string.IsNullOrEmpty(Skill))
 			{
-				var availableMonsters = World.AvailableMonsters;
-				if (availableMonsters.Count > 0)
+				instance.Index++;
+			}
+			else
+			{
+				LogForm.Instance.AppendDebug($"[TargetAuraGreaterThan] Condition met");
+				if (!string.IsNullOrEmpty(Skill))
 				{
-					Player.AttackMonster(availableMonsters[0].Name);
-					LogForm.Instance.AppendDebug($"[TargetAuraGreaterThan] Targeted {availableMonsters[0].Name}, casting skill: {Skill}");
-					Player.UseSkill(Skill);
-				}
-				else
-				{
-					LogForm.Instance.AppendDebug($"[TargetAuraGreaterThan] No monsters available to target for skill cast");
+					var availableMonsters = World.AvailableMonsters;
+					if (availableMonsters.Count > 0)
+					{
+						Player.AttackMonster(availableMonsters[0].Name);
+						LogForm.Instance.AppendDebug($"[TargetAuraGreaterThan] Targeted {availableMonsters[0].Name}, casting skill: {Skill}");
+						Player.UseSkill(Skill);
+					}
+					else
+					{
+						LogForm.Instance.AppendDebug($"[TargetAuraGreaterThan] No monsters available to target for skill cast");
+					}
 				}
 			}
 
