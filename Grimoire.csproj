@@ -752,6 +752,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\big.Ico" />
+    <Content Include="Resources\Skillsets\**" Exclude="Resources\Skillsets\**\*.json" Condition="Exists('Resources\Skillsets')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Skillsets\%(Filename)%(Extension)</Link>
+    </Content>
+    <None Include="Resources\Skillsets\skillsets.json" Condition="Exists('Resources\Skillsets\skillsets.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Skillsets\skillsets.json</Link>
+    </None>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

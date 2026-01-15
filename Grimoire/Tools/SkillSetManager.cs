@@ -32,7 +32,7 @@ namespace Grimoire.Tools
 
         public SkillSetManager()
         {
-            _skillsetsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "SkillSets");
+            _skillsetsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Skillsets");
             _collectionPath = Path.Combine(_skillsetsDir, "skillsets.json");
             
             // Ensure directory exists
