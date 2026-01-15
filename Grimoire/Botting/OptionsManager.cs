@@ -23,6 +23,7 @@ namespace Grimoire.Botting
 
         private static bool _infMana;
 
+
         public static String LoginUsername
         {
             get;
@@ -125,6 +126,7 @@ namespace Grimoire.Botting
                     DestroyPlayers();
             }
         }
+
 
         public static bool InfiniteRange
         {

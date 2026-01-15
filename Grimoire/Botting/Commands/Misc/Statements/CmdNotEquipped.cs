@@ -14,7 +14,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 
         public Task Execute(IBotEngine instance)
         {
-            if ((Player.Inventory.Items.Find((InventoryItem x) => x.Name == (instance.IsVar(Value1)  ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1)) ?? new InventoryItem()).IsEquipped)
+            if ((Player.Inventory.Items.Find((InventoryItem x) => x.Name == (string.IsNullOrEmpty(Value1) ? Value1 : (instance.IsVar(Value1)  ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1))) ?? new InventoryItem()).IsEquipped)
             {
                 instance.Index++;
             }

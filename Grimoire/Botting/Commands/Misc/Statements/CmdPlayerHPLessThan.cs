@@ -13,8 +13,8 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 
         public Task Execute(IBotEngine instance)
         {
-            string PlayerName = instance.IsVar(Value1) ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1;
-            int CheckHP = int.Parse(instance.IsVar(Value2) ? Configuration.Tempvariable[instance.GetVar(Value2)] : Value2);
+            string PlayerName = string.IsNullOrEmpty(Value1) ? Value1 : (instance.IsVar(Value1) ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1);
+            int CheckHP = int.Parse(string.IsNullOrEmpty(Value2) ? Value2 : (instance.IsVar(Value2) ? Configuration.Tempvariable[instance.GetVar(Value2)] : Value2));
             if (!(World.GetPlayerHealthPercentage(PlayerName) < CheckHP))
             {
                 instance.Index++;

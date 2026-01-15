@@ -2,6 +2,7 @@
 using Grimoire.Game;
 using Grimoire.Networking;
 using Grimoire.Tools;
+using Grimoire.Networking.Handlers;
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -94,6 +95,7 @@ namespace Grimoire.UI
         public ToolStripMenuItem enableOptionsToolStripMenuItem;
         private ToolStripMenuItem menuCharSelect;
         public ToolStripMenuItem maidStrip;
+
 
         //public AxShockwaveFlash Client => flashPlayer;
 
