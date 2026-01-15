@@ -835,7 +835,7 @@ namespace Grimoire.UI
             this.chkStartBot.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.chkStartBot.AutoSize = true;
             this.chkStartBot.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(36)))));
-            this.chkStartBot.Location = new System.Drawing.Point(568, 5);
+            this.chkStartBot.Location = new System.Drawing.Point(549, 5);
             this.chkStartBot.Name = "chkStartBot";
             this.chkStartBot.Size = new System.Drawing.Size(67, 17);
             this.chkStartBot.TabIndex = 38;
@@ -847,7 +847,7 @@ namespace Grimoire.UI
             this.chkAutoAttack.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.chkAutoAttack.AutoSize = true;
             this.chkAutoAttack.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(36)))));
-            this.chkAutoAttack.Location = new System.Drawing.Point(648, 5);
+            this.chkAutoAttack.Location = new System.Drawing.Point(616, 5);
             this.chkAutoAttack.Name = "chkAutoAttack";
             this.chkAutoAttack.Size = new System.Drawing.Size(15, 14);
             this.chkAutoAttack.TabIndex = 37;
@@ -858,7 +858,7 @@ namespace Grimoire.UI
             this.cbAutoAttack.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbAutoAttack.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
             this.cbAutoAttack.FormattingEnabled = true;
-            this.cbAutoAttack.Location = new System.Drawing.Point(667, 3);
+            this.cbAutoAttack.Location = new System.Drawing.Point(632, 3);
             this.cbAutoAttack.Name = "cbAutoAttack";
             this.cbAutoAttack.Size = new System.Drawing.Size(85, 21);
             this.cbAutoAttack.TabIndex = 38;
@@ -866,12 +866,12 @@ namespace Grimoire.UI
             // btnBank
             // 
             this.btnBank.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBank.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(27)))), ((int)(((byte)(27)))), ((int)(((byte)(27)))));
+            this.btnBank.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(36)))));
             this.btnBank.Checked = false;
             this.btnBank.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
-            this.btnBank.Location = new System.Drawing.Point(964, 2);
+            this.btnBank.Location = new System.Drawing.Point(719, 3);
             this.btnBank.Name = "btnBank";
-            this.btnBank.Size = new System.Drawing.Size(42, 23);
+            this.btnBank.Size = new System.Drawing.Size(45, 21);
             this.btnBank.TabIndex = 36;
             this.btnBank.Text = "Bank";
             this.btnBank.Click += new System.EventHandler(this.btnBank_Click_1);
@@ -880,7 +880,7 @@ namespace Grimoire.UI
             // 
             this.cbCells.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbCells.FormattingEnabled = true;
-            this.cbCells.Location = new System.Drawing.Point(849, 3);
+            this.cbCells.Location = new System.Drawing.Point(853, 3);
             this.cbCells.MaxDropDownItems = 50;
             this.cbCells.Name = "cbCells";
             this.cbCells.Size = new System.Drawing.Size(85, 21);
@@ -901,7 +901,7 @@ namespace Grimoire.UI
             "Bottom",
             "Up",
             "Down"});
-            this.cbPads.Location = new System.Drawing.Point(758, 3);
+            this.cbPads.Location = new System.Drawing.Point(766, 3);
             this.cbPads.MaxDropDownItems = 50;
             this.cbPads.Name = "cbPads";
             this.cbPads.Size = new System.Drawing.Size(85, 21);
@@ -1331,7 +1331,7 @@ namespace Grimoire.UI
             this.accountManagerToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
             this.accountManagerToolStripMenuItem.Name = "accountManagerToolStripMenuItem";
             this.accountManagerToolStripMenuItem.Size = new System.Drawing.Size(120, 23);
-            this.accountManagerToolStripMenuItem.Text = "Account Manager";
+            this.accountManagerToolStripMenuItem.Text = "Manager";
             this.accountManagerToolStripMenuItem.Click += new System.EventHandler(this.accountManagerToolStripMenuItem_Click);
             // 
             // Root
