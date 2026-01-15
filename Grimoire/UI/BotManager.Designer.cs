@@ -325,7 +325,6 @@ namespace Grimoire.UI
 		private DarkButton btnAuraGreater;
 		private DarkButton btnAuraLess;
 		private DarkCheckBox chkMultiAura;
-        private DarkCheckBox chkAuraWait;
 		private DarkTextBox txtAuraName2;
 		private DarkNumericUpDown numAuraValue2;
 		private DarkComboBox cbAuraOperator;
@@ -706,7 +705,6 @@ namespace Grimoire.UI
             this.numAuraSafeValue2 = new DarkUI.Controls.DarkNumericUpDown();
             this.lblAuraSafePercent2 = new DarkUI.Controls.DarkLabel();
             this.chkMultiAura = new DarkUI.Controls.DarkCheckBox();
-            this.chkAuraWait = new DarkUI.Controls.DarkCheckBox();
             this.txtAuraName2 = new DarkUI.Controls.DarkTextBox();
             this.numAuraValue2 = new DarkUI.Controls.DarkNumericUpDown();
             this.cbAuraOperator = new DarkUI.Controls.DarkComboBox();
@@ -5282,7 +5280,6 @@ namespace Grimoire.UI
             this.grpAura.Controls.Add(this.btnAuraGreater);
             this.grpAura.Controls.Add(this.btnAuraLess);
             this.grpAura.Controls.Add(this.chkMultiAura);
-            this.grpAura.Controls.Add(this.chkAuraWait);
             this.grpAura.Controls.Add(this.txtAuraName2);
             this.grpAura.Controls.Add(this.numAuraValue2);
             this.grpAura.Controls.Add(this.cbAuraOperator);
@@ -5453,15 +5450,7 @@ namespace Grimoire.UI
             this.chkMultiAura.Name = "chkMultiAura";
             this.chkMultiAura.Size = new System.Drawing.Size(120, 20);
             this.chkMultiAura.TabIndex = 14;
-            // chkAuraWait
-            // 
-            this.chkAuraWait.AutoSize = true;
-            this.chkAuraWait.Checked = false;
-            this.chkAuraWait.Location = new System.Drawing.Point(105, 45);
-            this.chkAuraWait.Name = "chkAuraWait";
-            this.chkAuraWait.Size = new System.Drawing.Size(50, 17);
-            this.chkAuraWait.TabIndex = 15;
-            this.chkAuraWait.Text = "Wait";
+            this.chkMultiAura.Text = "Multiple Auras";
             // 
             // txtAuraName2
             // 

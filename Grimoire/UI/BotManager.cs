@@ -3895,7 +3895,7 @@ namespace Grimoire.UI
             string prefix = isPlayer ? "Player" : "Target";
             string cmdIndex = isPlayer ? "CmdPlayerAuraEquals" : "CmdTargetAuraEquals";
             
-            string textValue = $"[{prefix} Aura =] {auraName}|{numAuraValue.Value}|{numAuraSkillIndex.Value}{(chkAuraWait.Checked ? "W" : "")}";
+            string textValue = $"[{prefix} Aura =] {auraName}|{numAuraValue.Value}|{numAuraSkillIndex.Value}";
             
             if (chkMultiAura.Checked)
             {
@@ -3953,7 +3953,7 @@ namespace Grimoire.UI
             string prefix = isPlayer ? "Player" : "Target";
             string cmdIndex = isPlayer ? "CmdPlayerAuraGreaterThan" : "CmdTargetAuraGreaterThan";
             
-            string textValue = $"[{prefix} Aura >] {auraName}|{numAuraValue.Value}|{numAuraSkillIndex.Value}{(chkAuraWait.Checked ? "W" : "")}";
+            string textValue = $"[{prefix} Aura >] {auraName}|{numAuraValue.Value}|{numAuraSkillIndex.Value}";
             
             if (chkMultiAura.Checked)
             {
@@ -4011,7 +4011,7 @@ namespace Grimoire.UI
             string prefix = isPlayer ? "Player" : "Target";
             string cmdIndex = isPlayer ? "CmdPlayerAuraLessThan" : "CmdTargetAuraLessThan";
             
-            string textValue = $"[{prefix} Aura <] {auraName}|{numAuraValue.Value}|{numAuraSkillIndex.Value}{(chkAuraWait.Checked ? "W" : "")}";
+            string textValue = $"[{prefix} Aura <] {auraName}|{numAuraValue.Value}|{numAuraSkillIndex.Value}";
             
             if (chkMultiAura.Checked)
             {
