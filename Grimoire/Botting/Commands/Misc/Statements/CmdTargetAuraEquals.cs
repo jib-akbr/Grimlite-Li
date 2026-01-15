@@ -12,17 +12,11 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 			Text = "Target aura value equals";
 		}
 
-		public async Task Execute(IBotEngine instance)
+		public Task Execute(IBotEngine instance)
 		{
 			string Aura = string.IsNullOrEmpty(Value1) ? Value1 : (instance.IsVar(Value1) ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1);
 			string AuraValue = string.IsNullOrEmpty(Value2) ? Value2 : (instance.IsVar(Value2) ? Configuration.Tempvariable[instance.GetVar(Value2)] : Value2);
 			string Skill = string.IsNullOrEmpty(Value3) ? Value3 : (instance.IsVar(Value3) ? Configuration.Tempvariable[instance.GetVar(Value3)] : Value3);
-			bool waitForSkill = false;
-			if (!string.IsNullOrEmpty(Skill) && Skill.EndsWith("W"))
-			{
-				waitForSkill = true;
-				Skill = Skill.Substring(0, Skill.Length - 1);
-			}
 			string Aura2 = string.IsNullOrEmpty(Value4) ? Value4 : (instance.IsVar(Value4) ? Configuration.Tempvariable[instance.GetVar(Value4)] : Value4);
 			string AuraValue2 = string.IsNullOrEmpty(Value5) ? Value5 : (instance.IsVar(Value5) ? Configuration.Tempvariable[instance.GetVar(Value5)] : Value5);
 			string Operator = string.IsNullOrEmpty(Value6) ? Value6 : (instance.IsVar(Value6) ? Configuration.Tempvariable[instance.GetVar(Value6)] : Value6);
@@ -57,12 +51,6 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 				LogForm.Instance.AppendDebug($"[TargetAuraEquals] Condition met");
 				if (!string.IsNullOrEmpty(Skill))
 				{
-					if (waitForSkill)
-					{
-						int waitTime = Player.SkillAvailable(Skill);
-						if (waitTime > 0)
-							await Task.Delay(waitTime);
-					}
 					var availableMonsters = World.AvailableMonsters;
 					if (availableMonsters.Count > 0)
 					{
@@ -77,7 +65,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 				}
 			}
 
-			return;
+			return Task.FromResult<object>(null);
 		}
 
 		public override string ToString()
