@@ -65,6 +65,16 @@ namespace Grimoire.UI.Maid
 
         Stopwatch stopwatch = new Stopwatch();
 
+        // Skillset support
+        private string _selectedSkillSet = "";
+        private Grimoire.Botting.Configuration _selectedConfiguration = null;
+        
+        // Aura caching to avoid repeated expensive Flash calls
+        private Dictionary<string, int> _auraCache = new Dictionary<string, int>();
+        private bool _auraCacheValid = false;
+        private DateTime _lastAuraPreloadTime = DateTime.MinValue;
+        private const int AURA_PRELOAD_INTERVAL_MS = 10000; // Preload every 10 seconds
+
         public MaidRemake()
         {
             InitializeComponent();
@@ -77,6 +87,19 @@ namespace Grimoire.UI.Maid
             cmbUltraBoss.SelectedIndex = 0;
             this.Text = $"Maid Remake";
 
+            // Load skillsets asynchronously in background to avoid blocking UI
+            this.Shown += (s, e) => LoadSkillsetsAsync();
+            
+            // Subscribe to skillset saved event to auto-refresh dropdown
+            SkillSetManager.Instance.SkillSetSaved += (s, e) => RefreshSkillsetsAsync();
+
+            if (cbAntiCounter.Checked)
+                Flash.FlashCall2 += AntiCounterHandler;
+            if (cbPartyCmd.Checked)
+            {
+                Proxy.Instance.RegisterHandler(PartyInvitationHandler);
+                Proxy.Instance.RegisterHandler(PartyChatHandler);
+            }
             if (cbAntiCounter.Checked)
                 Flash.FlashCall2 += AntiCounterHandler;
             if (cbPartyCmd.Checked)
@@ -95,6 +118,130 @@ namespace Grimoire.UI.Maid
                 "\n.start => turn on Maid" +
                 "\n.stop => turn off Maid"
                 );
+        }
+
+        /// <summary>
+        /// Load skillsets asynchronously in background thread to avoid blocking UI
+        /// </summary>
+        private void LoadSkillsetsAsync()
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    var skillSets = SkillSetManager.Instance.GetAllSkillSetNames();
+                    if (skillSets != null && skillSets.Count > 0)
+                    {
+                        // Add to dropdown on UI thread
+                        this.Invoke((Action)(() =>
+                        {
+                            try
+                            {
+                                // Only add if separator not already there
+                                bool hasSeparator = false;
+                                foreach (var item in cmbPreset.Items)
+                                {
+                                    if (item?.ToString() == "---")
+                                    {
+                                        hasSeparator = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!hasSeparator)
+                                {
+                                    cmbPreset.Items.Add("---");
+                                }
+
+                                foreach (var skillSet in skillSets)
+                                {
+                                    if (!cmbPreset.Items.Contains(skillSet))
+                                    {
+                                        cmbPreset.Items.Add(skillSet);
+                                    }
+                                }
+
+                                // If we have a saved skillset, select it
+                                if (!string.IsNullOrEmpty(_selectedSkillSet) && cmbPreset.Items.Contains(_selectedSkillSet))
+                                {
+                                    cmbPreset.SelectedIndex = -1; // Reset
+                                    cmbPreset.SelectedItem = _selectedSkillSet;
+                                    LogForm.Instance?.AppendDebug($"[Maid] Restored skillset selection: {_selectedSkillSet}");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                LogForm.Instance?.AppendDebug($"[Maid] Error populating skillsets dropdown: {ex.Message}");
+                            }
+                        }));
+                    }
+                }
+                catch { /* Fail silently */ }
+            });
+        }
+
+        /// <summary>
+        /// Refresh skillsets dropdown when a new skillset is saved or deleted
+        /// </summary>
+        private void RefreshSkillsetsAsync()
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    var skillSets = SkillSetManager.Instance.GetAllSkillSetNames();
+                    if (skillSets != null)
+                    {
+                        this.Invoke((Action)(() =>
+                        {
+                            try
+                            {
+                                // Find separator position
+                                int separatorIndex = -1;
+                                for (int i = 0; i < cmbPreset.Items.Count; i++)
+                                {
+                                    if (cmbPreset.Items[i]?.ToString() == "---")
+                                    {
+                                        separatorIndex = i;
+                                        break;
+                                    }
+                                }
+
+                                // Remove all items after separator (old skillsets)
+                                if (separatorIndex >= 0)
+                                {
+                                    while (cmbPreset.Items.Count > separatorIndex + 1)
+                                    {
+                                        cmbPreset.Items.RemoveAt(cmbPreset.Items.Count - 1);
+                                    }
+                                }
+                                else
+                                {
+                                    // No separator found, add it
+                                    cmbPreset.Items.Add("---");
+                                    separatorIndex = cmbPreset.Items.Count - 1;
+                                }
+
+                                // Add current skillsets
+                                foreach (var skillSet in skillSets)
+                                {
+                                    if (!cmbPreset.Items.Contains(skillSet))
+                                    {
+                                        cmbPreset.Items.Add(skillSet);
+                                    }
+                                }
+
+                                LogForm.Instance?.AppendDebug($"[Maid] Skillsets refreshed - {skillSets.Count} skillsets available");
+                            }
+                            catch (Exception ex)
+                            {
+                                LogForm.Instance?.AppendDebug($"[Maid] Error refreshing skillsets dropdown: {ex.Message}");
+                            }
+                        }));
+                    }
+                }
+                catch { /* Fail silently */ }
+            });
         }
 
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
@@ -117,8 +264,54 @@ namespace Grimoire.UI.Maid
                 string equippedclass = Player.EquippedClass.ToLower();
                 var skillproperties = Flash.Instance.GetGameObject<List<JObject>>("world.actions.active");
 
-                string[] skillList = tbSkillList.Text.Split(',');
+                // Check if using custom skillset or manual skill list
+                List<SavedSkill> customSkillSet = null;
+                List<Skill> configurationSkills = null;
+                string[] skillList = null;
                 int skillIndex = 0;
+
+                // Try to load custom skillset if one is selected
+                if (!string.IsNullOrEmpty(_selectedSkillSet))
+                {
+                    try
+                    {
+                        var skillSetData = SkillSetManager.Instance.LoadSkillSet(_selectedSkillSet);
+                        if (skillSetData != null && skillSetData.Skills != null && skillSetData.Skills.Count > 0)
+                        {
+                            // Keep all skills including aura conditions for full support
+                            customSkillSet = skillSetData.Skills;
+                            LogForm.Instance?.AppendDebug($"[Maid] Using custom skillset: {_selectedSkillSet} ({customSkillSet.Count} entries including aura conditions)");
+                            
+                            // Preload auras for the skillset
+                            await PreloadAurasForSkillsetAsync(customSkillSet);
+                            _lastAuraPreloadTime = DateTime.Now; // Start the 10-second refresh timer after initial load
+                        }
+                        else if (_selectedConfiguration != null && _selectedConfiguration.Skills != null && _selectedConfiguration.Skills.Count > 0)
+                        {
+                            // Use Configuration format skills if loaded
+                            configurationSkills = _selectedConfiguration.Skills;
+                            LogForm.Instance?.AppendDebug($"[Maid] Using Configuration skillset: {_selectedSkillSet} ({configurationSkills.Count} skills)");
+                        }
+                        else
+                        {
+                            LogForm.Instance?.AppendDebug($"[Maid] Selected skillset '{_selectedSkillSet}' is empty or not found, falling back to manual list");
+                            _selectedSkillSet = "";
+                            _selectedConfiguration = null;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogForm.Instance?.AppendDebug($"[Maid] Error loading skillset '{_selectedSkillSet}': {ex.Message}");
+                        _selectedSkillSet = "";
+                        _selectedConfiguration = null;
+                    }
+                }
+
+                // Fall back to manual skill list if no skillset
+                if (customSkillSet == null && configurationSkills == null)
+                {
+                    skillList = tbSkillList.Text.Split(',');
+                }
 
                 if (cbHandleLockedMap.Checked && AlternativeMap.Count() > 0)
                     AlternativeMap.Init();
@@ -163,6 +356,14 @@ namespace Grimoire.UI.Maid
                 {
                     try
                     {
+                        // Refresh aura cache every 10 seconds
+                        if (customSkillSet != null && 
+                            (DateTime.Now - _lastAuraPreloadTime).TotalMilliseconds > AURA_PRELOAD_INTERVAL_MS)
+                        {
+                            _lastAuraPreloadTime = DateTime.Now;
+                            _ = PreloadAurasForSkillsetAsync(customSkillSet); // Fire and forget
+                        }
+                        
                         // while player is logout -> do delay (2s), wait first join, do first join delay
                         if (cbEnablePlugin.Checked && !Player.IsLoggedIn)
                             await waitForFirstJoin();
@@ -227,19 +428,117 @@ namespace Grimoire.UI.Maid
                             if (World.IsMonsterAvailable("*") && !Player.HasTarget)
                                 Player.AttackMonster("*");
 
-                            //keep using buff when no enemy target & checking waitskill
-                            string selfskill = skillproperties[int.Parse(skillList[skillIndex])]?["tgt"]?.ToString();
-                            //debug($"{selfskill}");
-                            if (cbWaitSkill.Checked && selfskill != "h") //H or F [H - monster/hostile, F - Friendly/self]
+                            // Get current skill index as string
+                            string currentSkillIndex = "";
+                            SavedSkill currentSkillData = null;
+                            Skill currentConfigSkill = null;
+                            
+                            if (customSkillSet != null && skillIndex < customSkillSet.Count)
                             {
-                                await Task.Delay(Player.SkillAvailable(skillList[skillIndex]));
-                                Player.ForceUseSkill(skillList[skillIndex]);
-                                await Task.Delay(150);
-                                skillIndex = (skillIndex + 1) % skillList.Length;
+                                currentSkillData = customSkillSet[skillIndex];
+                                
+                                // Handle Label/Aura condition entries
+                                if (currentSkillData.Type == 2) // Label type
+                                {
+                                    // Evaluate the aura condition
+                                    LogForm.Instance?.AppendDebug($"[MaidSkillSet] Processing aura statement: {currentSkillData.Text}");
+                                    
+                                    if (_auraCacheValid)
+                                    {
+                                        bool conditionMet = CheckAuraCondition(currentSkillData);
+                                        
+                                        if (conditionMet)
+                                        {
+                                            // Extract skill index from the condition text and execute it
+                                            string skillToExecute = ExtractSkillIndexFromCondition(currentSkillData.Text);
+                                            
+                                            if (!string.IsNullOrEmpty(skillToExecute))
+                                            {
+                                                LogForm.Instance?.AppendDebug($"[MaidSkillSet] Condition MET - executing skill {skillToExecute}");
+                                                useSkill(skillToExecute);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            LogForm.Instance?.AppendDebug($"[MaidSkillSet] Condition NOT met - skipping");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        LogForm.Instance?.AppendDebug($"[MaidSkillSet] Aura cache not ready, waiting...");
+                                    }
+                                    
+                                    // Always advance past the aura condition
+                                    skillIndex = (skillIndex + 1) % customSkillSet.Count;
+                                    continue;
+                                }
+                                
+                                currentSkillIndex = currentSkillData.Index;
+                            }
+                            else if (configurationSkills != null && skillIndex < configurationSkills.Count)
+                            {
+                                currentConfigSkill = configurationSkills[skillIndex];
+                                
+                                // Handle Label/Aura condition entries (Type.Label = 2)
+                                // These execute aura checks and cast skills if conditions are met
+                                if (currentConfigSkill.Type == Skill.SkillType.Label)
+                                {
+                                    LogForm.Instance?.AppendDebug($"[MaidSkillSet] Processing aura statement: {currentConfigSkill.Text}");
+                                    try
+                                    {
+                                        // ExecuteSkill() handles Label type by calling ExecuteStatementCommand()
+                                        // which evaluates the aura condition and casts the skill if met
+                                        await currentConfigSkill.ExecuteSkill();
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        LogForm.Instance?.AppendDebug($"[MaidSkillSet] Error processing aura statement: {ex.Message}");
+                                    }
+                                    
+                                    // Move to next entry after processing aura statement
+                                    skillIndex = (skillIndex + 1) % configurationSkills.Count;
+                                    continue;
+                                }
+                                
+                                // This is a regular skill entry (Type.Normal or Type.Safe)
+                                currentSkillIndex = currentConfigSkill.Index;
+                            }
+                            else if (skillList != null && skillIndex < skillList.Length)
+                                currentSkillIndex = skillList[skillIndex];
+                            if (string.IsNullOrEmpty(currentSkillIndex))
+                                continue;
+
+                            // Validate skill index is numeric before trying to use it
+                            if (!int.TryParse(currentSkillIndex, out int _))
+                            {
+                                LogForm.Instance?.AppendDebug($"[Maid] Invalid skill index: {currentSkillIndex}, skipping");
+                                int listCount = customSkillSet != null ? customSkillSet.Count : (configurationSkills != null ? configurationSkills.Count : skillList.Length);
+                                skillIndex = (skillIndex + 1) % listCount;
+                                continue;
+                            }
+
+                            //keep using buff when no enemy target & checking waitskill
+                            try
+                            {
+                                string selfskill = skillproperties[int.Parse(currentSkillIndex)]?["tgt"]?.ToString();
+                                //debug($"{selfskill}");
+                                if (cbWaitSkill.Checked && selfskill != "h") //H or F [H - monster/hostile, F - Friendly/self]
+                                {
+                                    await Task.Delay(Player.SkillAvailable(currentSkillIndex));
+                                    Player.ForceUseSkill(currentSkillIndex);
+                                    await Task.Delay(150);
+                                    skillIndex = (skillIndex + 1) % (customSkillSet != null ? customSkillSet.Count : skillList.Length);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                LogForm.Instance?.AppendDebug($"[Maid] Error executing buff check for skill {currentSkillIndex}: {ex.Message}");
+                                skillIndex = (skillIndex + 1) % (customSkillSet != null ? customSkillSet.Count : skillList.Length);
+                                continue;
                             }
 
                             // waiting for skill CD if 'Wait' skill checked
-                            if (cbWaitSkill.Checked && (Player.SkillAvailable(skillList[skillIndex]) > 0 || !Player.HasTarget))
+                            if (cbWaitSkill.Checked && (Player.SkillAvailable(currentSkillIndex) > 0 || !Player.HasTarget))
                             {
                                 await Task.Delay(150);
                                 continue;
@@ -248,32 +547,44 @@ namespace Grimoire.UI.Maid
                             // do attack with skills
                             if (Player.HasTarget)
                             {
-                                //For class with some aura detection or Ultragramiel boss fight
-                                await SpecialCombo();
-                                if (tauntTask == null)
-                                    taunt();
-                                // force, to ensure a skill is REALLY executed 
-                                if (forceSkill)
+                                try
                                 {
-                                    string skillAct = numSkillAct.Value.ToString();
-                                    await Task.Delay(1000);
-                                    await Task.Delay(Player.SkillAvailable(skillAct));
-                                    //Player.UseSkill(skillAct);
-                                    useSkill(skillAct, true);
-                                    forceSkill = false;
-                                    await Task.Delay(500);
+                                    //For class with some aura detection or Ultragramiel boss fight
+                                    await SpecialCombo();
+                                    if (tauntTask == null)
+                                        taunt();
+                                    // force, to ensure a skill is REALLY executed 
+                                    if (forceSkill)
+                                    {
+                                        string skillAct = numSkillAct.Value.ToString();
+                                        LogForm.Instance?.AppendDebug($"[MaidSkillSet] Force executing skill {skillAct}");
+                                        await Task.Delay(1000);
+                                        await Task.Delay(Player.SkillAvailable(skillAct));
+                                        //Player.UseSkill(skillAct);
+                                        useSkill(skillAct, true);
+                                        forceSkill = false;
+                                        await Task.Delay(500);
+                                    }
+                                    else
+                                    {   // normal skill spamming
+                                        string skillSource = customSkillSet != null ? $"skillset[{skillIndex}]" : (configurationSkills != null ? $"config[{skillIndex}]" : $"manual[{skillIndex}]");
+                                        LogForm.Instance?.AppendDebug($"[MaidSkillSet] Using skill {currentSkillIndex} from {skillSource}");
+                                        useSkill(currentSkillIndex);
+                                    }
                                 }
-                                else
-                                {   // normal skill spamming
-                                    // Previously Player.UseSkill(skillList[skillIndex]); 
-                                    useSkill(skillList[skillIndex]);
+                                catch (Exception ex)
+                                {
+                                    LogForm.Instance?.AppendDebug($"[Maid] Error using skill {currentSkillIndex}: {ex.Message}");
                                 }
                             }
 
                             skillIndex++;
-
-                            if (skillIndex >= skillList.Length)
-                                skillIndex = 0;
+                            if (customSkillSet != null)
+                                skillIndex = skillIndex % customSkillSet.Count;
+                            else if (configurationSkills != null)
+                                skillIndex = skillIndex % configurationSkills.Count;
+                            else if (skillList != null)
+                                skillIndex = skillIndex % skillList.Length;
                         }
                         else if (Player.IsLoggedIn && !World.IsMapLoading)
                         {
@@ -321,6 +632,7 @@ namespace Grimoire.UI.Maid
                 stopMaid();
             }
         }
+
         private async Task waitSkill(string index)
         {
             // Auto-fix for stuck skill 5 bug
@@ -338,14 +650,404 @@ namespace Grimoire.UI.Maid
             }
             useSkill(index, true);
         }
-        private void useSkill(string skillIndex, bool force = false)
+
+        // Check if an aura condition is met
+        private bool CheckAuraCondition(SavedSkill auraConditionSkill)
         {
-            if (isUsingCSH() || force)
+            if (string.IsNullOrEmpty(auraConditionSkill.Text))
+                return true;
+
+            try
             {
-                Player.ForceUseSkill(skillIndex);
+                // Parse the aura text: "[Player Aura <] XXI - The World|1|1|0 - The Fool|1|AND"
+                string text = auraConditionSkill.Text;
+                
+                // Determine operator: < or >
+                bool isLessThan = text.Contains("[Player Aura <]");
+                bool isGreaterThan = text.Contains("[Player Aura >]");
+                
+                if (!isLessThan && !isGreaterThan)
+                    return true;
+
+                // Remove the operator prefix
+                string aurasection = text.Replace("[Player Aura <] ", "").Replace("[Player Aura >] ", "");
+                
+                // Split by | to get aura info
+                string[] parts = aurasection.Split('|');
+                if (parts.Length < 2)
+                    return true;
+
+                // First aura: name and target value
+                string aura1Name = parts[0].Trim();
+                if (!int.TryParse(parts[1], out int targetValue1))
+                    return true;
+
+                // Get FRESH aura value (not cached) for immediate evaluation
+                int current1 = Player.GetAuras(true, aura1Name);
+                
+                LogForm.Instance?.AppendDebug($"[AuraStmt] Evaluating: {aura1Name} = {current1}, Target = {targetValue1}, Operator = {(isLessThan ? "<" : ">")}");
+
+                // Check first aura
+                bool condition1Met = isLessThan ? (current1 < targetValue1) : (current1 > targetValue1);
+
+                // Check if there's a second aura condition
+                if (parts.Length >= 5)
+                {
+                    // Multi-aura condition: Aura1|Value1|SkillIndex|Aura2|Value2|Operator
+                    string aura2Name = parts[3].Trim();
+                    if (!int.TryParse(parts[4], out int targetValue2))
+                        return condition1Met;
+
+                    int current2 = Player.GetAuras(true, aura2Name);
+                    bool condition2Met = isLessThan ? (current2 < targetValue2) : (current2 > targetValue2);
+                    
+                    // Get operator (AND or OR)
+                    string op = (parts.Length > 5) ? parts[5].Trim().ToUpper() : "AND";
+                    
+                    bool finalResult = op == "AND" ? (condition1Met && condition2Met) : (condition1Met || condition2Met);
+                    
+                    LogForm.Instance?.AppendDebug($"[AuraStmt] Multi-aura: {aura1Name}={current1}, {aura2Name}={current2}, Operator={op}, Result={finalResult}");
+                    
+                    return finalResult;
+                }
+
+                LogForm.Instance?.AppendDebug($"[AuraStmt] Single aura condition: {(condition1Met ? "MET" : "NOT met")}");
+                return condition1Met;
+            }
+            catch (Exception ex)
+            {
+                LogForm.Instance?.AppendDebug($"[AuraStmt] Error evaluating condition: {ex.Message}");
+                return true; // Default to true on error
+            }
+        }
+
+        /// <summary>
+        /// Extract skill index from aura condition text
+        /// Format: [Player Aura <] AuraName|TargetValue|SkillIndex|...
+        /// Returns the SkillIndex (3rd element after split by |)
+        /// </summary>
+        private string ExtractSkillIndexFromCondition(string conditionText)
+        {
+            try
+            {
+                // Remove the operator prefix
+                string aurasection = conditionText.Replace("[Player Aura <] ", "").Replace("[Player Aura >] ", "");
+                
+                // Split by | - format is: AuraName|Threshold|SkillIndex|...
+                string[] parts = aurasection.Split('|');
+                
+                // The skill index is the 3rd element (index 2)
+                if (parts.Length >= 3)
+                {
+                    return parts[2].Trim();
+                }
+            }
+            catch { }
+            
+            return null;
+        }
+
+        private int GetCachedAura(string auraName)
+        {
+            // COMPLETELY NON-BLOCKING - no Flash calls in main loop
+            // Just return what's in cache, or 0 if not cached yet
+            
+            lock (_auraCache)
+            {
+                if (_auraCache.ContainsKey(auraName))
+                {
+                    return _auraCache[auraName];
+                }
+            }
+            
+            // Not in cache - return 0 without blocking
+            // PreloadAurasForSkillsetAsync will fetch these values in background
+            return 0;
+        }
+
+        /// <summary>
+        /// Pre-load all auras including those needed by SpecialCombo and skillset conditions
+        /// Only called every 10 seconds or on player death - not every loop iteration
+        /// </summary>
+        private async Task PreloadAurasForSkillsetAsync(List<SavedSkill> customSkillSet)
+        {
+            if (customSkillSet == null) 
+            {
+                _auraCacheValid = true;
                 return;
             }
-            Player.UseSkill(skillIndex);
+            
+            // Mark as invalid while we're loading
+            _auraCacheValid = false;
+            
+            // Run in background thread
+            await Task.Run(() =>
+            {
+                try
+                {
+                    // Collect all unique aura names from the skillset
+                    var auraNames = new HashSet<string>();
+                    
+                    foreach (var skill in customSkillSet)
+                    {
+                        if (skill.Type == 2 && !string.IsNullOrEmpty(skill.Text))
+                        {
+                            var extracted = ExtractAuraNames(skill.Text);
+                            foreach (var name in extracted)
+                            {
+                                auraNames.Add(name);
+                            }
+                        }
+                    }
+                    
+                    // Add auras needed by SpecialCombo
+                    AddSpecialComboAuras(auraNames);
+                    
+                    if (auraNames.Count == 0)
+                    {
+                        _auraCacheValid = true;
+                        return;
+                    }
+                    
+                    // Clear old cache
+                    lock (_auraCache)
+                    {
+                        _auraCache.Clear();
+                    }
+                    
+                    LogForm.Instance?.AppendDebug($"[Maid] Preloading {auraNames.Count} auras...");
+                    
+                    // Fetch each aura with individual timeout
+                    int successCount = 0;
+                    foreach (var auraName in auraNames)
+                    {
+                        try
+                        {
+                            // Create a task for this specific aura
+                            var auraTask = Task.Run(() => 
+                            {
+                                try 
+                                { 
+                                    return Player.GetAuras(true, auraName); 
+                                }
+                                catch 
+                                { 
+                                    return 0; 
+                                }
+                            });
+                            
+                            // Wait max 150ms per aura
+                            if (auraTask.Wait(TimeSpan.FromMilliseconds(150)))
+                            {
+                                int value = auraTask.Result;
+                                lock (_auraCache)
+                                {
+                                    _auraCache[auraName] = value;
+                                }
+                                successCount++;
+                            }
+                            else
+                            {
+                                // Timeout - default to 0
+                                LogForm.Instance?.AppendDebug($"[Maid] Timeout preloading aura: {auraName}");
+                                lock (_auraCache)
+                                {
+                                    _auraCache[auraName] = 0;
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LogForm.Instance?.AppendDebug($"[Maid] Error preloading aura {auraName}: {ex.Message}");
+                            lock (_auraCache)
+                            {
+                                _auraCache[auraName] = 0;
+                            }
+                        }
+                    }
+                    
+                    LogForm.Instance?.AppendDebug($"[Maid] Preloaded {successCount}/{auraNames.Count} auras successfully");
+                    _auraCacheValid = true;
+                    
+                    // Confirm cache is ready for condition evaluation
+                    if (successCount > 0)
+                    {
+                        LogForm.Instance?.AppendDebug($"[Maid] Aura cache ready - conditions will now be evaluated");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogForm.Instance?.AppendDebug($"[Maid] Error in PreloadAuras: {ex.Message}");
+                    _auraCacheValid = true; // Mark as valid anyway to prevent infinite retry
+                }
+            });
+        }
+
+        /// <summary>
+        /// Extract aura names from condition text
+        /// Example: "[Player Aura <] XXI - The World|1|1|0 - The Fool|1|AND"
+        /// Returns: ["XXI - The World", "0 - The Fool"]
+        /// </summary>
+        private List<string> ExtractAuraNames(string conditionText)
+        {
+            var names = new List<string>();
+            try
+            {
+                if (conditionText.Contains("[Player Aura <]") || conditionText.Contains("[Player Aura >]"))
+                {
+                    // Find content after the bracket
+                    int bracketEnd = conditionText.IndexOf("]");
+                    if (bracketEnd < 0) return names;
+                    
+                    string afterBracket = conditionText.Substring(bracketEnd + 1).Trim();
+                    
+                    // Split by AND/OR
+                    var parts = System.Text.RegularExpressions.Regex.Split(afterBracket, @"\s+(AND|OR)\s+");
+                    
+                    foreach (var part in parts)
+                    {
+                        if (part == "AND" || part == "OR") continue;
+                        
+                        // Parse "AuraName|threshold|..."
+                        var segments = part.Trim().Split('|');
+                        if (segments.Length > 0 && !string.IsNullOrWhiteSpace(segments[0]))
+                        {
+                            names.Add(segments[0].Trim());
+                        }
+                    }
+                }
+            }
+            catch { /* Ignore parse errors */ }
+            
+            return names;
+        }
+
+        /// <summary>
+        /// Add auras needed by SpecialCombo based on current class and equipped items
+        /// </summary>
+        private void AddSpecialComboAuras(HashSet<string> auraNames)
+        {
+            // Potion-related auras (check for equipped potions)
+            var potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i) =>
+                i.IsEquipped &&
+                i.Quantity >= 1 &&
+                potionNames.Any(pots => i.Name.IndexOf(pots, StringComparison.OrdinalIgnoreCase) >= 0));
+            
+            if (potion != null)
+            {
+                if (potion.Name.Contains("Potent"))
+                {
+                    auraNames.Add("Potent Honor Malice");
+                }
+                else if (potion.Name.Contains("Felicitous"))
+                {
+                    auraNames.Add("Felicitous Philtre");
+                }
+            }
+            
+            // Class-specific auras
+            string equippedClass = Player.EquippedClass;
+            
+            if (equippedClass.Contains("CHRONO SHADOW"))
+            {
+                auraNames.Add("Rounds Empty");
+            }
+            else if (equippedClass == "ARCANA INVOKER")
+            {
+                auraNames.Add("0 - The Fool");
+                auraNames.Add("XXI - The World");
+                auraNames.Add("XX - Judgement");
+                auraNames.Add("End of the world");
+            }
+            else if (equippedClass == "ARCHMAGE")
+            {
+                auraNames.Add("Arcane Flux");
+                auraNames.Add("Corporeal Ascension");
+                auraNames.Add("Arcane Sigil");
+            }
+            
+            // Map-specific auras
+            if (Player.Map == "ascendedeclipse")
+            {
+                auraNames.Add("Sun's Heat");
+            }
+        }
+
+        /// <summary>
+        /// Loads a Configuration object from JSON and sets it as the active skillset
+        /// Can be called with Configuration JSON pasted directly
+        /// </summary>
+        public void LoadConfigurationFromJson(string jsonContent, string configName = "Loaded Configuration")
+        {
+            try
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Auto,
+                    NullValueHandling = NullValueHandling.Ignore
+                };
+                
+                var config = JsonConvert.DeserializeObject<Grimoire.Botting.Configuration>(jsonContent, settings);
+                
+                if (config != null && config.Skills != null && config.Skills.Count > 0)
+                {
+                    _selectedConfiguration = config;
+                    _selectedSkillSet = configName;
+                    LogForm.Instance?.AppendDebug($"[Maid] Loaded Configuration with {config.Skills.Count} skills");
+                    logConfigurationSkills(config);
+                }
+                else
+                {
+                    LogForm.Instance?.AppendDebug($"[Maid] Configuration loaded but has no skills");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogForm.Instance?.AppendDebug($"[Maid] Error loading Configuration from JSON: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Logs the skills in a Configuration for debugging purposes
+        /// </summary>
+        private void logConfigurationSkills(Grimoire.Botting.Configuration config)
+        {
+            if (config?.Skills == null) return;
+            
+            LogForm.Instance?.AppendDebug($"[Maid] Configuration contains {config.Skills.Count} entries:");
+            for (int i = 0; i < config.Skills.Count && i < 10; i++) // Log first 10 skills
+            {
+                var skill = config.Skills[i];
+                LogForm.Instance?.AppendDebug($"  [{i}] Index: {skill.Index}, Text: {skill.Text}, Type: {skill.Type}");
+            }
+            if (config.Skills.Count > 10)
+                LogForm.Instance?.AppendDebug($"  ... and {config.Skills.Count - 10} more skills");
+        }
+
+        private void useSkill(string skillIndex, bool force = false)
+        {
+            try
+            {
+                var skillproperties = Flash.Instance.GetGameObject<List<JObject>>("world.actions.active");
+                string skillName = skillproperties != null && int.TryParse(skillIndex, out int idx) && idx < skillproperties.Count
+                    ? skillproperties[idx]?["name"]?.ToString() ?? "Unknown"
+                    : "Unknown";
+                
+                LogForm.Instance?.AppendDebug($"[MaidSkill] Executing skill {skillIndex} ({skillName}) - Force: {force}");
+                
+                if (isUsingCSH() || force)
+                {
+                    LogForm.Instance?.AppendDebug($"[MaidSkill] Using ForceUseSkill for index {skillIndex}");
+                    Player.ForceUseSkill(skillIndex);
+                    return;
+                }
+                LogForm.Instance?.AppendDebug($"[MaidSkill] Using UseSkill for index {skillIndex}");
+                Player.UseSkill(skillIndex);
+            }
+            catch (Exception ex)
+            {
+                LogForm.Instance?.AppendDebug($"[MaidSkill] Error executing skill {skillIndex}: {ex.Message}");
+            }
         }
 
         private void equipEnrage()
@@ -451,7 +1153,7 @@ namespace Grimoire.UI.Maid
                 }
             }
 
-            if (isUsingCSH() && cmbPreset.SelectedItem.ToString() == "CSH")
+            if (isUsingCSH() && (cmbPreset.SelectedItem?.ToString() == "CSH" || _selectedSkillSet == "CSH"))
             {
                 if (Player.GetAuras(true, "Rounds Empty") == 1 || Player.Mana < 15)
                 {
@@ -464,24 +1166,34 @@ namespace Grimoire.UI.Maid
                     await Task.Delay(200);*/
                 }
             }
-            else if (Player.EquippedClass == "ARCANA INVOKER")
+            
+            // Only run AI combo if AI is selected
+            if (cmbPreset.SelectedItem?.ToString() == "AI" || _selectedSkillSet == "AI")
             {
-                if ((Player.GetAuras(true, "0 - The Fool") == 0 &&
-                    Player.GetAuras(true, "XXI - The World") == 0) || 
-					Player.GetAuras(true, "XX - Judgement") == 1 ||
-                    Player.GetAuras(true, "End of the world") >= 20 )
+                if (Player.EquippedClass == "ARCANA INVOKER")
                 {
-                    await waitSkill("1");
-                    await Task.Delay(200);
+                    if ((Player.GetAuras(true, "0 - The Fool") == 0 &&
+                        Player.GetAuras(true, "XXI - The World") == 0) || 
+                        Player.GetAuras(true, "XX - Judgement") == 1 ||
+                        Player.GetAuras(true, "End of the world") >= 20)
+                    {
+                        await waitSkill("1");
+                        await Task.Delay(200);
+                    }
                 }
             }
-            else if (Player.EquippedClass == "ARCHMAGE")
+            
+            // Only run AM combo if AM is selected
+            if (cmbPreset.SelectedItem?.ToString() == "AM" || _selectedSkillSet == "AM")
             {
-                if (Player.GetAuras(true, "Arcane Flux") == 1 &&
-                    Player.GetAuras(true, "Corporeal Ascension") == 0 ||
-                    Player.GetAuras(true, "Arcane Sigil") == 0)
+                if (Player.EquippedClass == "ARCHMAGE")
                 {
-                    await waitSkill("4");
+                    if (Player.GetAuras(true, "Arcane Flux") == 1 &&
+                        Player.GetAuras(true, "Corporeal Ascension") == 0 ||
+                        Player.GetAuras(true, "Arcane Sigil") == 0)
+                    {
+                        await waitSkill("4");
+                    }
                 }
             }
 
@@ -1156,8 +1868,22 @@ namespace Grimoire.UI.Maid
 
         private void cmbPreset_SelectedIndexChanged(object sender, EventArgs e)
         {
+            string selected = cmbPreset.SelectedItem?.ToString() ?? "";
+            
+            // Skip separator
+            if (selected == "---") return;
+            
+            // Check if it's a custom skillset
+            if (SkillSetManager.Instance.SkillSetExists(selected))
+            {
+                _selectedSkillSet = selected;
+                return;
+            }
+            
+            // Otherwise it's a class preset
+            _selectedSkillSet = "";
             ClassPreset.cbClear();
-            switch (cmbPreset.SelectedItem.ToString())
+            switch (selected)
             {
                 case "LR":
                     ClassPreset.LR();
@@ -1252,6 +1978,7 @@ namespace Grimoire.UI.Maid
                 SpecialAct = (int)numSkillAct.Value,
                 AntiCounter = cbAntiCounter.Checked,
                 UltraBossExtra = cmbUltraBoss.SelectedIndex,
+                SelectedSkillSet = _selectedSkillSet,
             };
 
             string configFolder = Path.Combine(Application.StartupPath, "Config");
@@ -1320,6 +2047,9 @@ namespace Grimoire.UI.Maid
                     tbSpecialMsg.Text = config.SpecialMsg;
                     numSkillAct.Value = config.SpecialAct;
                     cbAntiCounter.Checked = config.AntiCounter;
+                    
+                    // Load SelectedSkillSet for backward compatibility
+                    _selectedSkillSet = config.SelectedSkillSet ?? "";
                 }
             }
             if (cbEnableGlobalHotkey.Checked)

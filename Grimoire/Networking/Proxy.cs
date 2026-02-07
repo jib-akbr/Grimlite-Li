@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Grimoire.Game;
 using Grimoire.Game.Data;
 using Grimoire.Networking.Handlers;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Grimoire.Tools;
 
 namespace Grimoire.Networking
@@ -216,6 +218,51 @@ namespace Grimoire.Networking
 						foreach (IJsonMessageHandler item in _handlersJson.Where((IJsonMessageHandler h) => h.HandledCommands.Contains(jsonMessage.Command)))
 						{
 							item.Handle(jsonMessage);
+						}
+						
+						// Check for dodge in "ct" (combat) packets
+						if (jsonMessage.Command == "ct")
+						{
+							try
+							{
+								dynamic packet = JsonConvert.DeserializeObject<dynamic>(jsonMessage.RawContent);
+								
+								// CT packets have the sara array nested at packet.b.o.sara
+								JToken saraToken = packet?["b"]?["o"]?["sara"];
+								
+								if (saraToken != null)
+								{
+									JArray sara = saraToken as JArray;
+									
+									if (sara != null && sara.Count > 0)
+									{
+										foreach (JToken actionToken in sara)
+										{
+											JObject actionObj = actionToken as JObject;
+											if (actionObj != null)
+											{
+												JToken resultToken = actionObj["actionResult"];
+												if (resultToken != null)
+												{
+													string actionType = resultToken["typ"]?.ToString(); // typ not type
+													string targetInfo = resultToken["tInf"]?.ToString();
+													
+													// Check if player dodged - typ:"d" means dodge
+													if (!string.IsNullOrEmpty(actionType) && actionType == "d" && !string.IsNullOrEmpty(targetInfo) && targetInfo.StartsWith("p:"))
+													{
+														//UI.LogForm.Instance.AppendDebug($"[Proxy] 🛡️ DODGE DETECTED! Type: {actionType}, Target: {targetInfo}");
+														Grimoire.Botting.Commands.Combat.DodgeDetector.NotifyDodge(targetInfo);
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+							catch (Exception ex)
+							{
+								UI.LogForm.Instance.AppendDebug($"[Proxy] Error parsing ct packet: {ex.Message}");
+							}
 						}
 						break;
 

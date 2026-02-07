@@ -53,5 +53,8 @@ namespace Grimoire.Tools.Maid
 		public bool AntiCounter;
 
 		public int UltraBossExtra;
+
+		// Support for custom skillsets from Skills tab
+		public string SelectedSkillSet = "";
 	}
 }

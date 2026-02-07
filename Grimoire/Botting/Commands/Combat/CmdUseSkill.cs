@@ -43,8 +43,15 @@ namespace Grimoire.Botting.Commands.Combat
                 await Task.Delay(Player.SkillAvailable(Index));
                 FindTarget(target);
             }
-            if (isCSH()) Player.ForceUseSkill(Index);
-            else Player.UseSkill(Index);
+            
+            // Use the async skill execution with dodge logic
+            if (isCSH())
+                Player.ForceUseSkill(Index);
+            else
+            {
+                Skill skill = instance.Configuration.Skills[int.Parse(Index)];
+                await skill.useSkill(Index);
+            }
         }
 
         private bool isCSH()

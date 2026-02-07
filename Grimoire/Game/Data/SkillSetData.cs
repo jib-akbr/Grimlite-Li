@@ -69,6 +69,9 @@ namespace Grimoire.Game.Data
         [JsonProperty("waitCooldown")]
         public bool WaitCooldown { get; set; } = false;
 
+        [JsonProperty("waitDodge")]
+        public bool WaitDodge { get; set; } = false;
+
         public SavedSkill() { }
 
         public SavedSkill(string index, string text)

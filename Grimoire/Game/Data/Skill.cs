@@ -1,11 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using Grimoire.Tools;
 using Newtonsoft.Json.Linq;
 
 namespace Grimoire.Game.Data
 {
-    public class Skill
+    // Interface for any object that can wait for a dodge
+    public interface ISkillWaiter
+    {
+        void NotifyDodge();
+    }
+
+    public class Skill : ISkillWaiter
     {
         public string Text
         {
@@ -29,6 +36,8 @@ namespace Grimoire.Game.Data
         public int SafeValue2 { get; set; }
         
         public bool waitCd { get; set; } = false;
+        
+        public bool dodgeAttack { get; set; } = false;
 
         public static string GetSkillName(string index)
         {
@@ -65,7 +74,7 @@ namespace Grimoire.Game.Data
             Equals
         }
 
-        public void ExecuteSkill()
+        public async System.Threading.Tasks.Task ExecuteSkill()
         {
             Skill s = this;
             if (s.Type == Skill.SkillType.Label)
@@ -88,7 +97,7 @@ namespace Grimoire.Game.Data
                             if (manaPercent <= s.SafeValue)
                             {
                                 UI.LogForm.Instance.AppendDebug($"[SafeSkill] ✓ Using skill {s.Index} - MP condition met");
-                                useSkill(s.Index);
+                                await useSkill(s.Index);
                             }
                             else
                             {
@@ -99,7 +108,7 @@ namespace Grimoire.Game.Data
                             if (manaPercent >= s.SafeValue)
                             {
                                 UI.LogForm.Instance.AppendDebug($"[SafeSkill] ✓ Using skill {s.Index} - MP condition met");
-                                useSkill(s.Index);
+                                await useSkill(s.Index);
                             }
                             else
                             {
@@ -110,7 +119,7 @@ namespace Grimoire.Game.Data
                             if (manaPercent == s.SafeValue)
                             {
                                 UI.LogForm.Instance.AppendDebug($"[SafeSkill] ✓ Using skill {s.Index} - MP condition met");
-                                useSkill(s.Index);
+                                await useSkill(s.Index);
                             }
                             else
                             {
@@ -129,7 +138,7 @@ namespace Grimoire.Game.Data
                             if (healthPercent <= s.SafeValue)
                             {
                                 UI.LogForm.Instance.AppendDebug($"[SafeSkill] ✓ Using skill {s.Index} - HP condition met");
-                                useSkill(s.Index);
+                                await useSkill(s.Index);
                             }
                             else
                             {
@@ -140,7 +149,7 @@ namespace Grimoire.Game.Data
                             if (healthPercent >= s.SafeValue)
                             {
                                 UI.LogForm.Instance.AppendDebug($"[SafeSkill] ✓ Using skill {s.Index} - HP condition met");
-                                useSkill(s.Index);
+                                await useSkill(s.Index);
                             }
                             else
                             {
@@ -151,7 +160,7 @@ namespace Grimoire.Game.Data
                             if (healthPercent == s.SafeValue)
                             {
                                 UI.LogForm.Instance.AppendDebug($"[SafeSkill] ✓ Using skill {s.Index} - HP condition met");
-                                useSkill(s.Index);
+                                await useSkill(s.Index);
                             }
                             else
                             {
@@ -163,8 +172,16 @@ namespace Grimoire.Game.Data
             }
             else
             {
-                UI.LogForm.Instance.AppendDebug($"[Skill] Using skill {s.Index} ({s.Text})");
-                useSkill(s.Index);
+                UI.LogForm.Instance.AppendDebug($"[Skill] Using skill {s.Index} ({s.Text}) - WaitCD: {s.waitCd}, Dodge: {s.dodgeAttack}");
+                
+                // Skip if dodge is enabled and player has active dodge aura
+                if (s.dodgeAttack && Player.GetAuras(true, "dodge") > 0)
+                {
+                    UI.LogForm.Instance.AppendDebug($"[Skill] ⊗ Skipping skill {s.Index} - Player is dodging");
+                    return;
+                }
+                
+                await useSkill(s.Index);
                 //Player.UseSkill(s.Index);
             }
         }
@@ -339,38 +356,180 @@ namespace Grimoire.Game.Data
             }
         }
 
-        private void useSkill(string Index)
+        public async System.Threading.Tasks.Task useSkill(string Index)
         {
-            if (Player.EquippedClass.IndexOf("Chrono Shadow", StringComparison.OrdinalIgnoreCase) >= 0)
+            UI.LogForm.Instance.AppendDebug($"[useSkill] Index: {Index}, waitCd: {waitCd}, dodgeAttack: {dodgeAttack}");
+            
+            // Wait for dodge FIRST if enabled
+            if (dodgeAttack)
             {
-                Player.ForceUseSkill(Index);
-                return;
+                UI.LogForm.Instance.AppendDebug($"[useSkill] 🛡️ Waiting for dodge before using skill {Index}...");
+                bool dodgeDetected = await WaitForDodge();
+                
+                // Only proceed if dodge was actually detected (not timed out)
+                if (dodgeDetected)
+                {
+                    UI.LogForm.Instance.AppendDebug($"[useSkill] ✓ Dodge detected, spamming skill {Index} until available...");
+                    
+                    // Now spam the skill until it's available (dodge was detected, so use it immediately if ready)
+                    while (true)
+                    {
+                        int waitMs = 0;
+                        UI.BotManager.Instance.Invoke((MethodInvoker)delegate
+                        {
+                            waitMs = Player.SkillAvailable(Index);
+                        });
+                        
+                        if (waitMs <= 0)
+                        {
+                            UI.LogForm.Instance.AppendDebug($"[useSkill] ✓ Skill {Index} is available!");
+                            break;
+                        }
+                        
+                        // Wait a short amount before retrying (10ms for aggressive spam)
+                        await System.Threading.Tasks.Task.Delay(10);
+                    }
+                }
+                else
+                {
+                    UI.LogForm.Instance.AppendDebug($"[useSkill] ⏱️ Dodge timeout (30s) - using skill anyway without dodge");
+                    
+                    // Spam the skill until it's available (dodge didn't come, but don't skip the skill)
+                    while (true)
+                    {
+                        int waitMs = 0;
+                        UI.BotManager.Instance.Invoke((MethodInvoker)delegate
+                        {
+                            waitMs = Player.SkillAvailable(Index);
+                        });
+                        
+                        if (waitMs <= 0)
+                        {
+                            UI.LogForm.Instance.AppendDebug($"[useSkill] ✓ Skill {Index} is available!");
+                            break;
+                        }
+                        
+                        // Wait a short amount before retrying (10ms for aggressive spam)
+                        await System.Threading.Tasks.Task.Delay(10);
+                    }
+                }
             }
-            Player.UseSkill(Index);
+            else if (waitCd)
+            {
+                // Spam/retry the skill instead of waiting - keep trying until it's available
+                UI.LogForm.Instance.AppendDebug($"[useSkill] 🔄 Spamming skill {Index} until available...");
+                while (true)
+                {
+                    int waitMs = 0;
+                    UI.BotManager.Instance.Invoke((MethodInvoker)delegate
+                    {
+                        waitMs = Player.SkillAvailable(Index);
+                    });
+                    
+                    if (waitMs <= 0)
+                    {
+                        UI.LogForm.Instance.AppendDebug($"[useSkill] ✓ Skill {Index} is available!");
+                        break;
+                    }
+                    
+                    // Wait a short amount before retrying (10ms for aggressive spam)
+                    await System.Threading.Tasks.Task.Delay(10);
+                }
+            }
+
+            // Use UI thread for Flash calls
+            UI.BotManager.Instance.Invoke((MethodInvoker)delegate
+            {
+                if (Player.EquippedClass.IndexOf("Chrono Shadow", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    Player.ForceUseSkill(Index);
+                }
+                else
+                {
+                    Player.UseSkill(Index);
+                }
+            });
         }
 
         public override string ToString()
         {
-            string text = Text;
-            if (text != null)
-                if (text.StartsWith("1: ") || text.StartsWith("2: ") || text.StartsWith("3: ") || text.StartsWith("4: "))
+            try
+            {
+                string text = Text;
+                if (text != null)
+                    if (text.StartsWith("1: ") || text.StartsWith("2: ") || text.StartsWith("3: ") || text.StartsWith("4: "))
+                    {
+                        text = text.Remove(0, 3);
+                    }
+                
+                // Don't call GetSkillName if we already have text set - it's expensive and can freeze UI
+                string skillName = text ?? Index;
+                string safeType = IsSafeMp ? "MP" : "HP";
+                string safeTypeS = SType == SafeType.GreaterThan ? ">=" : "<=";
+
+                string skillText;
+
+                if (Type == SkillType.Safe)
+                    skillText = $"[{safeType} {safeTypeS} {SafeValue}%] {Index}: {skillName}";
+                else if (Type == SkillType.Label)
+                    skillText = $"{Text}";
+                else //normal
+                    skillText = $"{Index}: {skillName}";
+                
+                // Build prefix with Wait and/or Dodge indicators
+                string prefix = "";
+                if (waitCd) prefix += "[Wait]";
+                if (dodgeAttack) prefix += "[Dodge]";
+                
+                return !string.IsNullOrEmpty(prefix) ? $"{prefix} {skillText}" : skillText;
+            }
+            catch (Exception ex)
+            {
+                // Fallback to just showing index if ToString fails
+                System.Diagnostics.Debug.WriteLine($"Error in Skill.ToString(): {ex.Message}");
+                return $"{Index}";
+            }
+        }
+
+        private async System.Threading.Tasks.Task<bool> WaitForDodge()
+        {
+            var tcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
+            
+            // Register this skill waiter with the queue
+            UI.LogForm.Instance.AppendDebug($"[WaitForDodge] Registering skill waiter for dodge...");
+            Grimoire.Botting.Commands.Combat.DodgeDetector.RegisterSkillWaiter(this);
+            
+            _pendingDodgeCompletion = tcs;
+            
+            try
+            {
+                // Set a timeout of 30 seconds
+                var timeoutTask = System.Threading.Tasks.Task.Delay(30000);
+                var completedTask = await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask);
+                
+                if (completedTask == timeoutTask)
                 {
-                    text = text.Remove(0, 3);
+                    UI.LogForm.Instance.AppendDebug($"[WaitForDodge] ⏱️ Timeout waiting for dodge (30s)");
+                    return false;  // Return false = timeout, no dodge detected
                 }
-            string skillName = text ?? Skill.GetSkillName(Index);
-            string safeType = IsSafeMp ? "MP" : "HP";
-            string safeTypeS = SType == SafeType.GreaterThan ? ">=" : "<=";
-
-            string skillText;
-
-
-            if (Type == SkillType.Safe)
-                skillText = $"[{safeType} {safeTypeS} {SafeValue}%] {Index}: {skillName}";
-            else if (Type == SkillType.Label)
-                skillText = $"{Text}";
-            else //normal
-                skillText = $"{Index}: {skillName}";
-            return waitCd ? $"[Wait] {skillText}" : skillText;
+                
+                return true;  // Return true = dodge detected
+            }
+            finally
+            {
+                // Ensure we always unregister
+                try { Grimoire.Botting.Commands.Combat.DodgeDetector.UnregisterSkillWaiter(this); } catch { }
+                _pendingDodgeCompletion = null;
+            }
+        }
+        
+        private System.Threading.Tasks.TaskCompletionSource<bool> _pendingDodgeCompletion;
+        
+        // Implement ISkillWaiter interface
+        public void NotifyDodge()
+        {
+            UI.LogForm.Instance.AppendDebug($"[WaitForDodge] 🛡️ Dodge notified to skill!");
+            _pendingDodgeCompletion?.TrySetResult(true);
         }
     }
 }

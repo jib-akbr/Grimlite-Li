@@ -14,6 +14,10 @@ namespace Grimoire.Botting.Commands.Combat
         public async Task Execute(IBotEngine instance)
 		{
 			BotData.BotState = BotData.State.Combat;
+			
+			// Reset skill index at the start of each attack
+			ResetSkillIndex();
+			
 			if (instance.Configuration.SkipAttack)
             {
                 if (Player.HasTarget) Player.CancelTarget();
@@ -51,6 +55,14 @@ namespace Grimoire.Botting.Commands.Combat
 
         private int _skillIndex;
         private int Index;
+        
+        /// <summary>Reset skill indices when bot stops</summary>
+        public static void ResetSkillIndex()
+        {
+            _staticSkillIndex = 0;
+        }
+        private static int _staticSkillIndex = 0;
+        
         private async Task UseSkillsSet(IBotEngine instance)
         {
             int ClassIndex = -1;
@@ -71,44 +83,45 @@ namespace Grimoire.Botting.Commands.Combat
                 }
                 return;
             }*/
-			if (ClassIndex != -1)
+			while (instance.IsRunning && Player.IsAlive && Player.IsLoggedIn && Player.HasTarget)
 			{
-				//with label
-				Skill s = instance.Configuration.Skills[this.Index];
-				if (s.Type == Skill.SkillType.Label)
+				if (ClassIndex != -1)
 				{
-					this.Index = ClassIndex;
-				}
+					//with label - use Index
+					Skill s = instance.Configuration.Skills[this.Index];
+					if (s.Type == Skill.SkillType.Label)
+					{
+						this.Index = ClassIndex;
+					}
 
-				s.ExecuteSkill();
+					await s.ExecuteSkill();
 
-				int index;
-				if (this.Index < Count)
-				{
-					int num3 = this.Index + 1;
-					this.Index = num3;
-					index = num3;
+					int index;
+					if (this.Index < Count)
+					{
+						int num3 = this.Index + 1;
+						this.Index = num3;
+						index = num3;
+					}
+					else
+					{
+						index = ClassIndex;
+					}
+					this.Index = index;
+					s = null;
 				}
 				else
 				{
-					index = ClassIndex;
+					//non label - use _skillIndex
+					Skill s = instance.Configuration.Skills[_skillIndex];
+
+					await s.ExecuteSkill();
+
+					int count = instance.Configuration.Skills.Count - 1;
+					_skillIndex = _skillIndex >= count ? 0 : ++_skillIndex;
 				}
-				this.Index = index;
-				s = null;
-			}
-			else
-			{
-				//non label
-				Skill s = instance.Configuration.Skills[_skillIndex];
-
-				s.ExecuteSkill();
-
-				int count = instance.Configuration.Skills.Count - 1;
-
-				_skillIndex = _skillIndex >= count ? 0 : ++_skillIndex;
 				await Task.Delay(instance.Configuration.SkillDelay);
 			}
-			await Task.Delay(instance.Configuration.SkillDelay);
         }
 
 	}

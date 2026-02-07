@@ -238,6 +238,7 @@
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdRest.cs" />
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdShortHunt.cs" />
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdSkillSet.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Combat\CmdWaitForDodge.cs" />
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdStartSkillSet.cs" />
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdStopSkillSet.cs" />
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdUseSkill.cs" />

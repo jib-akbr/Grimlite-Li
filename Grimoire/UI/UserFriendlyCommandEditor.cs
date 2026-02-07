@@ -5,6 +5,7 @@ using Grimoire.Botting.Commands.Quest;
 using Grimoire.Game;
 using Grimoire.Game.Data;
 using Grimoire.Properties;
+using Grimoire.Tools;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Properties;
@@ -181,6 +182,9 @@ namespace Grimoire.UI
                                 lblText = "Quest ID"; 
                                 tbText = qObj.Id.ToString(); 
                                 break;
+                            case "SkillSet":
+                                lblText = "Skill Set";
+                                break;
                         }
                         
                         // For aura commands, add "Multiple Auras" checkbox before Value4
@@ -330,6 +334,58 @@ namespace Grimoire.UI
                         // Skip Value4, Value5, Value6 as they're handled specially
                         if (item.Key == "Value4" || item.Key == "Value5" || item.Key == "Value6")
                             continue;
+                        
+                        // Special handling for SkillSet - create ComboBox instead of TextBox
+                        if (item.Key == "SkillSet")
+                        {
+                            var lblSkillSet = new DarkLabel()
+                            {
+                                Name = $"lbl{item.Key}{count}",
+                                Text = lblText,
+                                Size = new System.Drawing.Size(90, 20),
+                                Location = new System.Drawing.Point(25, currentY + 2),
+                                Anchor = AnchorStyles.Left | AnchorStyles.Top
+                            };
+                            
+                            var cbSkillSet = new DarkUI.Controls.DarkComboBox()
+                            {
+                                Name = $"cb{item.Key}{count}",
+                                Size = new System.Drawing.Size(160, 24),
+                                Location = new System.Drawing.Point(125, currentY - 2),
+                                Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left,
+                                DropDownStyle = ComboBoxStyle.DropDownList
+                            };
+                            
+                            // Populate with skillset options
+                            cbSkillSet.Items.Add("Auto Attack"); // Default auto attack option
+                            try
+                            {
+                                var skillSetNames = SkillSetManager.Instance.GetAllSkillSetNames();
+                                foreach (var skillSetName in skillSetNames)
+                                {
+                                    cbSkillSet.Items.Add(skillSetName);
+                                }
+                            }
+                            catch { }
+                            
+                            // Set selected value
+                            if (!string.IsNullOrEmpty(tbText) && cbSkillSet.Items.Contains(tbText))
+                                cbSkillSet.SelectedItem = tbText;
+                            else
+                                cbSkillSet.SelectedIndex = 0;
+                            
+                            commandEditor.Controls.Add(lblSkillSet);
+                            commandEditor.Controls.Add(cbSkillSet);
+                            
+                            // Store reference for later retrieval
+                            currentVars.Add(item.Key, new KeyValuePair<DarkLabel, DarkTextBox>(
+                                lblSkillSet,
+                                new DarkTextBox() { Name = cbSkillSet.Name, Text = cbSkillSet.SelectedItem?.ToString() ?? "" }));
+                            
+                            count++;
+                            currentY += 30;
+                            continue;
+                        }
                         
                         currentVars.Add(item.Key, new KeyValuePair<DarkLabel, DarkTextBox>(
                             new DarkLabel()
@@ -693,8 +749,18 @@ namespace Grimoire.UI
                         {
                             if (item.Key == "Quest")
                                 continue;
+                            // Special handling for SkillSet ComboBox
+                            if (item.Key == "SkillSet")
+                            {
+                                var cbSkillSet = commandEditor.Controls.OfType<DarkUI.Controls.DarkComboBox>()
+                                    .FirstOrDefault(c => c.Name.StartsWith("cbSkillSet"));
+                                if (cbSkillSet != null && cbSkillSet.SelectedItem != null)
+                                    content[item.Key] = cbSkillSet.SelectedItem.ToString();
+                                else
+                                    content[item.Key] = ""; // Default to empty
+                            }
                             // Special handling for Value6 (Operator ComboBox)
-                            if (item.Key == "Value6")
+                            else if (item.Key == "Value6")
                             {
                                 var cbOperator = commandEditor.Controls.OfType<DarkUI.Controls.DarkComboBox>()
                                     .FirstOrDefault(c => c.Name == "cbOperator2");

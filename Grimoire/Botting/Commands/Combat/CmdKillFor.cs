@@ -1,5 +1,6 @@
 using Grimoire.Botting.Commands.Item;
 using Grimoire.Game;
+using Grimoire.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,6 +36,7 @@ namespace Grimoire.Botting.Commands.Combat
 		public string KillPriority { get; set; } = "";
 		public bool AntiCounter { get; set; } = false;
 		public string QuestId { get; set; }
+		public string SkillSet { get; set; } = "Auto Attack";
 		public int DelayAfterKill { get; set; } = 500;
 
 		private Configuration config;
@@ -47,23 +49,54 @@ namespace Grimoire.Botting.Commands.Combat
 			CmdKill kill = new CmdKill {
 				Monster = Monster,
 				KillPriority = KillPriority,
+				SkillSet = SkillSet,
 				AntiCounter = AntiCounter
 			};
 
 			int id;
 			if (int.TryParse(QuestId, out id))
 			{
-				while (!Player.Quests.IsInProgress(id))
+				// Check if quest is available first (not already completed one-time quest)
+				if (!Player.Quests.IsAvailable(id))
 				{
+					LogForm.Instance.AppendDebug($"[CmdKillFor] Quest {id} unavailable (one-time quest already completed)");
+					return;
+				}
+
+				// Try to accept the quest if not already in progress
+				if (!Player.Quests.IsInProgress(id))
+				{
+					LogForm.Instance.AppendDebug($"[CmdKillFor] Accepting quest {id}...");
 					Player.Quests.Accept(id);
-					await Task.Delay(1000);
+					await instance.WaitUntil(() => Player.Quests.IsInProgress(id), timeout: 5);
+					LogForm.Instance.AppendDebug($"[CmdKillFor] Quest {id} accepted");
 				}
-				while (instance.IsRunning && Player.IsLoggedIn && Player.IsAlive && !Player.Quests.CanComplete(id))
+
+				// Kill until quest can be completed
+			int killCount = 0;
+			while (instance.IsRunning && Player.IsLoggedIn && Player.IsAlive)
+			{
+				// Check if quest is now completable
+				if (Player.Quests.CanComplete(id))
 				{
-					await kill.Execute(instance);
-					await Task.Delay(DelayAfterKill);
+					LogForm.Instance.AppendDebug($"[CmdKillFor] Quest {id} is now completable after {killCount} kills");
+					break;
 				}
+				
+				killCount++;
+				await kill.Execute(instance);
+				await Task.Delay(DelayAfterKill + 500); // Extra delay to let server update
 			}
+			
+			// Complete the quest if it can be completed
+			if (Player.Quests.CanComplete(id))
+			{
+				LogForm.Instance.AppendDebug($"[CmdKillFor] Completing quest {id}...");
+				Player.Quests.Complete(id);
+				await Task.Delay(1000);
+				LogForm.Instance.AppendDebug($"[CmdKillFor] Quest {id} completed!");
+			}
+		}
 			else
 			{
 				List<string> removedList = new List<string>();
@@ -75,6 +108,7 @@ namespace Grimoire.Botting.Commands.Combat
 
 				if (ItemType == ItemType.Items)
 				{
+					LogForm.Instance.AppendDebug($"[CmdKillFor] Item mode - Hunting for {ItemName} ({Quantity}x)");
 					while (instance.IsRunning && 
 						Player.IsLoggedIn && 
 						Player.IsAlive &&
@@ -84,6 +118,7 @@ namespace Grimoire.Botting.Commands.Combat
 						await kill.Execute(instance);
 						await Task.Delay(DelayAfterKill);
 					}
+					LogForm.Instance.AppendDebug($"[CmdKillFor] Item hunting complete!");
 				}
 				else
 				{

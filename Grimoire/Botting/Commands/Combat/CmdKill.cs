@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Grimoire.Game;
@@ -16,6 +17,7 @@ namespace Grimoire.Botting.Commands.Combat
         public string Monster { get; set; }
         public string KillPriority { get; set; } = "";
         public bool AntiCounter { get; set; } = false;
+        public string SkillSet { get; set; } = "";
 
         private bool onPause = false;
 
@@ -51,13 +53,119 @@ namespace Grimoire.Botting.Commands.Combat
                 Flash.FlashCall += AntiCounterHandler;
             }
 
-            //Console.WriteLine("Mon:" + Monster);
+            LogForm.Instance.AppendDebug($"[CmdKill] Attacking monster: {Monster}");
             Player.AttackMonster(Monster);
 
-            if (instance.Configuration.Skills.Count > 0)
-                await UseSkillsSet(instance);
+            // Load skillset if one is specified (same as BotManager does)
+            List<Skill> skillsToUse = new List<Skill>();
+            
+            // Treat empty string as "Auto Attack" (default behavior)
+            string skillSetToUse = string.IsNullOrEmpty(SkillSet) ? "Auto Attack" : SkillSet;
+            
+            if (skillSetToUse != "Auto Attack")
+            {
+                LogForm.Instance.AppendDebug($"[CmdKill] Loading skillset: {skillSetToUse}");
+                var skillSetData = SkillSetManager.Instance.LoadSkillSet(skillSetToUse);
+                if (skillSetData != null && skillSetData.Skills != null)
+                {
+                    foreach (var savedSkill in skillSetData.Skills)
+                    {
+                        var skill = new Skill
+                        {
+                            Index = savedSkill.Index,
+                            Text = savedSkill.Text,
+                            Type = (Skill.SkillType)savedSkill.Type,
+                            SType = (Skill.SafeType)savedSkill.SafeType,
+                            IsSafeMp = savedSkill.IsSafeMp,
+                            SafeValue = savedSkill.SafeValue,
+                            SType2 = (Skill.SafeType)savedSkill.SafeType2,
+                            IsSafeMp2 = savedSkill.IsSafeMp2,
+                            SafeValue2 = savedSkill.SafeValue2,
+                            waitCd = savedSkill.WaitCooldown,
+                            dodgeAttack = savedSkill.WaitDodge
+                        };
+                        skillsToUse.Add(skill);
+                    }
+                }
+            }
+            else
+            {
+                LogForm.Instance.AppendDebug($"[CmdKill] Using auto attack from main UI");
+            }
+            
+            // Use BotManager's skill execution system (it already works perfectly)
+            if (skillsToUse.Count > 0)
+            {
+                // Custom skillset - execute those skills
+                LogForm.Instance.AppendDebug($"[CmdKill] Executing custom skillset with {skillsToUse.Count} skills");
+                while (Player.IsAlive && World.IsMonsterAvailable(Monster) && instance.IsRunning)
+                {
+                    try
+                    {
+                        if (!Player.HasTarget)
+                        {
+                            Player.AttackMonster(Monster);
+                            await Task.Delay(200);
+                        }
 
-            Player.CancelTarget(); //timeout increased to 20 for Autoattack/empty skills users
+                        foreach (var skill in skillsToUse)
+                        {
+                            if (!instance.IsRunning || !Player.IsAlive || !World.IsMonsterAvailable(Monster))
+                                break;
+                            
+                            await skill.ExecuteSkill();
+                            await Task.Delay(50);
+                        }
+                        
+                        await Task.Delay(25);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogForm.Instance.AppendDebug($"[CmdKill] Error: {ex.Message}");
+                        await Task.Delay(100);
+                    }
+                }
+            }
+            else
+            {
+                // No custom skillset - execute skills 1, 2, 3, 4 (hardcoded auto attack)
+                LogForm.Instance.AppendDebug($"[CmdKill] Using hardcoded auto attack skills 1, 2, 3, 4");
+                int[] autoAttackSkills = { 1, 2, 3, 4 };
+                
+                while (Player.IsAlive && World.IsMonsterAvailable(Monster) && instance.IsRunning)
+                {
+                    try
+                    {
+                        // Ensure we have a target
+                        if (!Player.HasTarget && World.AvailableMonsters.Count > 0)
+                        {
+                            Player.AttackMonster(Monster);
+                            await Task.Delay(200);
+                        }
+
+                        // Execute skills 1, 2, 3, 4 in sequence
+                        foreach (int skillIndex in autoAttackSkills)
+                        {
+                            if (!instance.IsRunning || !Player.IsAlive || !World.IsMonsterAvailable(Monster))
+                                break;
+                            
+                            Player.UseSkill(skillIndex.ToString());
+                            await Task.Delay(50);
+                        }
+                        
+                        await Task.Delay(25);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogForm.Instance.AppendDebug($"[CmdKill] Error: {ex.Message}");
+                        await Task.Delay(100);
+                    }
+                }
+            }
+            
+            LogForm.Instance.AppendDebug($"[CmdKill] Combat finished");
+
+            Player.CancelTarget();
             await instance.WaitUntil(() => !Player.HasTarget && !onPause, timeout: 20);
 
             if (AntiCounter)
@@ -71,118 +179,6 @@ namespace Grimoire.Botting.Commands.Combat
 
         private CancellationTokenSource _cts;
 
-        private static int Index = -1;
-
-        private static string _lastBotSkill;
-        private async Task UseSkillsSet(IBotEngine instance)
-        {
-            this._cts = new CancellationTokenSource();
-
-            int ClassIndex = 0;
-            bool flag = BotData.SkillSet != null && BotData.SkillSet.ContainsKey("[" + BotData.BotSkill + "]");
-            if (flag)
-                ClassIndex = BotData.SkillSet["[" + BotData.BotSkill + "]"] + 1;
-
-            int Count = instance.Configuration.Skills.Count - 1;
-            if (Index > Count)
-            {
-                Index = ClassIndex;
-                //LogForm.Instance.AppendDebug($"Index is higher than CurrentSkillcount, Sets index as {Index}");
-            }
-            if (_lastBotSkill != BotData.BotSkill)
-            {// Reset index only when skillset changed
-                if (ClassIndex != 0)
-                {
-                    Index = ClassIndex;
-                }
-                _lastBotSkill = BotData.BotSkill;
-                //LogForm.Instance.AppendDebug($"Skillset Used  : {BotData.BotSkill}");
-            }
-
-
-            while (!this._cts.IsCancellationRequested && !onPause && Player.HasTarget && Player.GetTargetHealth() > 0)
-            {
-                switch (this.Monster.ToLower())
-                {
-                    case "escherion":
-                        if (World.IsMonsterAvailable("Staff of Inversion"))
-                            Player.AttackMonster("Staff of Inversion");
-                        break;
-                    case "commander gallaeon":
-                        if (World.IsMonsterAvailable("hydra crew"))
-                            Player.AttackMonster("hydra crew");
-                        break;
-                    case "vath":
-                        if (World.IsMonsterAvailable("Stalagbite"))
-                            Player.AttackMonster("Stalagbite");
-                        break;
-                    case "ultra avatar tyndarius":
-                        if (World.IsMonsterAvailable("Ultra Fire Orb"))
-                            Player.AttackMonster("Ultra Fire Orb");
-                        break;
-                }
-
-                if (KillPriority.Length > 0)
-                {
-                    List<string> priorities = new List<string>();
-                    if (KillPriority.Contains(","))
-                    {
-                        foreach (string p in KillPriority.Split(','))
-                        {
-                            priorities.Add(p);
-                        }
-                    }
-                    else
-                    {
-                        priorities.Add(KillPriority);
-                    }
-
-                    foreach (string p in priorities)
-                    {
-                        if (World.IsMonsterAvailable(p))
-                        {
-                            Player.AttackMonster(p);
-                            break;
-                        }
-                    }
-                }
-
-                Skill s = instance.Configuration.Skills[Index];
-                if (s.Type == Skill.SkillType.Label)
-                {
-                    // Check if it's a skill set marker (like [AM]) or an aura statement command
-                    if (string.IsNullOrEmpty(s.Index) || (!s.Index.StartsWith("Cmd")))
-                    {
-                        //Reset back when meet with SkillLabel marker
-                        Index = ClassIndex;
-                        continue;
-                    }
-                    else
-                    {
-                        // It's an aura statement command (CmdPlayerAuraLessThan, etc.) - execute it
-                        s.ExecuteSkill();
-                        Index = (Index < Count) ? Index + 1 : ClassIndex;
-                        await Task.Delay(instance.Configuration.SkillDelay);
-                        continue;
-                    }
-                }
-
-                if (instance.Configuration.WaitForSkill || s.waitCd)
-                {
-                    BotManager.Instance.OnSkillIndexChanged(Index);
-                    await Task.Delay(Player.SkillAvailable(s.Index));
-                }
-
-                s.ExecuteSkill();
-
-                Index = (Index < Count) ? Index + 1 : ClassIndex;
-
-                await Task.Delay(instance.Configuration.SkillDelay);
-
-            }
-
-        }
-
         private void AntiCounterHandler(AxShockwaveFlashObjects.AxShockwaveFlash flash, string function, params object[] args)
         {
             string msg = args[0].ToString();
@@ -192,9 +188,42 @@ namespace Grimoire.Botting.Commands.Combat
                 dynamic packet = JsonConvert.DeserializeObject<dynamic>(msg);
                 string type = packet["params"].type;
                 dynamic data = packet["params"].dataObj;
+                UI.LogForm.Instance.AppendDebug($"[CmdKill] pext packet received - type: {type}");
                 if (type == "json")
+                {
+                    UI.LogForm.Instance.AppendDebug($"[CmdKill] JSON packet - cmd: {data.cmd}");
                     if (data.cmd == "ct")
                     {
+                        UI.LogForm.Instance.AppendDebug($"[CmdKill] ct packet detected");
+                        // Check for dodge actions in sara array
+                        JArray sara = (JArray)data.sara;
+                        if (sara != null)
+                        {
+                            UI.LogForm.Instance.AppendDebug($"[CmdKill] Sara array found with {sara.Count} actions");
+                            foreach (JObject action in sara)
+                            {
+                                JObject actionResult = (JObject)action["actionResult"];
+                                if (actionResult != null)
+                                {
+                                    string actionType = actionResult["type"]?.ToString();
+                                    string targetInfo = actionResult["tInf"]?.ToString();
+                                    
+                                    UI.LogForm.Instance.AppendDebug($"[CmdKill] Combat action - Type: {actionType}, Target: {targetInfo}");
+                                    
+                                    // Check if player dodged (tInf starts with "p:")
+                                    if (actionType == "dodge" && targetInfo != null && targetInfo.StartsWith("p:"))
+                                    {
+                                        UI.LogForm.Instance.AppendDebug($"[CmdKill] 🛡️ DODGE DETECTED! Notifying DodgeDetector...");
+                                        Grimoire.Botting.Commands.Combat.DodgeDetector.NotifyDodge(targetInfo);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            UI.LogForm.Instance.AppendDebug($"[CmdKill] No sara array in ct packet");
+                        }
+                        
                         JArray anims = (JArray)data.anims;
                         if (anims != null)
                             if (anims[0]["msg"].ToString().ToLower().Contains("prepares a counter attack"))
@@ -217,6 +246,7 @@ namespace Grimoire.Botting.Commands.Combat
                                 }
                             }
                     }
+                }
             }
         }
 

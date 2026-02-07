@@ -191,6 +191,8 @@ namespace Grimoire.Botting
             this.StopCommands();
             TauntCycle.Reset();
             OptionsManager.SetLagKiller(Configuration.Instance.keepLagKiller);
+            // Reset skill indices when bot stops
+            Grimoire.Botting.Commands.Combat.CmdAttack.ResetSkillIndex();
         }
         public bool paused
         {

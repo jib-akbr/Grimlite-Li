@@ -18,6 +18,11 @@ namespace Grimoire.Tools
         private readonly string _collectionPath;
         private SkillSetsCollection _collection;
 
+        /// <summary>
+        /// Event fired when a skillset is saved
+        /// </summary>
+        public event EventHandler SkillSetSaved;
+
         public static SkillSetManager Instance
         {
             get
@@ -32,7 +37,9 @@ namespace Grimoire.Tools
 
         public SkillSetManager()
         {
-            _skillsetsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Skillsets");
+            // Save skillsets to AppData instead of bin folder so builds don't reset them
+            string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Grimoire");
+            _skillsetsDir = Path.Combine(appDataPath, "Skillsets");
             _collectionPath = Path.Combine(_skillsetsDir, "skillsets.json");
             
             // Ensure directory exists
@@ -51,18 +58,31 @@ namespace Grimoire.Tools
         {
             try
             {
-                if (File.Exists(_collectionPath))
+                if (!File.Exists(_collectionPath))
+                {
+                    _collection = new SkillSetsCollection();
+                    return;
+                }
+
+                try
                 {
                     string json = File.ReadAllText(_collectionPath);
                     _collection = JsonConvert.DeserializeObject<SkillSetsCollection>(json) ?? new SkillSetsCollection();
                 }
-                else
+                catch (IOException ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"IOException loading skillsets: {ex.Message}");
+                    _collection = new SkillSetsCollection();
+                }
+                catch (JsonException ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"JsonException loading skillsets: {ex.Message}");
                     _collection = new SkillSetsCollection();
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Error in LoadCollection: {ex.Message}");
                 _collection = new SkillSetsCollection();
             }
         }
@@ -76,11 +96,37 @@ namespace Grimoire.Tools
             {
                 _collection.LastUpdated = DateTime.Now;
                 string json = JsonConvert.SerializeObject(_collection, Formatting.Indented);
-                File.WriteAllText(_collectionPath, json);
+                
+                try
+                {
+                    // Try to write to temp file first, then replace
+                    string tempPath = _collectionPath + ".tmp";
+                    File.WriteAllText(tempPath, json);
+                    
+                    // If temp write succeeded, replace original
+                    if (File.Exists(_collectionPath))
+                    {
+                        File.Delete(_collectionPath);
+                    }
+                    File.Move(tempPath, _collectionPath);
+                }
+                catch (IOException ex)
+                {
+                    // Fallback: just overwrite directly if atomic write fails
+                    System.Diagnostics.Debug.WriteLine($"IOException during atomic write: {ex.Message}, retrying direct write");
+                    try
+                    {
+                        File.WriteAllText(_collectionPath, json);
+                    }
+                    catch (Exception ex2)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Failed to save skillsets collection: {ex2.Message}");
+                    }
+                }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error saving skillsets collection: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error in SaveCollection: {ex.Message}");
             }
         }
 
@@ -103,6 +149,10 @@ namespace Grimoire.Tools
                 _collection.SkillSets.Add(skillSetData);
 
                 SaveCollection();
+                
+                // Notify subscribers that a skillset was saved
+                SkillSetSaved?.Invoke(this, EventArgs.Empty);
+                
                 return true;
             }
             catch (Exception ex)
@@ -170,6 +220,10 @@ namespace Grimoire.Tools
                 if (_collection.SkillSets.RemoveAll(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) > 0)
                 {
                     SaveCollection();
+                    
+                    // Notify subscribers that a skillset was deleted
+                    SkillSetSaved?.Invoke(this, EventArgs.Empty);
+                    
                     return true;
                 }
                 return false;

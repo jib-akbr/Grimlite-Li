@@ -1805,7 +1805,8 @@ namespace Grimoire.UI
                             SType2 = (Skill.SafeType)s.SafeType2,
                             IsSafeMp2 = s.IsSafeMp2,
                             SafeValue2 = s.SafeValue2,
-                            waitCd = s.WaitCooldown
+                            waitCd = s.WaitCooldown,
+                            dodgeAttack = s.WaitDodge
                         }).ToList();
                         isCustomSkillset = true;
                     }
@@ -1848,14 +1849,14 @@ namespace Grimoire.UI
                                 (listSkill[i].Text != null && listSkill[i].Text.Contains("|")))
                             {
                                 // Execute aura statement commands even without target
-                                listSkill[i].ExecuteSkill();
+                                await listSkill[i].ExecuteSkill();
                                 await Task.Delay(100);
                             }
                             // Skip to next skill immediately for section markers
                         }
                         else if (Player.HasTarget)
                         {
-                            listSkill[i].ExecuteSkill();
+                            await listSkill[i].ExecuteSkill();
                             await Task.Delay(100);
                         }
                     }
@@ -1865,6 +1866,10 @@ namespace Grimoire.UI
                 }
                 else
                 {
+                    // Reset dodge detector when auto attack is disabled
+                    UI.LogForm.Instance.AppendDebug($"[chkAutoAttack] ⏹️ Auto attack disabled - resetting skills");
+                    Grimoire.Botting.Commands.Combat.DodgeDetector.Reset();
+                    
                     await Task.Delay(5000);
                     BotData.BotState = BotData.State.Combat;
                 }
@@ -1909,19 +1914,26 @@ namespace Grimoire.UI
 
         public void RefreshAutoAttackDropdown()
         {
-            cbAutoAttack.Items.Clear();
-            cbAutoAttack.Items.Add("Auto Attack");
-            
-            var skillSetNames = SkillSetManager.Instance.GetAllSkillSetNames();
-            foreach (var name in skillSetNames)
+            try
             {
-                cbAutoAttack.Items.Add(name);
+                cbAutoAttack.Items.Clear();
+                cbAutoAttack.Items.Add("Auto Attack");
+                
+                var skillSetNames = SkillSetManager.Instance.GetAllSkillSetNames();
+                foreach (var name in skillSetNames)
+                {
+                    cbAutoAttack.Items.Add(name);
+                }
+                
+                // Set "Auto Attack" as default selection
+                if (cbAutoAttack.Items.Count > 0)
+                {
+                    cbAutoAttack.SelectedIndex = 0;
+                }
             }
-            
-            // Set "Auto Attack" as default selection
-            if (cbAutoAttack.Items.Count > 0)
+            catch (Exception ex)
             {
-                cbAutoAttack.SelectedIndex = 0;
+                LogForm.Instance?.AppendDebug($"[SkillSet] Error refreshing auto attack dropdown: {ex.Message}");
             }
         }
 

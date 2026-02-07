@@ -250,6 +250,7 @@ namespace Grimoire.UI
 		private DarkLabel lblSafePercent;
 		private DarkLabel lblHpOr;
 		private DarkCheckBox chkSafeSkillMp;
+		private DarkCheckBox chkSkillsWait;
 		private DarkComboBox cbSafeSkillType;
 		private DarkLabel lblSkillDelay;
 		private DarkNumericUpDown numSkillDelay;
@@ -720,6 +721,7 @@ namespace Grimoire.UI
             this.lblSafePercent = new DarkUI.Controls.DarkLabel();
             this.lblHpOr = new DarkUI.Controls.DarkLabel();
             this.chkSafeSkillMp = new DarkUI.Controls.DarkCheckBox();
+            this.chkSkillsWait = new DarkUI.Controls.DarkCheckBox();
             this.cbSafeSkillType = new DarkUI.Controls.DarkComboBox();
             this.lblSkillDelay = new DarkUI.Controls.DarkLabel();
             this.numSkillDelay = new DarkUI.Controls.DarkNumericUpDown();
@@ -5279,13 +5281,14 @@ namespace Grimoire.UI
             this.grpAura.Controls.Add(this.btnAuraEquals);
             this.grpAura.Controls.Add(this.btnAuraGreater);
             this.grpAura.Controls.Add(this.btnAuraLess);
+            this.grpAura.Controls.Add(this.chkSkillsWait);
             this.grpAura.Controls.Add(this.chkMultiAura);
             this.grpAura.Controls.Add(this.txtAuraName2);
             this.grpAura.Controls.Add(this.numAuraValue2);
             this.grpAura.Controls.Add(this.cbAuraOperator);
             this.grpAura.Location = new System.Drawing.Point(6, 6);
             this.grpAura.Name = "grpAura";
-            this.grpAura.Size = new System.Drawing.Size(260, 270);
+            this.grpAura.Size = new System.Drawing.Size(260, 305);
             this.grpAura.TabIndex = 0;
             this.grpAura.TabStop = false;
             this.grpAura.Text = "Aura";
@@ -5443,6 +5446,16 @@ namespace Grimoire.UI
             this.btnAuraLess.Text = "Aura Less Than";
             this.btnAuraLess.Click += new System.EventHandler(this.btnAuraLess_Click);
             // 
+            // chkSkillsWait
+            // 
+            this.chkSkillsWait.AutoSize = true;
+            this.chkSkillsWait.Location = new System.Drawing.Point(110, 210);
+            this.chkSkillsWait.Name = "chkSkillsWait";
+            this.chkSkillsWait.Size = new System.Drawing.Size(105, 17);
+            this.chkSkillsWait.TabIndex = 13;
+            this.chkSkillsWait.Text = "Wait";
+            this.chkSkillsWait.Visible = true;
+            // 
             // chkMultiAura
             // 
             this.chkMultiAura.Checked = false;
@@ -5583,7 +5596,7 @@ namespace Grimoire.UI
             this.grpAddSkills.Controls.Add(this.numSkillDelay);
             this.grpAddSkills.Location = new System.Drawing.Point(272, 132);
             this.grpAddSkills.Name = "grpAddSkills";
-            this.grpAddSkills.Size = new System.Drawing.Size(186, 128);
+            this.grpAddSkills.Size = new System.Drawing.Size(230, 128);
             this.grpAddSkills.TabIndex = 3;
             this.grpAddSkills.TabStop = false;
             this.grpAddSkills.Text = "Skill Set";

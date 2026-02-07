@@ -198,7 +198,7 @@ namespace Grimoire.UI
                                 if (item.Type == Skill.SkillType.Label && 
                                     (item.Index.StartsWith("CmdPlayerAura") || item.Index.StartsWith("CmdTargetAura")))
                                 {
-                                    item.ExecuteSkill();
+                                    await item.ExecuteSkill();
                                 }
                             }
                         }
@@ -247,7 +247,7 @@ namespace Grimoire.UI
                                 if (!_skillSetMonitorRunning) break;
                                 
                                 // Execute the skill (works for both Label-type and regular skills)
-                                item.ExecuteSkill();
+                                await item.ExecuteSkill();
                                 
                                 // Small delay between skill executions
                                 await Task.Delay(50);
@@ -269,6 +269,21 @@ namespace Grimoire.UI
             _skillSetMonitorRunning = false;
         }
 
+        public ListBox.ObjectCollection GetLstSkills()
+        {
+            if (lstSkills == null || lstSkills.IsDisposed)
+                return null;
+            
+            try
+            {
+                return lstSkills.Items;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private void BotManager_Load(object sender, EventArgs e)
         {
             lstBoosts.DisplayMember = "Text";
@@ -288,10 +303,21 @@ namespace Grimoire.UI
             if (font != null)
                 this.Font = new Font(font, 8.25f, FontStyle.Regular, GraphicsUnit.Point, 0);
             lstCommands.ItemHeight = int.Parse(c.Get("CommandsSize") ?? "60");
-            // Initialize saved skillsets dropdown
-            RefreshSavedSkillSets();
             lstCommands.Font = new Font(font, lstCommands.ItemHeight / 4 - (float)6.5, FontStyle.Regular, GraphicsUnit.Point, 0);
             lstCommands.ItemHeight = lstCommands.ItemHeight / 4;
+            
+            // Defer skillset loading to after form is shown to avoid blocking UI
+            this.Shown += (s, e2) => 
+            {
+                try
+                {
+                    RefreshSavedSkillSets();
+                }
+                catch (Exception ex)
+                {
+                    LogForm.Instance?.AppendDebug($"[SkillSet] Error loading skillsets on form shown: {ex.Message}");
+                }
+            };
         }
 
         private void TextboxEnter(object sender, EventArgs e)
@@ -3602,7 +3628,8 @@ namespace Grimoire.UI
                         SafeType2 = (int)skill.SType2,
                         IsSafeMp2 = skill.IsSafeMp2,
                         SafeValue2 = skill.SafeValue2,
-                        WaitCooldown = skill.waitCd
+                        WaitCooldown = skill.waitCd,
+                        WaitDodge = skill.dodgeAttack
                     });
                 }
             }
@@ -3644,7 +3671,8 @@ namespace Grimoire.UI
                     SType2 = (Skill.SafeType)savedSkill.SafeType2,
                     IsSafeMp2 = savedSkill.IsSafeMp2,
                     SafeValue2 = savedSkill.SafeValue2,
-                    waitCd = savedSkill.WaitCooldown
+                    waitCd = savedSkill.WaitCooldown,
+                    dodgeAttack = savedSkill.WaitDodge
                 };
                 lstSkills.Items.Add(skill);
             }
@@ -3678,43 +3706,91 @@ namespace Grimoire.UI
 
         private void cbSavedSkillSets_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (cbSavedSkillSets.SelectedItem == null) return;
-            
-            string selectedSkillSetName = cbSavedSkillSets.SelectedItem.ToString();
-            var skillSetData = SkillSetManager.Instance.LoadSkillSet(selectedSkillSetName);
-            
-            if (skillSetData == null || skillSetData.Skills == null) return;
-            
-            // Clear the current skills list
-            lstSkills.Items.Clear();
-            
-            // Load the saved skills
-            foreach (var savedSkill in skillSetData.Skills)
+            try
             {
-                var skill = new Skill
+                if (cbSavedSkillSets.SelectedItem == null) return;
+                
+                string selectedSkillSetName = cbSavedSkillSets.SelectedItem.ToString();
+                
+                if (string.IsNullOrEmpty(selectedSkillSetName)) return;
+                
+                try
                 {
-                    Index = savedSkill.Index,
-                    Text = savedSkill.Text,
-                    Type = (Skill.SkillType)savedSkill.Type,
-                    SType = (Skill.SafeType)savedSkill.SafeType,
-                    IsSafeMp = savedSkill.IsSafeMp,
-                    SafeValue = savedSkill.SafeValue,
-                    SType2 = (Skill.SafeType)savedSkill.SafeType2,
-                    IsSafeMp2 = savedSkill.IsSafeMp2,
-                    SafeValue2 = savedSkill.SafeValue2,
-                    waitCd = savedSkill.WaitCooldown
-                };
-                lstSkills.Items.Add(skill);
+                    var skillSetData = SkillSetManager.Instance.LoadSkillSet(selectedSkillSetName);
+                    
+                    if (skillSetData == null || skillSetData.Skills == null) return;
+                    
+                    // Clear the current skills list
+                    lstSkills.Items.Clear();
+                    
+                    // Load the saved skills
+                    foreach (var savedSkill in skillSetData.Skills)
+                    {
+                        try
+                        {
+                            var skill = new Skill
+                            {
+                                Index = savedSkill.Index,
+                                Text = savedSkill.Text,
+                                Type = (Skill.SkillType)savedSkill.Type,
+                                SType = (Skill.SafeType)savedSkill.SafeType,
+                                IsSafeMp = savedSkill.IsSafeMp,
+                                SafeValue = savedSkill.SafeValue,
+                                SType2 = (Skill.SafeType)savedSkill.SafeType2,
+                                IsSafeMp2 = savedSkill.IsSafeMp2,
+                                SafeValue2 = savedSkill.SafeValue2,
+                                waitCd = savedSkill.WaitCooldown,
+                                dodgeAttack = savedSkill.WaitDodge
+                            };
+                            lstSkills.Items.Add(skill);
+                        }
+                        catch (Exception ex)
+                        {
+                            LogForm.Instance?.AppendDebug($"[SkillSet] Error adding skill: {ex.Message}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogForm.Instance?.AppendDebug($"[SkillSet] Error loading skillset '{selectedSkillSetName}': {ex.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogForm.Instance?.AppendDebug($"[SkillSet] Unexpected error in cbSavedSkillSets_SelectedIndexChanged: {ex.Message}");
             }
         }
 
         private void RefreshSavedSkillSets()
         {
-            cbSavedSkillSets.Items.Clear();
-            var skillSetNames = SkillSetManager.Instance.GetAllSkillSetNames();
-            foreach (var name in skillSetNames)
+            try
             {
-                cbSavedSkillSets.Items.Add(name);
+                if (cbSavedSkillSets == null) return;
+                
+                cbSavedSkillSets.Items.Clear();
+                
+                try
+                {
+                    var skillSetNames = SkillSetManager.Instance.GetAllSkillSetNames();
+                    if (skillSetNames != null)
+                    {
+                        foreach (var name in skillSetNames)
+                        {
+                            if (!string.IsNullOrEmpty(name))
+                            {
+                                cbSavedSkillSets.Items.Add(name);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogForm.Instance?.AppendDebug($"[SkillSet] Error getting skillset names: {ex.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogForm.Instance?.AppendDebug($"[SkillSet] Error refreshing saved skill sets: {ex.Message}");
             }
         }
 
@@ -3866,7 +3942,8 @@ namespace Grimoire.UI
                 Text = skillName,
                 Index = skillIndex.ToString(),
                 Type = cbAuraHpMp.SelectedIndex > 0 ? Skill.SkillType.Safe : Skill.SkillType.Normal,
-                waitCd = (ModifierKeys & Keys.Alt) == Keys.Alt
+                waitCd = chkSkillsWait.Checked || (ModifierKeys & Keys.Alt) == Keys.Alt,
+                dodgeAttack = false
             };
             
             // Add HP/MP conditions if selected
@@ -4083,35 +4160,77 @@ namespace Grimoire.UI
 
         private void btnSkillsAddSkillSet_Click(object sender, EventArgs e)
         {
-            if (txtSkillsSkillSet.Text == "Skill Set Name" || string.IsNullOrEmpty(txtSkillsSkillSet.Text)) return;
-            
-            // Extract SavedSkill objects from the current lstSkills
-            List<SavedSkill> skillsToSave = new List<SavedSkill>();
-            foreach (var item in lstSkills.Items)
+            try
             {
-                if (item is Skill skill)
+                if (txtSkillsSkillSet.Text == "Skill Set Name" || string.IsNullOrEmpty(txtSkillsSkillSet.Text)) return;
+                
+                string skillSetName = txtSkillsSkillSet.Text;
+                
+                // Extract SavedSkill objects from the current lstSkills
+                List<SavedSkill> skillsToSave = new List<SavedSkill>();
+                foreach (var item in lstSkills.Items)
                 {
-                    skillsToSave.Add(new SavedSkill
+                    if (item is Skill skill)
                     {
-                        Index = skill.Index,
-                        Text = skill.Text,
-                        Type = (int)skill.Type,
-                        SafeType = (int)skill.SType,
-                        IsSafeMp = skill.IsSafeMp,
-                        SafeValue = skill.SafeValue,
-                        WaitCooldown = skill.waitCd
-                    });
+                        try
+                        {
+                            skillsToSave.Add(new SavedSkill
+                            {
+                                Index = skill.Index,
+                                Text = skill.Text,
+                                Type = (int)skill.Type,
+                                SafeType = (int)skill.SType,
+                                IsSafeMp = skill.IsSafeMp,
+                                SafeValue = skill.SafeValue,
+                                SafeType2 = (int)skill.SType2,
+                                IsSafeMp2 = skill.IsSafeMp2,
+                                SafeValue2 = skill.SafeValue2,
+                                WaitCooldown = skill.waitCd,
+                                WaitDodge = skill.dodgeAttack
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            LogForm.Instance?.AppendDebug($"[SkillSet] Error extracting skill: {ex.Message}");
+                        }
+                    }
                 }
+                
+                // Save the skillset
+                if (!SkillSetManager.Instance.SaveSkillSet(skillSetName, skillsToSave))
+                {
+                    MessageBox.Show("Failed to save skill set", "Error");
+                    return;
+                }
+                
+                // Refresh the dropdown
+                try
+                {
+                    RefreshSavedSkillSets();
+                }
+                catch (Exception ex)
+                {
+                    LogForm.Instance?.AppendDebug($"[SkillSet] Error refreshing skill sets: {ex.Message}");
+                }
+                
+                try
+                {
+                    Root.Instance?.RefreshAutoAttackDropdown();
+                }
+                catch (Exception ex)
+                {
+                    LogForm.Instance?.AppendDebug($"[SkillSet] Error refreshing auto attack dropdown: {ex.Message}");
+                }
+                
+                // Clear the textbox
+                txtSkillsSkillSet.Text = "Skill Set Name";
+                MessageBox.Show($"Skill set '{skillSetName}' saved successfully", "Success");
             }
-            
-            // Save the skillset
-            SkillSetManager.Instance.SaveSkillSet(txtSkillsSkillSet.Text, skillsToSave);
-            
-            // Refresh the dropdown
-            RefreshSavedSkillSets();
-            
-            // Clear the textbox
-            txtSkillsSkillSet.Text = "Skill Set Name";
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error saving skill set: {ex.Message}", "Error");
+                LogForm.Instance?.AppendDebug($"[SkillSet] Exception: {ex}");
+            }
         }
 
         private void btnAddSkillToList_Click(object sender, EventArgs e)
@@ -4122,7 +4241,7 @@ namespace Grimoire.UI
                 Text = Skill.GetSkillName(index),
                 Index = index,
                 Type = Skill.SkillType.Normal,
-                waitCd = (ModifierKeys & Keys.Alt) == Keys.Alt
+                waitCd = chkSkillsWait.Checked || (ModifierKeys & Keys.Alt) == Keys.Alt
             }, (ModifierKeys & Keys.Control) == Keys.Control);
         }
 
@@ -4134,7 +4253,8 @@ namespace Grimoire.UI
                 {
                     Text = Skill.GetSkillName(i.ToString()),
                     Index = i.ToString(),
-                    Type = Skill.SkillType.Normal
+                    Type = Skill.SkillType.Normal,
+                    waitCd = chkSkillsWait.Checked || (ModifierKeys & Keys.Alt) == Keys.Alt
                 }, false);
             }
         }
