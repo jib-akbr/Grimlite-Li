@@ -45,12 +45,17 @@ namespace Grimoire.Botting.Commands.Combat
             }
             
             // Use the async skill execution with dodge logic
-            if (isCSH())
+            if (Force || isCSH())
                 Player.ForceUseSkill(Index);
+            else if (int.TryParse(Index, out int skillIndex) && skillIndex < instance.Configuration.Skills.Count)
+            {
+                Skill skill = instance.Configuration.Skills[skillIndex];
+                await skill.useSkill(Index);
+            }
             else
             {
-                Skill skill = instance.Configuration.Skills[int.Parse(Index)];
-                await skill.useSkill(Index);
+                // Fallback to ForceUseSkill if skill not found in config
+                Player.ForceUseSkill(Index);
             }
         }
 
