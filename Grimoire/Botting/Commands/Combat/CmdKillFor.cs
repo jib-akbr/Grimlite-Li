@@ -56,86 +56,168 @@ namespace Grimoire.Botting.Commands.Combat
 			int id;
 			if (int.TryParse(QuestId, out id))
 			{
-				// Check if quest is available first (not already completed one-time quest)
-				if (!Player.Quests.IsAvailable(id))
-				{
-					LogForm.Instance.AppendDebug($"[CmdKillFor] Quest {id} unavailable (one-time quest already completed)");
-					return;
-				}
+				// Wait for quests to load from server
+			await instance.WaitUntil(() => Player.Quests != null, timeout: 10);
 
-				// Try to accept the quest if not already in progress
-				if (!Player.Quests.IsInProgress(id))
-				{
-					LogForm.Instance.AppendDebug($"[CmdKillFor] Accepting quest {id}...");
-					Player.Quests.Accept(id);
-					await instance.WaitUntil(() => Player.Quests.IsInProgress(id), timeout: 5);
-					LogForm.Instance.AppendDebug($"[CmdKillFor] Quest {id} accepted");
-				}
-
-				// Kill until quest can be completed
-			int killCount = 0;
-			while (instance.IsRunning && Player.IsLoggedIn && Player.IsAlive)
+			// Try to accept the quest if not already in progress
+			if (!Player.Quests.IsInProgress(id))
 			{
-				// Check if quest is now completable
-				if (Player.Quests.CanComplete(id))
+				LogForm.Instance.AppendDebug($"[CmdKillFor] Attempting to accept quest {id}...");
+				
+				// Retry acceptance multiple times
+				int retries = 0;
+				while (!Player.Quests.IsInProgress(id) && retries < 5 && instance.IsRunning)
 				{
-					LogForm.Instance.AppendDebug($"[CmdKillFor] Quest {id} is now completable after {killCount} kills");
-					break;
+					Player.Quests.Accept(id);
+					await Task.Delay(800);
+					retries++;
+					LogForm.Instance.AppendDebug($"[CmdKillFor] Quest accept attempt {retries}/5");
 				}
 				
+				if (Player.Quests.IsInProgress(id))
+				{
+					LogForm.Instance.AppendDebug($"[CmdKillFor] Quest {id} accepted successfully!");
+				}
+				else
+				{
+					LogForm.Instance.AppendDebug($"[CmdKillFor] WARNING: Quest {id} may not be accepted. Continuing anyway...");
+				}
+			}
+			else
+			{
+				LogForm.Instance.AppendDebug($"[CmdKillFor] Quest {id} already in progress");
+			}
+
+			// Kill until quest can be completed
+			int killCount = 0;
+			bool foundRequired = false;
+			
+			// Create a background task to check inventory every 2 seconds while killing
+			var inventoryCheckTask = Task.Run(async () =>
+			{
+				while (!foundRequired && instance.IsRunning)
+				{
+					if (!string.IsNullOrEmpty(ItemName) && int.TryParse(Quantity, out int requiredQty))
+					{
+						var item = Player.TempInventory.Items.FirstOrDefault(i => i.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase));
+						int currentCount = item?.Quantity ?? 0;
+						
+						if (currentCount >= requiredQty)
+						{
+							LogForm.Instance.AppendDebug($"[CmdKillFor] Got {currentCount}/{requiredQty} {ItemName}! Moving to next command.");
+							foundRequired = true;
+							Player.CancelTarget();
+							break;
+						}
+						
+						LogForm.Instance.AppendDebug($"[CmdKillFor] Current {ItemName} count: {currentCount}/{requiredQty}");
+					}
+					
+					await Task.Delay(2000);
+				}
+			});
+			
+			// Kill loop runs normally while background task checks inventory
+			while (instance.IsRunning && Player.IsLoggedIn && Player.IsAlive && !foundRequired)
+			{
 				killCount++;
 				await kill.Execute(instance);
-				await Task.Delay(DelayAfterKill + 500); // Extra delay to let server update
+				await Task.Delay(DelayAfterKill + 1000);
 			}
 			
-			// Complete the quest if it can be completed
+			// Wait for the background check task to complete
+			await inventoryCheckTask;
+			
+			// Check if quest can be completed after hunting
 			if (Player.Quests.CanComplete(id))
 			{
-				LogForm.Instance.AppendDebug($"[CmdKillFor] Completing quest {id}...");
+				LogForm.Instance.AppendDebug($"[CmdKillFor] Quest {id} is completable. Completing...");
 				Player.Quests.Complete(id);
 				await Task.Delay(1000);
 				LogForm.Instance.AppendDebug($"[CmdKillFor] Quest {id} completed!");
 			}
 		}
+		else
+		{
+			List<string> removedList = new List<string>();
+			config = instance.Configuration;
+
+			string[] itemsName = ItemName.Split(new char[] { ',' });
+			// Trim whitespace from item names
+			for (int i = 0; i < itemsName.Length; i++)
+				itemsName[i] = itemsName[i].Trim();
+
+			string[] quantities = Quantity.Split(new char[] { ',' });
+			// Trim whitespace from quantities
+			for (int i = 0; i < quantities.Length; i++)
+				quantities[i] = quantities[i].Trim();
+
+			if (ItemType == ItemType.Items)
+			{
+				LogForm.Instance.AppendDebug($"[CmdKillFor] Item mode - Hunting for {ItemName} ({Quantity}x)");
+				while (instance.IsRunning && 
+					Player.IsLoggedIn && 
+					Player.IsAlive &&
+					!Enumerable.Range(0, itemsName.Length).All(i => Player.Inventory.ContainsItem(itemsName[i], quantities[i]))
+					)
+				{
+					await kill.Execute(instance);
+					await Task.Delay(DelayAfterKill);
+					
+					// Check if item obtained and cancel target immediately to prevent further attacks
+					bool allItemsObtained = Enumerable.Range(0, itemsName.Length).All(i => 
+					{
+						bool has = Player.Inventory.ContainsItem(itemsName[i], quantities[i]);
+						if (!has)
+							LogForm.Instance?.AppendDebug($"[CmdKillFor] Checking {itemsName[i]} x{quantities[i]} - Still needed");
+						else
+							LogForm.Instance?.AppendDebug($"[CmdKillFor] {itemsName[i]} x{quantities[i]} - OBTAINED!");
+						return has;
+					});
+					
+					if (allItemsObtained)
+					{
+						LogForm.Instance.AppendDebug($"[CmdKillFor] All items obtained! Stopping attack.");
+						Player.CancelTarget();
+						break;
+					}
+				}
+				LogForm.Instance.AppendDebug($"[CmdKillFor] Item hunting complete!");
+			}
 			else
 			{
-				List<string> removedList = new List<string>();
-				config = instance.Configuration;
-
-				string[] itemsName = ItemName.Split(new char[] { ',' });
-
-				string[] quantities = Quantity.Split(new char[] { ',' });
-
-				if (ItemType == ItemType.Items)
+				// Trim item name and quantity for temp inventory
+				ItemName = ItemName.Trim();
+				string trimmedQty = Quantity.Trim();
+				
+				LogForm.Instance.AppendDebug($"[CmdKillFor] Temp mode - Hunting for {ItemName} ({trimmedQty}x)");
+				while (instance.IsRunning && 
+					Player.IsLoggedIn && 
+					Player.IsAlive &&
+					!Player.TempInventory.ContainsItem(ItemName, trimmedQty))
 				{
-					LogForm.Instance.AppendDebug($"[CmdKillFor] Item mode - Hunting for {ItemName} ({Quantity}x)");
-					while (instance.IsRunning && 
-						Player.IsLoggedIn && 
-						Player.IsAlive &&
-						!Enumerable.Range(0, itemsName.Length).All(i => Player.Inventory.ContainsItem(itemsName[i], quantities[i]))
-						)
+					await kill.Execute(instance);
+					await Task.Delay(DelayAfterKill);
+				
+					// Check if item obtained
+					if (Player.TempInventory.ContainsItem(ItemName, trimmedQty))
 					{
-						await kill.Execute(instance);
-						await Task.Delay(DelayAfterKill);
+						LogForm.Instance.AppendDebug($"[CmdKillFor] Temp item {ItemName} x{trimmedQty} OBTAINED!");
+						Player.CancelTarget();
+						break;
 					}
-					LogForm.Instance.AppendDebug($"[CmdKillFor] Item hunting complete!");
-				}
-				else
-				{
-					while (instance.IsRunning && 
-						Player.IsLoggedIn && 
-						Player.IsAlive &&
-						!Player.TempInventory.ContainsItem(ItemName, Quantity))
+					else
 					{
-						await kill.Execute(instance);
-						await Task.Delay(DelayAfterKill);
+						LogForm.Instance.AppendDebug($"[CmdKillFor] {ItemName} x{trimmedQty} - Still needed");
 					}
 				}
 
+				LogForm.Instance.AppendDebug($"[CmdKillFor] Temp item hunting complete!");
 				Player.CancelTarget();
 				await Task.Delay(500);
 			}
 		}
+	}
 
 		public override string ToString()
 		{

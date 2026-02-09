@@ -34,9 +34,13 @@ namespace Grimoire.Botting.Commands.Combat
             LogForm.Instance.AppendDebug($"[CmdShortHunt] Starting hunt for {_Items}x{_Qty} (Monster: {Monster}) on map {_Map}");
 
             if (ItemType == ItemType.Items)
+            {
                 if (Player.Inventory.ContainsItem(_Items, _Qty)) { LogForm.Instance.AppendDebug($"[CmdShortHunt] Already have {_Items}x{_Qty}"); return; }
-                else
+            }
+            else // ItemType.Temps
+            {
                 if (Player.TempInventory.ContainsItem(_Items, _Qty)) { LogForm.Instance.AppendDebug($"[CmdShortHunt] Already have {_Items}x{_Qty} in temp"); return; }
+            }
 
             CmdJoin join = new CmdJoin
             {
