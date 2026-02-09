@@ -1,5 +1,7 @@
 using Grimoire.Botting.Commands.Item;
 using Grimoire.Game;
+using Grimoire.Game.Data;
+using Grimoire.Tools;
 using Grimoire.UI;
 using System;
 using System.Collections.Generic;
@@ -46,12 +48,6 @@ namespace Grimoire.Botting.Commands.Combat
 			string ItemName = ((instance.IsVar(this.ItemName) ? Configuration.Tempvariable[instance.GetVar(this.ItemName)] : this.ItemName)).Trim();
 
 			BotData.BotState = BotData.State.Combat;
-			CmdKill kill = new CmdKill {
-				Monster = Monster,
-				KillPriority = KillPriority,
-				SkillSet = SkillSet,
-				AntiCounter = AntiCounter
-			};
 
 			int id;
 			if (int.TryParse(QuestId, out id))
@@ -102,7 +98,7 @@ namespace Grimoire.Botting.Commands.Combat
 			for (int i = 0; i < quantities.Length; i++)
 				quantities[i] = quantities[i].Trim();
 			
-			// Create a background task to check inventory every 2 seconds while killing
+			// Create a background task to check inventory every 1 second while killing
 			var inventoryCheckTask = Task.Run(async () =>
 			{
 				while (!foundRequired && instance.IsRunning)
@@ -136,13 +132,7 @@ namespace Grimoire.Botting.Commands.Combat
 						{
 							LogForm.Instance.AppendDebug($"[CmdKillFor] All items obtained! Moving to next command. [{DateTime.Now:HH:mm:ss.fff}]");
 							foundRequired = true;
-							
-							// Aggressively cancel target repeatedly
-							for (int cancelAttempt = 0; cancelAttempt < 20; cancelAttempt++)
-							{
-								Player.CancelTarget();
-								await Task.Delay(50);
-							}
+							Player.CancelTarget();
 							break;
 						}
 					}
@@ -151,30 +141,152 @@ namespace Grimoire.Botting.Commands.Combat
 				}
 			});
 			
-			// Kill loop runs normally while background task checks inventory
+			// Inline attack loop - check inventory between each skill for instant exit
+			int[] autoAttackSkills = { 1, 2, 3, 4 };
+			string skillSetName = string.IsNullOrEmpty(SkillSet) ? "Auto Attack" : SkillSet;
+			List<Skill> skillsToUse = new List<Skill>();
+			
+			// Load custom skillset if specified
+			if (skillSetName != "Auto Attack")
+			{
+				var skillSetData = SkillSetManager.Instance.LoadSkillSet(skillSetName);
+				if (skillSetData != null && skillSetData.Skills != null)
+				{
+					foreach (var savedSkill in skillSetData.Skills)
+					{
+						var skill = new Skill
+						{
+							Index = savedSkill.Index,
+							Text = savedSkill.Text,
+							Type = (Skill.SkillType)savedSkill.Type,
+							SType = (Skill.SafeType)savedSkill.SafeType,
+							IsSafeMp = savedSkill.IsSafeMp,
+							SafeValue = savedSkill.SafeValue,
+							SType2 = (Skill.SafeType)savedSkill.SafeType2,
+							IsSafeMp2 = savedSkill.IsSafeMp2,
+							SafeValue2 = savedSkill.SafeValue2,
+							waitCd = savedSkill.WaitCooldown,
+							dodgeAttack = savedSkill.WaitDodge
+						};
+						skillsToUse.Add(skill);
+					}
+				}
+			}
+			
+			// Kill loop with per-attack inventory checks
 			while (instance.IsRunning && Player.IsLoggedIn && Player.IsAlive && !foundRequired)
 			{
-				killCount++;
-				await kill.Execute(instance);
+				// Check if target is still available
+				if (!World.IsMonsterAvailable(Monster))
+				{
+					LogForm.Instance.AppendDebug($"[CmdKillFor] Monster {Monster} unavailable, retrying...");
+					await instance.WaitUntil(() => World.IsMonsterAvailable(Monster), null, 3);
+					
+					if (!World.IsMonsterAvailable(Monster))
+						break;
+				}
 				
-				// Check if items were obtained during combat
+				// Attack and execute skills
+				if (!Player.HasTarget)
+				{
+					Player.AttackMonster(Monster);
+					await Task.Delay(200);
+				}
+				
+				killCount++;
+				LogForm.Instance.AppendDebug($"[CmdKillFor] Kill #{killCount} started");
+				
+				// Execute skills and check inventory after each one
+				if (skillsToUse.Count > 0)
+				{
+					// Custom skillset
+					foreach (var skill in skillsToUse)
+					{
+						if (!instance.IsRunning || !Player.IsAlive || !World.IsMonsterAvailable(Monster) || foundRequired)
+							break;
+						
+						await skill.ExecuteSkill();
+						await Task.Delay(50);
+						
+						// Inline inventory check - instant exit without waiting for full combat
+						if (!foundRequired)
+						{
+							bool allObtained = true;
+							for (int i = 0; i < itemNames.Length; i++)
+							{
+								if (int.TryParse(quantities[i], out int requiredQty))
+								{
+									var item = Player.TempInventory.Items.FirstOrDefault(it => 
+										it.Name.Equals(itemNames[i], StringComparison.OrdinalIgnoreCase));
+									int currentCount = item?.Quantity ?? 0;
+									if (currentCount < requiredQty)
+									{
+										allObtained = false;
+										break;
+									}
+								}
+							}
+							if (allObtained)
+							{
+								foundRequired = true;
+								Player.CancelTarget();
+								break;
+							}
+						}
+					}
+				}
+				else
+				{
+					// Auto attack skills 1, 2, 3, 4
+					foreach (int skillIndex in autoAttackSkills)
+					{
+						if (!instance.IsRunning || !Player.IsAlive || !World.IsMonsterAvailable(Monster) || foundRequired)
+							break;
+						
+						Player.UseSkill(skillIndex.ToString());
+						await Task.Delay(50);
+						
+						// Inline inventory check - instant exit without waiting for full combat
+						if (!foundRequired)
+						{
+							bool allObtained = true;
+							for (int i = 0; i < itemNames.Length; i++)
+							{
+								if (int.TryParse(quantities[i], out int requiredQty))
+								{
+									var item = Player.TempInventory.Items.FirstOrDefault(it => 
+										it.Name.Equals(itemNames[i], StringComparison.OrdinalIgnoreCase));
+									int currentCount = item?.Quantity ?? 0;
+									if (currentCount < requiredQty)
+									{
+										allObtained = false;
+										break;
+									}
+								}
+							}
+							if (allObtained)
+							{
+								foundRequired = true;
+								Player.CancelTarget();
+								break;
+							}
+						}
+					}
+				}
+				
+				await Task.Delay(25);
+				
 				if (foundRequired)
 					break;
 				
-				await Task.Delay(DelayAfterKill); // Minimal delay - background task checks every 2 seconds
+				await Task.Delay(DelayAfterKill);
 			}
 			
-			// Exit immediately and wait for background task to complete
+			// Exit immediately
 			if (foundRequired)
 			{
 				LogForm.Instance.AppendDebug($"[CmdKillFor] Items obtained! Exiting hunt loop immediately. [{DateTime.Now:HH:mm:ss.fff}]");
-				
-				// Keep canceling target aggressively
-				for (int i = 0; i < 30; i++)
-				{
-					Player.CancelTarget();
-					await Task.Delay(50);
-				}
+				Player.CancelTarget();
 				
 				// Wait a brief moment for background task to finish cleanly
 				try
@@ -211,16 +323,41 @@ namespace Grimoire.Botting.Commands.Combat
 			if (ItemType == ItemType.Items)
 			{
 				LogForm.Instance.AppendDebug($"[CmdKillFor] Item mode - Hunting for {ItemName} ({Quantity}x)");
+				int[] autoAttackSkills = { 1, 2, 3, 4 };
+				
 				while (instance.IsRunning && 
 					Player.IsLoggedIn && 
 					Player.IsAlive &&
-					!Enumerable.Range(0, itemsName.Length).All(i => Player.Inventory.ContainsItem(itemsName[i], quantities[i]))
-					)
+					!Enumerable.Range(0, itemsName.Length).All(i => Player.Inventory.ContainsItem(itemsName[i], quantities[i])))
 				{
-					await kill.Execute(instance);
+					await instance.WaitUntil(() => World.IsMonsterAvailable(Monster), null, 3);
+					if (!World.IsMonsterAvailable(Monster))
+						continue;
+
+					if (!Player.HasTarget)
+					{
+						Player.AttackMonster(Monster);
+						await Task.Delay(200);
+					}
+
+					while (Player.IsAlive && World.IsMonsterAvailable(Monster) && instance.IsRunning &&
+						!Enumerable.Range(0, itemsName.Length).All(i => Player.Inventory.ContainsItem(itemsName[i], quantities[i])))
+					{
+						foreach (int skillIndex in autoAttackSkills)
+						{
+							if (!instance.IsRunning || !Player.IsAlive || !World.IsMonsterAvailable(Monster))
+								break;
+							
+							Player.UseSkill(skillIndex.ToString());
+							await Task.Delay(50);
+						}
+						await Task.Delay(25);
+					}
+
+					Player.CancelTarget();
 					await Task.Delay(DelayAfterKill);
 					
-					// Check if item obtained and cancel target immediately to prevent further attacks
+					// Check if item obtained
 					bool allItemsObtained = Enumerable.Range(0, itemsName.Length).All(i => 
 					{
 						bool has = Player.Inventory.ContainsItem(itemsName[i], quantities[i]);
@@ -247,12 +384,38 @@ namespace Grimoire.Botting.Commands.Combat
 				string trimmedQty = Quantity.Trim();
 				
 				LogForm.Instance.AppendDebug($"[CmdKillFor] Temp mode - Hunting for {ItemName} ({trimmedQty}x)");
+				int[] autoAttackSkills = { 1, 2, 3, 4 };
+				
 				while (instance.IsRunning && 
 					Player.IsLoggedIn && 
 					Player.IsAlive &&
 					!Player.TempInventory.ContainsItem(ItemName, trimmedQty))
 				{
-					await kill.Execute(instance);
+					await instance.WaitUntil(() => World.IsMonsterAvailable(Monster), null, 3);
+					if (!World.IsMonsterAvailable(Monster))
+						continue;
+
+					if (!Player.HasTarget)
+					{
+						Player.AttackMonster(Monster);
+						await Task.Delay(200);
+					}
+
+					while (Player.IsAlive && World.IsMonsterAvailable(Monster) && instance.IsRunning &&
+						!Player.TempInventory.ContainsItem(ItemName, trimmedQty))
+					{
+						foreach (int skillIndex in autoAttackSkills)
+						{
+							if (!instance.IsRunning || !Player.IsAlive || !World.IsMonsterAvailable(Monster))
+								break;
+							
+							Player.UseSkill(skillIndex.ToString());
+							await Task.Delay(50);
+						}
+						await Task.Delay(25);
+					}
+
+					Player.CancelTarget();
 					await Task.Delay(DelayAfterKill);
 				
 					// Check if item obtained
