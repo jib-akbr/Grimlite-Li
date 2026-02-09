@@ -92,28 +92,62 @@ namespace Grimoire.Botting.Commands.Combat
 			int killCount = 0;
 			bool foundRequired = false;
 			
+			// Parse comma-separated items and quantities
+			string[] itemNames = ItemName.Split(new char[] { ',' });
+			string[] quantities = Quantity.Split(new char[] { ',' });
+			
+			// Trim whitespace
+			for (int i = 0; i < itemNames.Length; i++)
+				itemNames[i] = itemNames[i].Trim();
+			for (int i = 0; i < quantities.Length; i++)
+				quantities[i] = quantities[i].Trim();
+			
 			// Create a background task to check inventory every 2 seconds while killing
 			var inventoryCheckTask = Task.Run(async () =>
 			{
 				while (!foundRequired && instance.IsRunning)
 				{
-					if (!string.IsNullOrEmpty(ItemName) && int.TryParse(Quantity, out int requiredQty))
+					if (!string.IsNullOrEmpty(ItemName))
 					{
-						var item = Player.TempInventory.Items.FirstOrDefault(i => i.Name.Equals(ItemName, StringComparison.OrdinalIgnoreCase));
-						int currentCount = item?.Quantity ?? 0;
+						// Check if all items have required quantities
+						bool allObtained = true;
 						
-						if (currentCount >= requiredQty)
+						for (int i = 0; i < itemNames.Length; i++)
 						{
-							LogForm.Instance.AppendDebug($"[CmdKillFor] Got {currentCount}/{requiredQty} {ItemName}! Moving to next command.");
-							foundRequired = true;
-							Player.CancelTarget();
-							break;
+							if (int.TryParse(quantities[i], out int requiredQty))
+							{
+								var item = Player.TempInventory.Items.FirstOrDefault(it => 
+									it.Name.Equals(itemNames[i], StringComparison.OrdinalIgnoreCase));
+								int currentCount = item?.Quantity ?? 0;
+								
+								if (currentCount < requiredQty)
+								{
+									allObtained = false;
+									LogForm.Instance.AppendDebug($"[CmdKillFor] {itemNames[i]}: {currentCount}/{requiredQty}");
+								}
+								else
+								{
+									LogForm.Instance.AppendDebug($"[CmdKillFor] {itemNames[i]}: {currentCount}/{requiredQty} ✓");
+								}
+							}
 						}
 						
-						LogForm.Instance.AppendDebug($"[CmdKillFor] Current {ItemName} count: {currentCount}/{requiredQty}");
+						if (allObtained)
+						{
+							LogForm.Instance.AppendDebug($"[CmdKillFor] All items obtained! Moving to next command. [{DateTime.Now:HH:mm:ss.fff}]");
+							foundRequired = true;
+							
+							// Aggressively cancel target repeatedly
+							for (int cancelAttempt = 0; cancelAttempt < 20; cancelAttempt++)
+							{
+								Player.CancelTarget();
+								await Task.Delay(50);
+							}
+							break;
+						}
 					}
 					
-					await Task.Delay(2000);
+					await Task.Delay(1000); // Check every 1 second
 				}
 			});
 			
@@ -122,11 +156,33 @@ namespace Grimoire.Botting.Commands.Combat
 			{
 				killCount++;
 				await kill.Execute(instance);
-				await Task.Delay(DelayAfterKill + 1000);
+				
+				// Check if items were obtained during combat
+				if (foundRequired)
+					break;
+				
+				await Task.Delay(DelayAfterKill); // Minimal delay - background task checks every 2 seconds
 			}
 			
-			// Wait for the background check task to complete
-			await inventoryCheckTask;
+			// Exit immediately and wait for background task to complete
+			if (foundRequired)
+			{
+				LogForm.Instance.AppendDebug($"[CmdKillFor] Items obtained! Exiting hunt loop immediately. [{DateTime.Now:HH:mm:ss.fff}]");
+				
+				// Keep canceling target aggressively
+				for (int i = 0; i < 30; i++)
+				{
+					Player.CancelTarget();
+					await Task.Delay(50);
+				}
+				
+				// Wait a brief moment for background task to finish cleanly
+				try
+				{
+					await Task.WhenAny(inventoryCheckTask, Task.Delay(100));
+				}
+				catch { }
+			}
 			
 			// Check if quest can be completed after hunting
 			if (Player.Quests.CanComplete(id))
