@@ -11,6 +11,7 @@ using Grimoire.Game.Data;
 using Grimoire.Networking;
 using Grimoire.Properties;
 using Grimoire.Tools;
+using Grimoire.UI;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -1234,15 +1235,40 @@ namespace Grimoire.UI
 
         private void btnMapItem_Click(object sender, EventArgs e)
         {
-            AddCommand(new CmdMapItem
+            string input = txtMapItem.Text?.Trim();
+            if (string.IsNullOrEmpty(input))
             {
-                ItemId = (int)numMapItem.Value
-            }, (ModifierKeys & Keys.Control) == Keys.Control);
+                LogForm.Instance?.devDebug("[btnMapItem_Click] Input is empty");
+                return;
+            }
+
+            if (!int.TryParse(input, out int itemId))
+            {
+                LogForm.Instance?.devDebug($"[btnMapItem_Click] Invalid ID: {input}");
+                return;
+            }
+
+            LogForm.Instance?.devDebug($"[btnMapItem_Click] Adding map item command for ID: {itemId}");
+            AddCommand(new CmdMapItem { ItemId = itemId }, (ModifierKeys & Keys.Control) == Keys.Control);
         }
 
         private void btnMapItemExe_Click(object sender, EventArgs e)
         {
-            Player.GetMapItem((int)numMapItem.Value);
+            string input = txtMapItem.Text?.Trim();
+            if (string.IsNullOrEmpty(input))
+            {
+                LogForm.Instance?.devDebug("[btnMapItemExe_Click] Input is empty");
+                return;
+            }
+
+            if (!int.TryParse(input, out int itemId))
+            {
+                LogForm.Instance?.devDebug($"[btnMapItemExe_Click] Invalid ID: {input}");
+                return;
+            }
+
+            LogForm.Instance?.devDebug($"[btnMapItemExe_Click] Executing map item get for ID: {itemId}");
+            Player.GetMapItem(itemId);
         }
 
         private void btnBoth_Click(object sender, EventArgs e)

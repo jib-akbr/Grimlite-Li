@@ -225,7 +225,7 @@ namespace Grimoire.UI
 		private DarkButton btnWhitelistOff;
 		private DarkButton btnBoost;
 		private DarkComboBox cbBoosts;
-		private DarkNumericUpDown numMapItem;
+		private DarkTextBox txtMapItem;
 		private DarkButton btnMapItem;
 		private DarkButton btnSwap;
 		private DarkTextBox txtSwapInv;
@@ -429,7 +429,7 @@ namespace Grimoire.UI
             this.darkGroupBox5 = new DarkUI.Controls.DarkGroupBox();
             this.btnMapItemExe = new DarkUI.Controls.DarkButton();
             this.btnMapItem = new DarkUI.Controls.DarkButton();
-            this.numMapItem = new DarkUI.Controls.DarkNumericUpDown();
+            this.txtMapItem = new DarkUI.Controls.DarkTextBox();
             this.darkGroupBox4 = new DarkUI.Controls.DarkGroupBox();
             this.chkInventOnStart = new DarkUI.Controls.DarkCheckBox();
             this.chkPickupAll = new DarkUI.Controls.DarkCheckBox();
@@ -769,7 +769,6 @@ namespace Grimoire.UI
             ((System.ComponentModel.ISupportInitialize)(this.numWalkX)).BeginInit();
             this.tabItem.SuspendLayout();
             this.darkGroupBox5.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numMapItem)).BeginInit();
             this.darkGroupBox4.SuspendLayout();
             this.darkGroupBox3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numBuyQty)).BeginInit();
@@ -1961,7 +1960,7 @@ namespace Grimoire.UI
             // 
             this.darkGroupBox5.Controls.Add(this.btnMapItemExe);
             this.darkGroupBox5.Controls.Add(this.btnMapItem);
-            this.darkGroupBox5.Controls.Add(this.numMapItem);
+            this.darkGroupBox5.Controls.Add(this.txtMapItem);
             this.darkGroupBox5.Location = new System.Drawing.Point(284, 4);
             this.darkGroupBox5.Name = "darkGroupBox5";
             this.darkGroupBox5.Size = new System.Drawing.Size(97, 67);
@@ -1989,33 +1988,13 @@ namespace Grimoire.UI
             this.btnMapItem.Text = "Cmd";
             this.btnMapItem.Click += new System.EventHandler(this.btnMapItem_Click);
             // 
-            // numMapItem
+            // txtMapItem
             // 
-            this.numMapItem.IncrementAlternate = new decimal(new int[] {
-            10,
-            0,
-            0,
-            65536});
-            this.numMapItem.Location = new System.Drawing.Point(6, 18);
-            this.numMapItem.LoopValues = false;
-            this.numMapItem.Maximum = new decimal(new int[] {
-            100000,
-            0,
-            0,
-            0});
-            this.numMapItem.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numMapItem.Name = "numMapItem";
-            this.numMapItem.Size = new System.Drawing.Size(85, 20);
-            this.numMapItem.TabIndex = 30;
-            this.numMapItem.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
+            this.txtMapItem.Location = new System.Drawing.Point(6, 18);
+            this.txtMapItem.Name = "txtMapItem";
+            this.txtMapItem.Size = new System.Drawing.Size(85, 20);
+            this.txtMapItem.TabIndex = 30;
+            this.txtMapItem.Text = "";
             // 
             // darkGroupBox4
             // 
@@ -6048,7 +6027,6 @@ namespace Grimoire.UI
             this.tabItem.ResumeLayout(false);
             this.tabItem.PerformLayout();
             this.darkGroupBox5.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.numMapItem)).EndInit();
             this.darkGroupBox4.ResumeLayout(false);
             this.darkGroupBox4.PerformLayout();
             this.darkGroupBox3.ResumeLayout(false);

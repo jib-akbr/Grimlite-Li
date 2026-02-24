@@ -1,4 +1,5 @@
 using Grimoire.Game;
+using Grimoire.UI;
 using System.Threading.Tasks;
 
 namespace Grimoire.Botting.Commands.Item
@@ -13,6 +14,7 @@ namespace Grimoire.Botting.Commands.Item
 
         public async Task Execute(IBotEngine instance)
         {
+            LogForm.Instance?.devDebug($"[CmdMapItem.Execute] Getting map item ID: {ItemId}");
             BotData.BotState = BotData.State.Others;
             await instance.WaitUntil(() => World.IsActionAvailable(LockActions.GetMapItem));
             Player.GetMapItem(ItemId);
