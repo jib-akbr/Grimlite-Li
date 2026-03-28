@@ -178,21 +178,27 @@ namespace Grimoire.Botting
         public static void Stop()
         {
             IsRunning = false;
-			//SetLagKiller(false);
         }
 
         private static async Task ApplySettings()
         {
             IsRunning = true;
+            int timer = 0;
+			BotData.BotState = BotData.State.Combat;
             while (IsRunning && Player.IsLoggedIn)
             {
                 /*if (!Player.IsLoggedIn)
                 {
                     return;
                 }*/ //Commented due to redundant
-                bool flagprovoke = ProvokeMonsters && Player.IsAlive && BotData.BotState != BotData.State.Move && BotData.BotState != BotData.State.Rest && BotData.BotState != BotData.State.Transaction;
-                if (flagprovoke)
+                bool flagprovoke = ProvokeMonsters && BotData.isBusy && Player.IsAlive ;
+				if (flagprovoke)
                     SetProvokeMonsters();
+                await Task.Delay(millisecondsDelay: Timer);
+                timer += Timer;
+                if (!IsRunning || timer < 1000)
+                    continue;
+                timer = 0;
                 if (EnemyMagnet && Player.IsAlive)
                     SetEnemyMagnet();
                 if (SkipCutscenes)
@@ -200,7 +206,6 @@ namespace Grimoire.Botting
                 if (HidePlayers)
                     DestroyPlayers();
                 SetLagKiller(LagKiller);
-                await Task.Delay(millisecondsDelay: Timer);
             }
             //IsRunning = false; //To ensure it can be started again after disconnected
         }

@@ -62,7 +62,7 @@ namespace Grimoire.Botting
         {
             get;
             set;
-        }
+        } = 150;
 
         public bool ExitCombatBeforeRest
         {
@@ -154,11 +154,11 @@ namespace Grimoire.Botting
             set;
         }
 
-        public bool Untarget
+        public int optionDelay
         {
             get;
             set;
-        }
+        } = 500;
 
         public bool EnemyMagnet
         {
@@ -326,6 +326,8 @@ namespace Grimoire.Botting
             get;
             set;
         } = string.Empty;
+
+        public static List<string> LastAuraMessages { get; set; } = new List<string>();
 
         public static Dictionary<string, int> Tempvalues = new Dictionary<string, int>();
         public static Dictionary<string, string> Tempvariable = new Dictionary<string, string>();

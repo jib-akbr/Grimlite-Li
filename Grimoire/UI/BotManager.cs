@@ -9,33 +9,27 @@ using Grimoire.Botting.Commands.Quest;
 using Grimoire.Game;
 using Grimoire.Game.Data;
 using Grimoire.Networking;
-using Grimoire.Properties;
 using Grimoire.Tools;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
-using Grimoire.UI;
 using System.Drawing.Drawing2D;
 using static Grimoire.Botting.Commands.Item.CmdWhitelist;
-using System.Runtime.InteropServices;
 using DarkUI.Forms;
 using DarkUI.Controls;
 using Newtonsoft.Json.Linq;
 using Extensions = Grimoire.Botting.Extensions;
 using Properties;
 using System.Diagnostics;
-using System.IO.Compression;
 using System.Text;
 using Grimoire.Networking.Handlers;
 using Grimoire.Utils;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace Grimoire.UI
 {
@@ -162,13 +156,15 @@ namespace Grimoire.UI
         public DarkTextBox tbFollowPlayer2;
         private DarkGroupBox darkGroupBox11;
         private DarkTextBox txtSavedDesc;
-        public PacketSpammer botPacketSpammer;
+        // public PacketSpammer botPacketSpammer;
 
         private BotManager()
         {
             InitializeComponent();
             cbSafeType.SelectedIndex = 0;
-            botPacketSpammer = new PacketSpammer();
+
+            this.mainTabControl.SelectedIndex = 9; //Select bot tabs
+            //botPacketSpammer = new PacketSpammer();
         }
 
         private void BotManager_Load(object sender, EventArgs e)
@@ -199,6 +195,11 @@ namespace Grimoire.UI
             TextBox t = (TextBox)sender;
             if (t.Text == _defaultControlText[t.Name])
                 t.Clear();
+        }
+        private void clearTextbox(object sender, EventArgs e)
+        {
+            TextBox t = (TextBox)sender;
+            t.Clear();
         }
 
         private void TextboxLeave(object sender, EventArgs e)
@@ -359,6 +360,7 @@ namespace Grimoire.UI
                 DisableAnimations = chkDisableAnims.Checked,
                 FollowCheck = chkFollowOnly.Checked,
                 FollowName = tbFollowPlayer2.Text,
+                optionDelay = (int)numOptionsTimer.Value,
                 AutoZone = cmbSpecials.SelectedItem != null ? cmbSpecials.SelectedItem.ToString() : string.Empty,
             };
         }
@@ -472,6 +474,8 @@ namespace Grimoire.UI
                 else
                     rtbInfo.Text = config.Description;
                 chkFollowOnly.Checked = config.FollowCheck;
+
+                numOptionsTimer.Value = config.optionDelay;
                 tbFollowPlayer2.Text = config.FollowName == null ? "Player" : config.FollowName;
                 if (!string.IsNullOrEmpty(config.AutoZone))
                 {
@@ -688,22 +692,43 @@ namespace Grimoire.UI
             }
             else if (lstCommands.SelectedIndex > -1)
             {
-                int selectedIndex = lstCommands.SelectedIndex;
-                object obj = lstCommands.Items[selectedIndex];
-                string text = UserFriendlyCommandEditor.Show(obj);
-                //string text = RawCommandEditor.Show(JsonConvert.SerializeObject(obj, Formatting.Indented, _serializerSettings));
-                if (text != null)
-                {
-                    try
-                    {
-                        IBotCommand item = (IBotCommand)JsonConvert.DeserializeObject(text, obj.GetType());
-                        lstCommands.Items.Remove(obj);
-                        lstCommands.Items.Insert(selectedIndex, item);
-                    }
-                    catch
-                    {
+                showCmdEditor();
+                // int Index = lstCommands.SelectedIndex;
+                // object obj = lstCommands.Items[Index];
+                // string text = UserFriendlyCommandEditor.Show(obj);
+                // string text = RawCommandEditor.Show(JsonConvert.SerializeObject(obj, Formatting.Indented, _serializerSettings));
+                // if (text != null)
+                // {
+                // try
+                // {
+                // IBotCommand item = (IBotCommand)JsonConvert.DeserializeObject(text, obj.GetType());
+                // lstCommands.Items.Remove(obj);
+                // lstCommands.Items.Insert(selectedIndex, item);
+                // }
+                // catch
+                // {
 
-                    }
+                // }
+                // }
+            }
+        }
+        private void showCmdEditor()
+        {
+            int Index = lstCommands.SelectedIndex;
+            object obj = lstCommands.Items[Index];
+            string text = UserFriendlyCommandEditor.Show(obj);
+            //string text = RawCommandEditor.Show(JsonConvert.SerializeObject(obj, Formatting.Indented, _serializerSettings));
+            if (text != null)
+            {
+                try
+                {
+                    IBotCommand item = (IBotCommand)JsonConvert.DeserializeObject(text, obj.GetType());
+                    lstCommands.Items.Remove(obj);
+                    lstCommands.Items.Insert(Index, item);
+                }
+                catch
+                {
+
                 }
             }
         }
@@ -962,8 +987,16 @@ namespace Grimoire.UI
 
         private void btnCurrCell_Click(object sender, EventArgs e)
         {
-            txtCell.Text = Player.Cell;
-            txtPad.Text = Player.Pad;
+            if (altpressed)
+            {
+                txtCell.Text += $",{Player.Cell}";
+                txtPad.Text += $",{Player.Pad}";
+            }
+            else
+            {
+                txtCell.Text = Player.Cell;
+                txtPad.Text = Player.Pad;
+            }
         }
 
         private void btnJump_Click(object sender, EventArgs e)
@@ -1033,7 +1066,8 @@ namespace Grimoire.UI
                     case 1:
                         cmd = new CmdSell
                         {
-                            ItemName = text
+                            ItemName = text,
+                            Qty = altpressed ? "0" : "1"
                         };
                         break;
 
@@ -1174,7 +1208,7 @@ namespace Grimoire.UI
                 Int32.TryParse(tbShopId.Text, out int shopId);
                 Int32.TryParse(tbItemId.Text, out int itemId);
                 Int32.TryParse(tbShopItemId.Text, out int shopItemId);
-                int qty = (int)numBuyQty.Value;
+                int qty = altpressed ? -1 : (int)numBuyQty.Value;
 
                 if (radBuyByID.Checked)
                 {
@@ -1312,6 +1346,7 @@ namespace Grimoire.UI
                 {
                     ApplyConfiguration(config);
                     GetAllCommands<CmdLabel>(lbLabels);
+                    OptionsManager.Stop();
                 }
             }
         }
@@ -1374,6 +1409,7 @@ namespace Grimoire.UI
 
         private void cbStatement_SelectedIndexChanged(object sender, EventArgs e)
         {
+            //StatementsCommands
             if (cbCategories.SelectedIndex > -1 && cbStatement.SelectedIndex > -1)
             {
                 StatementCommand statementCommand = (StatementCommand)cbStatement.SelectedItem;
@@ -1384,18 +1420,6 @@ namespace Grimoire.UI
             }
         }
 
-        private void btnStatementAdd_Click(object sender, EventArgs e)
-        {
-            if (cbCategories.SelectedIndex > -1 && cbStatement.SelectedIndex > -1)
-            {
-                string text = txtStatement1.Text;
-                string text2 = txtStatement2.Text;
-                StatementCommand statementCommand = (StatementCommand)Activator.CreateInstance(cbStatement.SelectedItem.GetType());
-                statementCommand.Value1 = text;
-                statementCommand.Value2 = text2;
-                AddCommand((IBotCommand)statementCommand, (ModifierKeys & Keys.Control) == Keys.Control);
-            }
-        }
 
         private void cbCategories_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -1407,6 +1431,18 @@ namespace Grimoire.UI
                 object[] array = _statementCommands.Where((StatementCommand s) => s.Tag == text).ToArray();
                 object[] items2 = array;
                 items.AddRange(items2);
+            }
+        }
+        private void btnStatementAdd_Click(object sender, EventArgs e)
+        {
+            if (cbCategories.SelectedIndex > -1 && cbStatement.SelectedIndex > -1)
+            {
+                string text = txtStatement1.Text;
+                string text2 = txtStatement2.Text;
+                StatementCommand statementCommand = (StatementCommand)Activator.CreateInstance(cbStatement.SelectedItem.GetType());
+                statementCommand.Value1 = text;
+                statementCommand.Value2 = text2;
+                AddCommand((IBotCommand)statementCommand, (ModifierKeys & Keys.Control) == Keys.Control);
             }
         }
 
@@ -1483,7 +1519,7 @@ namespace Grimoire.UI
             string path = Path.Combine(txtSaved.Text, e.Node.FullPath);
             if (File.Exists(path))
             {
-                if ((ModifierKeys & Keys.Control) == Keys.Control)
+                if (ctrlpressed)
                 {
                     string relativePath = "Bots" + path.Substring(txtSaved.Text.Length);
                     LogForm.Instance.AppendDebug($"Path : {path}\r\nRelative path : {relativePath}\r\nNode : {e.Node.FullPath}");
@@ -1500,6 +1536,7 @@ namespace Grimoire.UI
                     return;
                 }
                 ApplyConfiguration(config);
+                OptionsManager.Stop();
             }
             lblCommands.Text = $"Number of{Environment.NewLine}Commands: {lstCommands.Items.Count}";
             lblSkills.Text = $"Skills: {lstSkills.Items.Count}";
@@ -1617,7 +1654,7 @@ namespace Grimoire.UI
         {
             OptionsManager.ProvokeMonsters = chkProvoke.Checked;
             Root.Instance.provokeToolStripMenuItem1.Checked = chkProvoke.Checked;
-        }
+		}
 
         private void chkMagnet_CheckedChanged(object sender, EventArgs e)
         {
@@ -1710,10 +1747,31 @@ namespace Grimoire.UI
             }
             else if (ModifierKeys == Keys.Control && e.KeyCode == Keys.D && SelectedList.SelectedIndex > -1)
             {
-                var selectedItems = SelectedList.SelectedItems;
-                for (int i = 0; selectedItems.Count > i; i++)
+                // var selectedItems = SelectedList.SelectedItems;
+                // for (int i = 0; selectedItems.Count > i; i++)
+                // {
+                // SelectedList.Items.Insert(SelectedList.SelectedIndex + selectedItems.Count + i, selectedItems[i]);
+                // }
+                int baseIndex = SelectedList.SelectedIndex;
+
+                // snapshot items
+                var itemsToDuplicate = SelectedList.SelectedItems
+                    .Cast<object>()
+                    .ToList();
+
+                // insert AFTER selected block
+                int insertIndex = baseIndex + itemsToDuplicate.Count;
+
+                foreach (var item in itemsToDuplicate)
                 {
-                    SelectedList.Items.Insert(SelectedList.SelectedIndex + selectedItems.Count + i, selectedItems[i]);
+                    SelectedList.Items.Insert(insertIndex++, item);
+                }
+
+                // OPTIONAL: select duplicated items
+                SelectedList.ClearSelected();
+                for (int i = 0; i < itemsToDuplicate.Count; i++)
+                {
+                    SelectedList.SetSelected(baseIndex + itemsToDuplicate.Count + i, true);
                 }
                 e.Handled = true;
             }
@@ -1838,7 +1896,13 @@ namespace Grimoire.UI
                 using (SaveFileDialog saveFileDialog = new SaveFileDialog())
                 {
                     saveFileDialog.Title = "Save bot";
-                    saveFileDialog.InitialDirectory = Path.Combine(Application.StartupPath, "Bots");
+                    string saveDir = ClientConfig.GetValue(ClientConfig.C_BOTS_DIR);
+                    if (!saveDir.Contains(":"))
+                    {
+                        saveDir = Path.Combine(Application.StartupPath, saveDir).Replace(".", "");
+                    }
+                    saveFileDialog.InitialDirectory = saveDir;
+                    //saveFileDialog.InitialDirectory = Path.Combine(Application.StartupPath, "Bots");
                     saveFileDialog.DefaultExt = ".gbot";
                     saveFileDialog.Filter = "Grimoire bots|*.gbot";
                     saveFileDialog.CheckFileExists = false;
@@ -1945,10 +2009,7 @@ namespace Grimoire.UI
             {
                 if (chkEnable.Checked)
                 {
-                    if (cmbSpecials.SelectedIndex != -1 && !chkSpecial.Checked)
-                    {
-                        chkSpecial.Checked = true;
-                    }
+
 
                     setPresetsSkills();
 
@@ -1970,8 +2031,10 @@ namespace Grimoire.UI
                     }
 
                     // Register any user-selected special handlers
-                    if (SpecialJsonHandler != null)
-                        Proxy.Instance.RegisterHandler(SpecialJsonHandler);
+                    if (cmbSpecials.SelectedIndex != -1 && !chkSpecial.Checked)
+                        chkSpecial.Checked = true;
+                    // if (SpecialJsonHandler != null) //ChkSpecial.Checked already trigger the RegisterHandler
+                    // Proxy.Instance.RegisterHandler(SpecialJsonHandler);
                     if (SpecialXtHandler != null)
                         Proxy.Instance.RegisterHandler(SpecialXtHandler);
 
@@ -1994,7 +2057,7 @@ namespace Grimoire.UI
                     }
                     if (lstItems.Items.Count > 0 && this.chkBankOnStop.Checked)
                     {
-                        Player.MoveToCell(Player.Cell, Player.Pad);
+                        Player.refreshCell();
                         await Task.Delay(2000);
                         await BankingItems();
                     }
@@ -2016,8 +2079,7 @@ namespace Grimoire.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Failed to start bot : " + ex.Message, "Grimoire", MessageBoxButtons.OK, MessageBoxIcon.Hand);
-
+                MessageBox.Show("Failed to start bot : " + ex.Message + ex.InnerException, "Grimoire", MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
             toggleAntiMod(chkAntiMod.Checked && chkEnable.Checked);
 
@@ -2087,12 +2149,12 @@ namespace Grimoire.UI
                 AddCommand(new CmdBuyFast
                 {
                     ItemName = tbShopItemName.Text,
-                    Qty = (int)numBuyQty.Value
+                    Qty = altpressed ? -1 : (int)numBuyQty.Value
                 }, (ModifierKeys & Keys.Control) == Keys.Control);
             }
         }
 
-        
+
 
         private void btnLoadShop_Click(object sender, EventArgs e)
         {
@@ -2201,7 +2263,8 @@ namespace Grimoire.UI
                 try
                 {
                     string botsDir = ClientConfig.GetValue(ClientConfig.C_BOTS_DIR);
-                    if (Directory.Exists(botsDir)) this.txtSaved.Text = botsDir;
+                    if (Directory.Exists(botsDir))
+                        this.txtSaved.Text = botsDir;
                 }
                 catch { }
                 UpdateTree();
@@ -2308,38 +2371,47 @@ namespace Grimoire.UI
         {
             string index = numSkillCmd.Text;
             string target = txtMonsterSkillCmd.Text;
-            if (target == "Monster (* = random)") target = "*";
-            Skill skill = new Skill
+            if (target == "Monster (* = random)")
+                target = "*";
+            if (altpressed)
             {
-                Text = Skill.GetSkillName(index),
-                Index = index,
-                Type = Skill.SkillType.Normal,
-            };
+                for (int i = 1; i < 5; i++)
+                {
+                    AddCommand(new CmdUseSkill
+                    {
+                        Index = i.ToString(),
+                        Wait = cbSkillCmdWait.Checked,
+                        Force = chkForceSkill.Checked,
+                        Monster = target
+                    }, (ModifierKeys & Keys.Control) == Keys.Control);
+                }
+                return;
+            }
             AddCommand(new CmdUseSkill
             {
-                Index = skill.Index,
-                Wait = cbSkillCmdWait.Checked || altpressed,
+                Index = index,
+                Wait = cbSkillCmdWait.Checked,
                 Force = chkForceSkill.Checked,
                 Monster = target
             }, (ModifierKeys & Keys.Control) == Keys.Control);
         }
 
-        private async void btnSetHero_Click(object sender, EventArgs e)
+        private void btnSetHero_Click(object sender, EventArgs e)
         {
             Button s = (Button)sender;
             switch (s.Name)
             {
                 case "btnSetGood":
-                    Proxy.Instance.SendToServer("%xt%zm%updateQuest%218701%41%1%");
+                    _ = Proxy.Instance.SendToServer("%xt%zm%updateQuest%218701%41%1%");
                     break;
                 case "btnSetEvil":
-                    Proxy.Instance.SendToServer("%xt%zm%updateQuest%218701%41%2%");
+                    _ = Proxy.Instance.SendToServer("%xt%zm%updateQuest%218701%41%2%");
                     break;
                 case "btnSetChaos":
-                    Proxy.Instance.SendToServer("%xt%zm%updateQuest%218701%41%3%");
+                    _ = Proxy.Instance.SendToServer("%xt%zm%updateQuest%218701%41%3%");
                     break;
                 case "btnSetUndecided":
-                    Proxy.Instance.SendToServer("%xt%zm%updateQuest%218701%41%5%");
+                    _ = Proxy.Instance.SendToServer("%xt%zm%updateQuest%218701%41%5%");
                     break;
                 case "btnSetMem":
                     Player.ChangeAccessLevel("Member");
@@ -2690,12 +2762,21 @@ namespace Grimoire.UI
 
         private void btnSetInt_Click(object sender, EventArgs e)
         {
+            if (altpressed)
+            {
+                AddCommand(new CmdInt2
+                {
+                    IntKey = txtSetInt.Text,
+                    Value = numSetInt.Value.ToString(),
+                }, ctrlpressed);
+
+            }
             AddCommand(new CmdInt
             {
                 Int = txtSetInt.Text,
                 Value = (int)numSetInt.Value,
                 type = CmdInt.Types.Set
-            }, (ModifierKeys & Keys.Control) == Keys.Control);
+            }, ctrlpressed);
         }
 
         private void btnIncreaseInt_Click(object sender, EventArgs e)
@@ -2787,7 +2868,7 @@ namespace Grimoire.UI
             AddCommand(new CmdReturn(), (ModifierKeys & Keys.Control) == Keys.Control);
         }
 
-        private void btnClearTempVar_Click(object sender, EventArgs e)
+        private void btnClearVarInt_Click(object sender, EventArgs e)
         {
             AddCommand(new CmdClearTemp(), (ModifierKeys & Keys.Control) == Keys.Control);
         }
@@ -2905,7 +2986,14 @@ namespace Grimoire.UI
 
         private void btnGetMapF_Click(object sender, EventArgs e)
         {
-            tbMapF.Text = Player.Map;
+            if (altpressed)
+            {
+                tbMapF.Text = Player.Map + "-[room]";
+                tbCellF.Text += $",{Player.Cell}";
+                tbPadF.Text += $",{Player.Pad}";
+                return;
+            }
+            tbMapF.Text = ctrlpressed ? Player.Map + "-[room]" : Player.Map;
             tbCellF.Text = Player.Cell;
             tbPadF.Text = Player.Pad;
         }
@@ -2920,34 +3008,54 @@ namespace Grimoire.UI
                     Text = Skill.GetSkillName(i.ToString()),
                     Index = i.ToString(),
                     Type = Skill.SkillType.Normal,
-                    waitCd = (ModifierKeys & Keys.Alt) == Keys.Alt
+                    waitCd = altpressed
                 }, (ModifierKeys & Keys.Control) == Keys.Control);
             }
         }
 
-        private void btnQAddToWhitelist_Click(object sender, EventArgs e)
+        private async void btnQAddToWhitelist_Click(object sender, EventArgs e)
         {
             if (!Player.IsLoggedIn) return;
             int idQuest = Decimal.ToInt32(numQQuestId.Value);
+            
             Player.Quests.Load(idQuest);
+            await BotUtilities.WaitUntil(() => Player.Quests.HasQuest(idQuest));
 
             if (chkQRewards.Checked)
             {
-                List<String> items = Grabber.GetQuestRewards(idQuest);
+                addDropList(Grabber.GetQuestRewards(idQuest));
+                /*List<String> items = Grabber.GetQuestRewards(idQuest);
                 foreach (String item in items)
                 {
                     if (item.Length > 0)
                         lstDrops.Items.Add(item);
-                }
+                }*/
             }
 
             if (chkQRequirements.Checked)
             {
-                List<String> items = Grabber.GetQuestRequirment(idQuest);
+                addDropList(Grabber.GetQuestRequirment(idQuest));
+                /*List<String> items = Grabber.GetQuestRequirment(idQuest);
                 foreach (String item in items)
                 {
                     if (item.Length > 0)
                         lstDrops.Items.Add(item);
+                }*/
+            }
+        }
+        public void addDropList(List<string> items)
+        {
+            var currentItems = lstDrops.Items
+                .Cast<object>()
+                .Select(x => x.ToString())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (string item in items)
+            {
+                if (!currentItems.Contains(item))
+                {
+                    lstDrops.Items.Add(item);
+                    currentItems.Add(item);
                 }
             }
         }
@@ -3183,12 +3291,13 @@ namespace Grimoire.UI
             {
                 //"cmd":"aura++","auras":[{"nam":"Counter Attack"
                 //prepares a counter attack!!
-                string c1 = "\"cmd\":\"aura++\",\"auras\":[{\"nam\":\"Counter Attack\"";
+                //string c1 = "\"cmd\":\"aura++\",\"auras\":[{\"nam\":\"Counter Attack\"";
                 string c2 = "prepares a counter attack";
                 if (msg.Contains(c2))
                 {
                     Task.Run(async () =>
                     {
+                        await Task.Delay(1500);
                         Player.CancelAutoAttack();
                         Player.CancelTarget();
                         if (chkEnable.Checked)
@@ -3198,17 +3307,17 @@ namespace Grimoire.UI
                         Console.WriteLine("Counter Attack: active");
 
                         //This function will ensure auto exit Counter/Stop Atk
-                        await Task.Delay(10000);
+                        await Task.Delay(7500);
                         ActiveBotEngine.Configuration.SkipAttack = false;
                     });
                 }
 
-                 //"cmd":"aura--","aura":{"nam":"Counter Attack" 
+                //"cmd":"aura--","aura":{"nam":"Counter Attack" 
                 if (msg.Contains("\"cmd\":\"aura--\",\"aura\":{\"nam\":\"Counter Attack\""))
                 {
                     Console.WriteLine("Counter Attack: fades");
                     ActiveBotEngine.Configuration.SkipAttack = false;
-                } 
+                }
             }
             catch (Exception e)
             {
@@ -3296,7 +3405,7 @@ namespace Grimoire.UI
             }
 
             // Register new handler immediately if bot is already running
-            if (SpecialJsonHandler != null && ActiveBotEngine.IsRunning)
+            if (SpecialJsonHandler != null)//&& ActiveBotEngine.IsRunning)
             {
                 Proxy.Instance.RegisterHandler(SpecialJsonHandler);
             }
