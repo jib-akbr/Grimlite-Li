@@ -116,6 +116,10 @@ namespace Grimoire.UI
 			},
             delegate
             {
+				Root.Instance.chkAutoAttack.Checked = !Root.Instance.chkAutoAttack.Checked;
+			},
+            delegate
+            {
 				//execute debug
 			}
         };
@@ -409,7 +413,8 @@ namespace Grimoire.UI
             "Load Armor Customizer",
             "Toggle Options",
             "Show DropUi",
-			"Show Swf Dev test"});
+            "Show Swf Dev test",
+            "Start/Stop AutoAttack"});
             this.cbActions.Location = new System.Drawing.Point(124, 12);
             this.cbActions.MaxDropDownItems = 20;
             this.cbActions.Name = "cbActions";
