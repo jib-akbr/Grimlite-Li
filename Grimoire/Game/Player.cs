@@ -370,7 +370,32 @@ namespace Grimoire.Game
         }
 
         public static bool isRejectingAllDrop { get; set; } = false;
-        public static Dictionary<int, string> recentMapItem = new Dictionary<int, string>();
+        public static Dictionary<int, string> recentMapItem = new Dictionary<int, string>();//initMapItem();
+
+        /* Disabled Merged InitMapItem 
+		private static Dictionary<int, string> initMapItem()
+        {
+            var result = new Dictionary<int, string>();
+
+            string logPath = Path.Combine(Application.StartupPath, "MapItemLog.txt");
+
+            if (!File.Exists(logPath))
+                return result;
+            LogForm.Instance.devDebug("MapItemLog.txt found");
+
+            foreach (var line in File.ReadAllLines(logPath))
+            {
+                if (string.IsNullOrEmpty(line))
+                    continue;
+                //LogForm.Instance.devDebug("MapItemLog.txt found");
+
+                var parts = line.Split(new[] { " = " }, StringSplitOptions.None);
+
+                if (parts.Length == 2 && int.TryParse(parts[0], out int key))
+                    result[key] = parts[1];
+            }
+            return result;
+        }*/
         static Player()
         {
             Bank = new Bank();

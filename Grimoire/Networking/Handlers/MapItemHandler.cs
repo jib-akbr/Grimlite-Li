@@ -3,19 +3,19 @@ using Grimoire.UI;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace Grimoire.Networking.Handlers
 {
     public class MapItemHandler : IJsonMessageHandler
     {
 
-        private readonly TaskCompletionSource<bool> _tcs;
+        private readonly CancellationTokenSource _cts;
         private readonly int mapItemid;
 
-        public MapItemHandler(TaskCompletionSource<bool> tcs, int itemid)
+        public MapItemHandler(CancellationTokenSource cts, int itemid)
         {
-            _tcs = tcs;
+            _cts = cts;
             mapItemid = itemid;
         }
         public string[] HandledCommands { get; } = { "addItems" };
@@ -23,38 +23,34 @@ namespace Grimoire.Networking.Handlers
         public void Handle(JsonMessage message)
         {
             //Console.WriteLine(message.ToString());
-            try
+
+            // Ambil "items"
+            JObject items = message.DataObject["items"] as JObject;
+            if (items == null)
             {
-                // Ambil "items"
-                JObject items = message.DataObject["items"] as JObject;
-                if (items == null)
+                LogForm.Instance.devDebug("[AddItemHandler] 'items' not found in packet.");
+                return;
+            }
+
+            foreach (var item in items)
+            {
+                var obj2 = item.Value as JObject;
+                if (obj2 == null)
+                    continue;
+
+                string name = item.Value["sName"]?.ToString() ?? Player.TempInventory.Items.FirstOrDefault
+                    (i => i.Id == (int)item.Value["ItemID"])?.Name ?? "blank";
+
+                lock (Player.recentMapItem)
                 {
-                    LogForm.Instance.devDebug("[AddItemHandler] 'items' not found in packet.");
-                    return;
+                    //Player.recentMapItem[mapItemid] = name;
+                    Player.recentMapItem[mapItemid] = $"{name} ({Player.Map})";
                 }
 
-                foreach (var item in items)
-                {
-                    var obj2 = item.Value as JObject;
-                    if (obj2 == null)
-                        continue;
-
-                    string name = item.Value["sName"]?.ToString() ?? Player.TempInventory.Items.FirstOrDefault
-                        (i => i.Id == (int)item.Value["ItemID"])?.Name ?? "blank";
-
-                    lock (Player.recentMapItem)
-                    {
-                        Player.recentMapItem[mapItemid] = name;
-                    }
-
-                    LogForm.Instance.devDebug($"[AddItemHandler] MapItem added: {name} ({mapItemid})");
-                }
-                _tcs.TrySetResult(true);
+                LogForm.Instance.devDebug($"[MapItemHandler] MapItem added: {mapItemid} - {name}");
             }
-            catch (Exception ex)
-            {
-                _tcs.TrySetResult(false);
-            }
+            _cts?.Cancel();
+
             //Proxy.Instance.UnregisterHandler(this);
         }
     }

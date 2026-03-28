@@ -14,6 +14,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Security;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
@@ -487,22 +488,30 @@ namespace Grimoire.Tools
                     int itemId = int.Parse(packet.Split('%')[5]);
                     if (Player.recentMapItem.TryGetValue(itemId, out var itemName) && itemName?.Equals("blank") == false)
                         break;
+                    if (!_activeMapItemTasks.TryAdd(itemId, 0))
+                        break;
 
                     Task.Run(async () =>
                     {
-                        var tcs = new TaskCompletionSource<bool>();
-                        var handler = new MapItemHandler(tcs, itemId);
+                        using (var cts = new CancellationTokenSource())
+                        {
+
+                            var handler = new MapItemHandler(cts, itemId);
                         Proxy.Instance.RegisterHandler(handler);
+                            bool timeout = false;
                         try
                         {
-                            await Task.WhenAny(tcs.Task, Task.Delay(5000));
+                                await Task.Delay(2000, cts.Token);
+                                timeout = true;
                         }
-                        catch (Exception)
+                            finally
                         {
-                            LogForm.Instance.devDebug("Nothing came out");
-                        }
+                                if (timeout)
+                                    LogForm.Instance.devDebug("[MapItemHandler] Nothing came out");
                         Proxy.Instance.UnregisterHandler(handler);
-
+                                _activeMapItemTasks.TryRemove(itemId, out _);
+                            }
+                        }
                     });
                     break;
 
@@ -517,12 +526,14 @@ namespace Grimoire.Tools
                         }
                         );
                     }
-                    DropUi.instance.clearDrop();
+                    Player.initLogin();
                     break;
             }
             //Console.WriteLine($"client: {packet}");
             return packet;
         }
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, byte> _activeMapItemTasks =
+            new System.Collections.Concurrent.ConcurrentDictionary<int, byte>();
 
         private static string ProcessPacketFromServer(string packet)
         {

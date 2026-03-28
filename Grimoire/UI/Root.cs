@@ -17,8 +17,8 @@ using System.Reflection;
 using System.Linq;
 using Grimoire.FlashTools;
 using Grimoire.Utils;
-using System.Diagnostics;
-using Grimoire.Botting.Commands.Combat;
+using DarkUI.Renderers;
+using DarkUI.Config;
 
 namespace Grimoire.UI
 {
@@ -184,6 +184,7 @@ namespace Grimoire.UI
             {
                 h.Uninstall();
             });
+            SaveRecentMapItemMerged("MapItemLog.txt");
             KeyboardHook.Instance.Dispose();
             Proxy.Instance.Stop(appClosing: true);
             CommandColorForm.Instance.Dispose();
@@ -711,6 +712,8 @@ namespace Grimoire.UI
             this.darkMenuStrip1.GripMargin = new System.Windows.Forms.Padding(0);
             this.darkMenuStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.darkMenuStrip1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            //AWAS LU KLO KERUBAH SENDIRI NJING
+            this.darkMenuStrip1.Renderer = new CustomDarkMenuRenderer();
             this.darkMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.botToolStripMenuItem,
             this.toolsToolStripMenuItem,
@@ -1752,36 +1755,64 @@ namespace Grimoire.UI
             ShowForm(DropUi.instance);
         }
 
-        private DateTime _lastPacketSent = DateTime.MinValue;
-        private void auraClearer()
-        {
-            bool _lastIsAlive = false;
-            Task.Run(async () =>
+		private const string Separator = " = ";
+        public static void SaveRecentMapItemMerged(string filePath)
             {
-                while (true)
+			if (Player.recentMapItem.Count == 0)
+				return;
+			
+            HashSet<string> merged = new HashSet<string>();
+            filePath = Path.Combine(Application.StartupPath, filePath);
+
+            // Load file lama
+            if (File.Exists(filePath))
                 {
-                    if (Player.IsLoggedIn)
+                foreach (var line in File.ReadAllLines(filePath))
                     {
-                        // Send every 15 minutes
-                        if ((DateTime.Now - _lastPacketSent).Seconds >= 60 * 15)
+                    if (!string.IsNullOrWhiteSpace(line))
+                        merged.Add(line.Trim());
+                }
+            }
+        
+            // Tambah data baru
+            foreach (var kv in Player.recentMapItem)
                         {
-                            await Proxy.Instance.SendToClient("{\"t\":\"xt\",\"b\":{\"r\":-1,\"o\":{\"cmd\":\"clearAuras\"}}}");
-                            _lastPacketSent = DateTime.Now;
-                            //LogForm.Instance.AppendDebug($"[{DateTime.Now}] Executing Clear Aura");
+                merged.Add($"{kv.Key}{Separator}{kv.Value}");
                         }
 
-                        // Death detection
-                        bool isAlive = Player.IsAlive;
-                        if (_lastIsAlive && !isAlive)
+            // Sort by key lalu value
+            var sorted = merged
+                .Select(x =>
+                {
+                    var p = x.Split(new[] { Separator }, StringSplitOptions.None);
+                    return new
                         {
-                            await Proxy.Instance.SendToClient("{\"t\":\"xt\",\"b\":{\"r\":-1,\"o\":{\"cmd\":\"clearAuras\"}}}");
-                            //LogForm.Instance.AppendDebug($"[{DateTime.Now}] Clearing Aura due to Death");
+                        Key = int.TryParse(p[0], out int k) ? k : int.MaxValue,
+                        Value = p.Length > 1 ? p[1] : ""
+                    };
+                })
+                .OrderBy(x => x.Key)
+                .ThenBy(x => x.Value)
+                .Select(x => $"{x.Key}{Separator}{x.Value}")
+                .ToList();
+        
+            File.WriteAllLines(filePath, sorted);
                         }
                         _lastIsAlive = isAlive;
                     }
                     await Task.Delay(9000);
                 }
-            });
+public class CustomDarkMenuRenderer : DarkMenuRenderer
+{
+    protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
+    {
+        Color color = e.Item.Selected ? Colors.GreyHighlight : e.Item.BackColor;
+
+        Rectangle rect = new Rectangle(2, 0, e.Item.Width - 2, e.Item.Height);
+
+        using (SolidBrush brush = new SolidBrush(color))
+        {
+            e.Graphics.FillRectangle(brush, rect);
         }
     }
 }
