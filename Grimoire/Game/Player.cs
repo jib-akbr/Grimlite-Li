@@ -19,7 +19,12 @@ namespace Grimoire.Game
             InCombat
         }
 
-        public static int UserID => Flash.Call<int>("UserID", new object[0]);
+        public static void initLogin()
+        {
+            _cachedUserID = 0;
+            Quests.QuestTreeRefresh();
+            DropUi.instance.clearDrop();
+        }
 
         public static Bank Bank
         {
@@ -126,13 +131,13 @@ namespace Grimoire.Game
         /// </summary>
         public static State CurrentState => (State)Flash.Call<int>("State", new string[0]);
 
-        public static async Task ExitCombat()
+        public static async Task ExitCombat(int delay = 1000, bool force = false)
         {
-
-            if (State.InCombat == CurrentState)
+            if (State.InCombat == CurrentState || force)
             {
-                MoveToCell(Cell, Pad);
-                await Task.Delay(1500);
+                await Task.Delay(100);
+                refreshCell();
+                await Task.Delay(delay);
             }
         }
 
@@ -309,6 +314,7 @@ namespace Grimoire.Game
         public static int GetTargetHealth() => Flash.Call<int>("GetTargetHealth", new string[0]);
 
         public static void MoveToCell(string cell, string pad = "Spawn") => Flash.Call("Jump", cell, pad);
+        public static void refreshCell() => MoveToCell(Cell, Pad);
 
         public static void Rest() => Flash.Call("Rest", new string[0]);
 

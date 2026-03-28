@@ -585,6 +585,11 @@ namespace Grimoire.Tools
                         Player.Bank.GetBank();
                         break;
 
+                    case "getDrop":
+                        if (Convert.ToInt32(data.bSuccess) == 1)
+                            World.DropStack.Remove(Convert.ToInt32(data.ItemID));
+                        break;
+                    //Handles getDrop either failing or success will decide to remove from DropUi or nah
                     case "dropItem":
                         JObject items = (JObject)data["items"];
                         if (items != null)

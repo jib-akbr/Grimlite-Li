@@ -202,22 +202,29 @@ namespace Grimoire.UI
 
             UpdateDropCount();
         }
-
+		
+		private bool clearAlertMsg = false;
         private void btnClear_Click(object sender, EventArgs e)
         {
-            var result = MessageBox.Show(
-                "This action will clear all Blacklist and Current drops within the UI.\n" +
-                "Do you wish to proceed?",
-                "Caution",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning
-            );
-
-            if (result == DialogResult.Yes)
-            {
-                clearDrop();
-                blacklisted.Clear();
-            }
+			if (!clearAlertMsg)
+			{
+				var result = MessageBox.Show(
+					"This action will clear all Blacklist and Current drops within the UI.\n" +
+					"Do you wish to proceed?",
+					"Caution",
+					MessageBoxButtons.YesNo,
+					MessageBoxIcon.Warning
+				);
+	
+				if (result == DialogResult.Yes)
+				{
+					clearDrop();
+					blacklisted.Clear();
+					clearAlertMsg = true;
+				}
+				return;
+			}
+			clearDrop();
         }
         public void clearDrop()
         {

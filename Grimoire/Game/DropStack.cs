@@ -1,3 +1,4 @@
+using Grimoire.Botting;
 using Grimoire.Game.Data;
 using Grimoire.Networking;
 using Grimoire.UI;
@@ -54,10 +55,6 @@ namespace Grimoire.Game
             DropUi.instance.AddItem(item);
         }
 
-        public async Task<bool> GetDrop(InventoryItem item)
-        {
-            return await GetDrop(item.Id);
-        }
 
         public async Task<bool> GetDrop(string itemName)
         {
@@ -70,15 +67,6 @@ namespace Grimoire.Game
             return flag;
         }
 
-        public async Task<bool> RemoveAll(int itemId)
-        {
-            if (Contains(itemId))
-            {
-                _drops.RemoveAll((InventoryItem d) => d.Id == itemId);
-                return true;
-            }
-            return false;
-        }
 
         public async Task<bool> GetDrop(int itemId)
         {
@@ -89,14 +77,14 @@ namespace Grimoire.Game
                 {
                     await Proxy.Instance.SendToServer($"%xt%zm%getDrop%{World.RoomId}%{itemId}%");
                     _cooldown.Add(new KeyValuePair<int, Stopwatch>(itemId, Stopwatch.StartNew()));
-                    _ = clean(itemId);
+                    // _ = clean(itemId); 
                     return true;
                 }
             }
             return false;
         }
 
-        private readonly static object _lock = new object();
+        /*private readonly static object _lock = new object();
         private async Task clean(int itemId)
         {
             bool obtained = await Player.Inventory.WaitForItemId(itemId, attempts: 10, delayMS: 200);
@@ -111,6 +99,36 @@ namespace Grimoire.Game
                     DropUi.instance.RemoveItem(item.Name);
                 }
             }
+        }
+        public async Task<bool> GetDrop(InventoryItem item)
+        {
+            return await GetDrop(item.Id);
+        }
+        public async Task<bool> RemoveAll(int itemId)
+        {
+            if (Contains(itemId))
+            {
+                _drops.RemoveAll((InventoryItem d) => d.Id == itemId);
+                return true;
+            }
+            return false;
+        }*/
+        public void Remove(string name) 
+        {
+            var item = _drops.Find((InventoryItem d) => d.Name == name);
+            if (item == null)
+                return;
+            _drops.Remove(item);
+            DropUi.instance.RemoveItem(item.Name);
+        }
+		
+		public void Remove(int id) 
+        {
+            var item = _drops.Find((InventoryItem d) => d.Id == id);
+            if (item == null)
+                return;
+            _drops.Remove(item);
+            DropUi.instance.RemoveItem(item.Name);
         }
 
         public void Clear()
