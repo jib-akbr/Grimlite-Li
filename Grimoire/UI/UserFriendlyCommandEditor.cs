@@ -1,5 +1,7 @@
 using DarkUI.Controls;
 using DarkUI.Forms;
+using Grimoire.Botting;
+using Grimoire.Botting.Commands.Combat;
 using Grimoire.Botting.Commands.Misc.Statements;
 using Grimoire.Botting.Commands.Quest;
 using Grimoire.Game;
@@ -117,8 +119,8 @@ namespace Grimoire.UI
                                 break;
                             case "Quest":
                                 var qObj = JsonConvert.DeserializeObject<Quest>(item.Value.ToString());
-                                lblText = "Quest ID"; 
-                                tbText = qObj.Id.ToString(); 
+                                lblText = "Quest ID";
+                                tbText = qObj.Id.ToString();
                                 break;
                         }
                         currentVars.Add(item.Key, new KeyValuePair<DarkLabel, DarkTextBox>(
@@ -241,7 +243,7 @@ namespace Grimoire.UI
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.splitContainer1.Location = new System.Drawing.Point(12, 46);
             this.splitContainer1.Name = "splitContainer1";
@@ -259,7 +261,7 @@ namespace Grimoire.UI
             // 
             // btnRawCommand
             // 
-            this.btnRawCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.btnRawCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnRawCommand.Checked = false;
             this.btnRawCommand.DialogResult = System.Windows.Forms.DialogResult.Abort;
@@ -271,7 +273,7 @@ namespace Grimoire.UI
             // 
             // btnGetInfo
             // 
-            this.btnGetInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.btnGetInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnGetInfo.Checked = false;
             this.btnGetInfo.Location = new System.Drawing.Point(12, -12);
@@ -311,28 +313,55 @@ namespace Grimoire.UI
                 string cell = Player.Cell;
                 string map = Player.Map;
                 string pad = Player.Pad;
-
+                string monster = World.GetMonsterNameHere() ?? "*";
                 // Fill relevant textbox
                 foreach (Control ctrl in this.Controls)
                 {
                     if (ctrl is DarkTextBox tb)
                     {
-                        if (tb.Name.IndexOf("swf", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                            tb.Name.IndexOf("max", StringComparison.OrdinalIgnoreCase) >= 0)
+                        string name = tb.Name;
+                        if (strContains(name, "swf") ||
+                            strContains(name, "max"))
                             continue;
-                        else if (tb.Name.IndexOf("Cell", StringComparison.OrdinalIgnoreCase) >= 0)
-                            tb.Text = cell;
-                        else if (tb.Name.IndexOf("Map", StringComparison.OrdinalIgnoreCase) >= 0)
-                            tb.Text = map;
-                        else if (tb.Name.IndexOf("Pad", StringComparison.OrdinalIgnoreCase) >= 0)
-                            tb.Text = pad;
+                        else if (strContains(name, "Cell"))
+                            tb.Text = alternate(tb, cell);
+                        else if (strContains(name, "Map"))
+                            tb.Text = alternate(tb, map);
+                        else if (strContains(name, "Pad"))
+                            tb.Text = alternate(tb, pad);
+                        else if (strContains(name, "Monster") && !(cmdObj is CmdQuestHunt) && (ctrlpressed||altpressed))
+                            tb.Text = alternate(tb, monster);
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Gagal mengambil info dari Player.\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Fatal Error : The player is not loaded completely.\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+        private string alternate(DarkTextBox tb, string ext)
+        {
+            string name = tb.Name;
+            if (altpressed)
+            {
+                if (strContains(name, "Map"))
+                    return ext + "-[room]";
+                else
+                    return $"{tb.Text},{ext}";
+            }
+            else if (ctrlpressed)
+            {
+                //if (tb.Name.IndexOf("Map", StringComparison.OrdinalIgnoreCase) >= 0)
+                if (strContains(name, "Map"))
+                    return ext + "-[room]";
+            }
+            return ext;
+        }
+        bool altpressed => (ModifierKeys & Keys.Alt) == Keys.Alt;
+        bool ctrlpressed => (ModifierKeys & Keys.Control) == Keys.Control;
+        private bool strContains(string text, string target)
+        {
+            return text.IndexOf(target, StringComparison.OrdinalIgnoreCase) >= 0;
         }
         private void UserFriendlyCommandEditor_KeyDown(object sender, KeyEventArgs e)
         {

@@ -1,3 +1,4 @@
+using Grimoire.Botting;
 using Grimoire.Game.Data;
 using Grimoire.Tools;
 using Newtonsoft.Json;
@@ -36,17 +37,15 @@ namespace Grimoire.Game
             {
                 foreach (string cell in Cells)
                 {
-                    // Ambil string JSON dari SWF
+                    //Gets JSON as string from SWF
                     string json = Flash.Call("GetMonstersInCell", new object[] { cell });
-
                     if (!string.IsNullOrEmpty(json) && json.StartsWith("["))
                     {
+                        //revert back to JSON
                         var monstersInCell = JsonConvert.DeserializeObject<List<Monster>>(json);
                         if (monstersInCell != null && monstersInCell.Count > 0)
-                        {
-                            //LogForm.Instance.AppendDebug($"Getting monsters on : {cell}");
                             allMonsters.AddRange(monstersInCell);
-                        } //else LogForm.Instance.AppendDebug($"[FAILED] Getting monsters on : {cell}");
+                        //else LogForm.Instance.AppendDebug($"[FAILED] Getting monsters on : {cell}");
                     }
                 }
             }
@@ -61,8 +60,17 @@ namespace Grimoire.Game
             }
             return allMonsters;
         }
+        public static string GetMonsterNameHere()
+        {
+            return string.Join(" & ",
+                AvailableMonsters
+                    .Select(m => m.Name)
+                    .Where(n => !string.IsNullOrWhiteSpace(n))
+                    .Distinct()
+            );
+        }
 
-		public static List<string> GetMonsterCells(string monsterName)
+        public static List<string> GetMonsterCells(string monsterName)
         {
             List<Monster> monMap = GetAllMonsters();
 
@@ -74,41 +82,41 @@ namespace Grimoire.Game
                     .OrderByDescending(g => g.Count())
                     .Select(g => g.Key)
                     .ToList();
-            
-			string[] tokens = monsterName
-				.Split('&')
-				.Select(t => t.Trim())
-				.Where(t => !string.IsNullOrEmpty(t))
-				.ToArray();
+
+            string[] tokens = monsterName
+                .Split('&')
+                .Select(t => t.Trim())
+                .Where(t => !string.IsNullOrEmpty(t))
+                .ToArray();
 
             // 3. Filtering process
             List<Func<Monster, bool>> predicates = new List<Func<Monster, bool>>();
             foreach (string token in tokens)
-			{
-				Match match = Regex.Match(token, @"^id['.:-](?<Id>\d+)$", RegexOptions.IgnoreCase);
-				if (match.Success && int.TryParse(match.Groups["Id"].Value, out int id))
-				{
-					predicates.Add(m => m.MonMapID == id);
-				}
-				else
-				{
-					string name = token;
-					predicates.Add(m =>
+            {
+                Match match = Regex.Match(token, @"^id['.:-](?<Id>\d+)$", RegexOptions.IgnoreCase);
+                if (match.Success && int.TryParse(match.Groups["Id"].Value, out int id))
+                {
+                    predicates.Add(m => m.MonMapID == id);
+                }
+                else
+                {
+                    string name = token;
+                    predicates.Add(m =>
                         m.Name.EqualsIgnoreCase(name)
-					);
-				}
-			}
-			// 4. Combine with OR
-			bool FinalPredicate(Monster m) => predicates.Any(p => p(m));
+                    );
+                }
+            }
+            // 4. Combine with OR
+            bool FinalPredicate(Monster m) => predicates.Any(p => p(m));
 
             // 5. Collect cells filtered with monster name/id
-			return monMap
-				.Where(FinalPredicate)
-				.Where(m => !string.IsNullOrEmpty(m.cell))
-				.GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
-				.OrderByDescending(g => g.Count())
-				.Select(g => g.Key)
-				.ToList();
+            return monMap
+                .Where(FinalPredicate)
+                .Where(m => !string.IsNullOrEmpty(m.cell))
+                .GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .ToList();
             /*List<string> targetCells = monMap
                 .Where(finalPredicate)
                 .GroupBy(m => m.cell, StringComparer.OrdinalIgnoreCase)
@@ -205,24 +213,24 @@ namespace Grimoire.Game
                 return Flash.Call<bool>("IsMonsterAvailable", new string[1] { name });
             }
         }
-		
-		public static bool MonstersAvailable(string[] monsters, out string monster)
-		{
-			monster = null;
 
-			if (monsters == null || monsters.Length == 0)
-				return false;
-			
-			foreach (string m in monsters)
-			{
-				if (!string.IsNullOrWhiteSpace(m) && World.IsMonsterAvailable(m))
-				{
-					monster = m;
-					return true;
-				}
-			}
-			return false;
-		}
+        public static bool MonstersAvailable(string[] monsters, out string monster)
+        {
+            monster = null;
+
+            if (monsters == null || monsters.Length == 0)
+                return false;
+
+            foreach (string m in monsters)
+            {
+                if (!string.IsNullOrWhiteSpace(m) && World.IsMonsterAvailable(m))
+                {
+                    monster = m;
+                    return true;
+                }
+            }
+            return false;
+        }
 
         static World()
         {
