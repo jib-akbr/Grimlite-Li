@@ -34,8 +34,9 @@ namespace Grimoire.Networking.Handlers.Maid
 							UI.Maid.MaidRemake.Instance.resumeFollow();
 						}
 					}
-					else
+					else 
 					{
+						UI.Maid.MaidRemake.Instance.cbStopAttack.Checked = false;
 						UI.Maid.MaidRemake.Instance.resumeFollow();
 					}
 				}
