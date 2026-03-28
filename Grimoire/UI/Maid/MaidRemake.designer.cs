@@ -164,6 +164,7 @@
             this.cmbUltraBoss.FormattingEnabled = true;
             this.cmbUltraBoss.Items.AddRange(new object[] {
             "None",
+            "Auto Potion",
             "Asc.Solstice P1",
             "Asc.Solstice P2",
             "Asc.Midnight P1",

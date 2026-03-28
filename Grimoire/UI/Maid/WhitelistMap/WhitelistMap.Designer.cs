@@ -85,7 +85,7 @@ namespace MaidRemake.WhitelistMap
 			this.lbCounter.Name = "lbCounter";
 			this.lbCounter.Size = new System.Drawing.Size(153, 20);
 			this.lbCounter.TabIndex = 17;
-			this.lbCounter.Text = "Number of map(s): 2";
+			this.lbCounter.Text = "Number of map(s): ";
 			// 
 			// tbGrabMapResult
 			// 
@@ -125,7 +125,10 @@ namespace MaidRemake.WhitelistMap
 			this.tbWhitelistMap.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
 			this.tbWhitelistMap.Size = new System.Drawing.Size(314, 213);
 			this.tbWhitelistMap.TabIndex = 13;
-			this.tbWhitelistMap.Text = "newbie;all\r\nbattleunderb;Enter;Spawn";
+			this.tbWhitelistMap.Text = "newbie;all\r\n" +
+				"prison;all\r\n" +
+				"chaoscrypt;all\r\n" +
+				"battleunderb;Enter;Spawn";
 			this.tbWhitelistMap.TextChanged += new System.EventHandler(this.tbWhitelistMap_TextChanged);
 			// 
 			// btnAddToList

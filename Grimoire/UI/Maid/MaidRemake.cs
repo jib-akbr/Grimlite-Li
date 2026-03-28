@@ -32,7 +32,7 @@ namespace Grimoire.UI.Maid
 
         public bool isPlayerInMyRoom => IsPlayerInMap(targetUsername);
 
-        public bool shouldFollow => !isPlayerInMyRoom || (isPlayerInMyRoom && !isPlayerInMyCell);
+        public bool shouldFollow => !(isPlayerInMyRoom && isPlayerInMyCell);
         //Avoiding unwanted stuck
         public int skillDelay => (int)MaidRemake.Instance.numSkillDelay.Value;
 
@@ -63,8 +63,10 @@ namespace Grimoire.UI.Maid
         bool onPause = false;
 
         bool forceSkill = false;
-        bool balance = false;
-
+        bool balance = false;   //Used on Gramiel crystal HP balancing
+        bool locktarget = false;//Used for Special cases like Breaking shield/safeguard
+        private string selectedMode => cmbUltraBoss.SelectedItem?.ToString() ?? "None";
+        private string selectedPreset => cmbPreset.SelectedItem?.ToString() ?? "";
         Stopwatch stopwatch = new Stopwatch();
 
         public MaidRemake()
@@ -77,6 +79,7 @@ namespace Grimoire.UI.Maid
             this.KeyDown += new KeyEventHandler(this.hotkey);
             if (Player.IsLoggedIn) cmbGotoUsername.Text = Player.Username;
             cmbUltraBoss.SelectedIndex = 0;
+            AutoLoadConfig();
             this.Text = $"Maid Remake";
 
             if (cbAntiCounter.Checked)
@@ -111,7 +114,9 @@ namespace Grimoire.UI.Maid
         private async void cbEnablePlugin_CheckedChanged(object sender, EventArgs e)
         {
             resetSpecials();
-            if (cbEnablePlugin.Checked)
+            bool toggle = cbEnablePlugin.Checked;
+            OptionsManager.SetLagKiller(toggle);
+            if (toggle)
             {
                 startUI();
 
@@ -141,7 +146,10 @@ namespace Grimoire.UI.Maid
                     Flash.FlashCall2 += AnimsMsgHandler;
 
                 if (!cbUnfollow.Checked && Player.IsLoggedIn && !World.IsMapLoading && shouldFollow)//isPlayerInMyRoom && !isPlayerInMyCell)
+                {
+                    // await gotoTarget(targetUsername);
                     Player.GoToPlayer(targetUsername);
+                }
 
                 if (cbAttackPriority.Checked)
                     monsterList = tbAttPriority.Text.Split(',');
@@ -156,13 +164,14 @@ namespace Grimoire.UI.Maid
                 }
 
                 // auto equip Scroll of Enrage
-                if (cmbUltraBoss.SelectedItem.ToString() != "None")
+                if (selectedMode != "None" && selectedMode != "Auto Potion")
                 {
                     equipEnrage();
                 }
-				if (skillproperties[5]?["sArg1"]?.ToString() != "")
-					useSkill("5",true);
-				
+                if (skillproperties[5]?["sArg1"]?.ToString() != "")
+                    useSkill("5", true);
+                OptionsManager.SetInfiniteRange();
+
                 while (cbEnablePlugin.Checked)
                 {
                     try
@@ -287,7 +296,7 @@ namespace Grimoire.UI.Maid
                         }
                         else if (Player.IsLoggedIn && !World.IsMapLoading)
                         {
-                            gotoTarget(targetUsername);
+                            _ = gotoTarget(targetUsername);
                             if (cbStopIf.Checked)
                             {
                                 gotoTry++;
@@ -311,13 +320,14 @@ namespace Grimoire.UI.Maid
                                 await Task.Delay(250);
 
                             // goto target current cell when in the same room
-                            while (cbEnablePlugin.Checked && Player.IsLoggedIn && shouldFollow) //isPlayerInMyRoom && !isPlayerInMyCell)
+                            while (!cbUnfollow.Checked & cbEnablePlugin.Checked && Player.IsLoggedIn && shouldFollow) //isPlayerInMyRoom && !isPlayerInMyCell)
                             {
-                                Player.GoToPlayer(targetUsername);
+                                //Player.GoToPlayer(targetUsername);
+                                await gotoTarget(targetUsername);
                                 // debug("Attempt to chase");
-                                if (cbEnablePlugin.Checked && Player.IsLoggedIn && shouldFollow) //isPlayerInMyRoom && !isPlayerInMyCell)
-                                    await Task.Delay(2000);
-                                else break;
+                                // if (cbEnablePlugin.Checked && Player.IsLoggedIn && shouldFollow) //isPlayerInMyRoom && !isPlayerInMyCell)
+                                await Task.Delay(750);
+                                // else break;
                             }
                         }
 
@@ -336,10 +346,10 @@ namespace Grimoire.UI.Maid
             int cd = Player.SkillAvailable(index);
             await Task.Delay(Math.Min(cd, 1500));
             useSkill(index, true);
-            for (int i = 0; i < 15; i++)
+            for (int i = 0; i < 10; i++)
             {
                 await Task.Delay(100); //Ensure its going to cooldown
-                if (Player.SkillAvailable(index) > 0) 
+                if (Player.SkillAvailable(index) > 0)
                     return;
             }
             useSkill(index, true);
@@ -358,8 +368,9 @@ namespace Grimoire.UI.Maid
         {
             InventoryItem item = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => i.Name.Equals("Scroll of Enrage") && i.IsEquippable);
             Player.EquipPotion(item.Id, item.Description, item.File, item.Name);
-            _ = Task.Run(async () => {
-                await Task.Delay(2000);
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(1000);
                 useSkill("5", true);
             });
         }
@@ -410,7 +421,7 @@ namespace Grimoire.UI.Maid
                     Task.Delay(2000);
                     stopMaid();
                     Task.Delay(200);
-                    Player.MoveToCell(Player.Cell, Player.Pad);
+                    Player.refreshCell();
                     tbSpecialMsg.Text = $"tc;2;*;12;<order 1-4>(optional)";
                 }
             }
@@ -443,7 +454,7 @@ namespace Grimoire.UI.Maid
                 }
             }
 
-            if (Player.Map == "voidxyfrag" && Player.EquippedClass == "LEGION REVENANT")
+            /*if (Player.Map == "voidxyfrag" && Player.EquippedClass == "LEGION REVENANT")
             {
                 if (!string.IsNullOrWhiteSpace(msgTemp))
                     return;
@@ -458,9 +469,9 @@ namespace Grimoire.UI.Maid
                     tbSpecialMsg.Text = msgTemp;
                     msgTemp = string.Empty; // Reset setelah keluar map
                 }
-            }
-
-            if (isUsingCSH() && cmbPreset.SelectedItem.ToString() == "CSH")
+            }*/
+            string preset = selectedPreset;
+            if (isUsingCSH() && preset == "CSH")
             {
                 if (Player.GetAuras(true, "Rounds Empty") == 1 || Player.Mana < 15)
                 {
@@ -473,24 +484,27 @@ namespace Grimoire.UI.Maid
                     await Task.Delay(200);*/
                 }
             }
-            else if (Player.EquippedClass == "ARCANA INVOKER")
+            else if (Player.EquippedClass == "ARCANA INVOKER" &&
+            preset == "AI")
             {
                 if ((Player.GetAuras(true, "0 - The Fool") == 0 &&
                     Player.GetAuras(true, "XXI - The World") == 0) ||
                     Player.GetAuras(true, "XX - Judgement") == 1 ||
-                    Player.GetAuras(true, "End of the world") >= 20 )
+                    Player.GetAuras(true, "End of the world") >= 20)
                 {
                     await waitSkill("1");
-                    await Task.Delay(200);
                 }
             }
-            else if (Player.EquippedClass == "ARCHMAGE")
+            else if (Player.EquippedClass == "ARCHMAGE" &&
+            preset == "AM")
             {
-                if (Player.GetAuras(true, "Arcane Flux") == 1 &&
-                    Player.GetAuras(true, "Corporeal Ascension") == 0 ||
+                if (Player.GetAuras(true, "Corporeal Ascension") == 0 ||
                     Player.GetAuras(true, "Arcane Sigil") == 0)
                 {
+                    LogForm.Instance.devDebug("Attempting to enable Corporeal & Arcane Sigil");
+                    await waitSkill("2");
                     await waitSkill("4");
+                    await Task.Delay(350);
                 }
             }
 
@@ -526,24 +540,31 @@ namespace Grimoire.UI.Maid
                 balance = false;
                 doPriorityAttack();
                 return;
-            }
+            }//Ensure Taunt executed properly
 
             //Gramiel crystal HP threshold
-            const int threshold = 100;
+            int[] thresholds = { 150, 50 };
             //Get Current target MonId
             int.TryParse(Flash.GetGameObject("world.myAvatar.target.objData.MonMapID").Replace("\"", ""), out int currentId);
+            foreach (int threshold in thresholds)
+            {
+                if (currentId == 2 &&
+                    L_crystal.Health <= threshold &&
+                    R_crystal.Health > threshold)
+                {
+                    Player.AttackMonster("id.3");//Right
+                    balance = true;
+                    return;
+                }
 
-            if (currentId == 2 && L_crystal.Health <= threshold && R_crystal.Health > threshold)
-            {
-                Player.AttackMonster("id.3");
-                balance = true;
-                return;
-            }
-            else if (currentId == 3 && R_crystal.Health <= threshold && L_crystal.Health > threshold)
-            {
-                Player.AttackMonster("id.2");
-                balance = true;
-                return;
+                if (currentId == 3 &&
+                    R_crystal.Health <= threshold &&
+                    L_crystal.Health > threshold)
+                {
+                    Player.AttackMonster("id.2");//Left
+                    balance = true;
+                    return;
+                }
             }
             balance = false;
         }
@@ -627,6 +648,7 @@ namespace Grimoire.UI.Maid
                             //System.Console.WriteLine("anims: " + anims);
                             foreach (JObject anim in anims)
                             {
+                                //catches anims[].msg
                                 string msg = anim?["msg"]?.ToString()?.ToLower();
 
                                 if (msg != null)
@@ -691,9 +713,10 @@ namespace Grimoire.UI.Maid
                                         //debug("Counter Attack: active");
                                         Task.Run(async () =>
                                         {
+                                            await Task.Delay(1500);
                                             counterAttack = true;
                                             cbStopAttack.Checked = true;
-                                            await Task.Delay(10000);
+                                            await Task.Delay(7500);
                                             //This function will auto exit Counter/Stop Atk
                                             counterAttack = false;
                                             cbStopAttack.Checked = false;
@@ -705,23 +728,44 @@ namespace Grimoire.UI.Maid
                     }
                     if (jsonMessage.DataObject?["a"] != null)
                     {
-                        JArray a = (JArray)jsonMessage.DataObject?["a"];
-                        if (a != null)
+                        JArray actions = (JArray)jsonMessage.DataObject?["a"];
+                        if (actions != null)
                         {
-                            if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
+                            /*if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
                                 cbStopAttack.Checked = true;
                             else if (Player.Map == "ascendedeclipse") //changed to avoid force uncheck
-                                cbStopAttack.Checked = false;
-                            foreach (JObject aura in a)
+                                cbStopAttack.Checked = false;*/
+                            foreach (JObject action in actions)
                             {
-                                JObject aura2 = (JObject)aura["aura"];
-                                if (aura2?["nam"]?.ToString() == "Counter Attack" && aura.GetValue("cmd")?.ToString() == "aura--")
+                                JObject aura = (JObject)action["aura"];
+                                if (aura?["nam"]?.ToString() == "Counter Attack" && action.GetValue("cmd")?.ToString() == "aura--")
                                 {
                                     counterAttack = false;
                                     cbStopAttack.Checked = false;
                                     //debug("Counter Attack: fades");
                                     break;
                                 } //Commented Old Counter handling
+                                JArray auras = (JArray)action["auras"];
+                                if (auras != null)
+                                {
+                                    foreach (JObject _auras in auras)
+                                    {
+                                        string msg = (string)(_auras?["msgOn"]);
+                                        if (msg == null) return;
+                                        if (msg.Contains("Gramiel attempts to drain"))
+                                        {
+                                            Task.Run(async () =>
+                                            {
+                                                debug($"Switching to attack Gramiel for 4s to break his Safeguard");
+                                                locktarget = true;
+                                                Player.AttackMonster("Gramiel");
+                                                await Task.Delay(4000);
+                                                locktarget = false;
+                                            });
+                                            break;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -751,15 +795,24 @@ namespace Grimoire.UI.Maid
 
         private void doPriorityAttack()
         {
-            if (balance)
+            if (balance || locktarget)
                 return;
 
-            string currentTarget = Player.GetTargetName;
+            JObject objData = Flash.Instance.GetGameObject<JObject>("world.myAvatar.target.objData");
+
+            // string currentTarget = Player.GetTargetName;
+            string currentTarget = objData?["strMonName"]?.ToString();
+            string idTarget = objData?["MonMapID"]?.ToString();
+
             for (int i = 0; i < monsterList.Length; i++)
             {
                 //if (monsterList[i].Equals(Player.GetTargetName(), StringComparison.OrdinalIgnoreCase))
-                if (currentTarget?.IndexOf(monsterList[i], StringComparison.OrdinalIgnoreCase) >= 0)
+                string monsterId = null;
+                if (monsterList[i].StartsWith("id", StringComparison.OrdinalIgnoreCase) && monsterList[i].Length > 3)
+                    monsterId = monsterList[i].Substring(3);
+
                 if (currentTarget.EqualsIgnoreCase(monsterList[i]) || 
+                    (monsterId != null && monsterId == idTarget))
                     return; //Made special for CSH non autoattack cases
 
                 if (World.IsMonsterAvailable(monsterList[i]))
@@ -770,14 +823,13 @@ namespace Grimoire.UI.Maid
             }
         }
 
-        private bool isPlayerInCombat()
-        {
-            return (Player.CurrentState == Player.State.InCombat ? true : false);
-        }
+        //private bool isPlayerInCombat => Player.CurrentState == Player.State.InCombat;
 
         private bool IsPlayerInMap(string targetUsername)
         {
-            foreach (string player in World.PlayersInMap)
+            var players = World.PlayersInMap;
+
+            foreach (string player in players)
             {
                 if (player.ToLower() == targetUsername)
                     return true;
@@ -791,13 +843,18 @@ namespace Grimoire.UI.Maid
             return Player.Health <= healthBoundary ? true : false;
         }
 
-        private async void gotoTarget(string targetUsername)
+        private async Task gotoTarget(string targetUsername)
         {
-            if (Player.CurrentState != Player.State.Idle)
-                Player.MoveToCell("Enter", "Spawn");
-            await Task.Delay(500);
+            BotData.BotState = BotData.State.Move;
+            await Player.ExitCombat(1500, true);
+            if (!isPlayerInMyRoom)
+            {
+                string currentmap = Player.Map;
+                await Proxy.Instance.SendToServer($"%xt%zm%cmd%1%goto%{targetUsername}%");
+                await BotUtilities.WaitUntil(() => Player.Map != currentmap && !World.IsMapLoading, interval: 500);
+                // await BotUtilities.WaitUntil(() => World.IsMapLoading,interval:200);
+            }
             Player.GoToPlayer(targetUsername);
-            //await Proxy.Instance.SendToServer($"%xt%zm%cmd%1%goto%{targetUsername}%");
         }
 
         /* UI state */
@@ -852,6 +909,7 @@ namespace Grimoire.UI.Maid
             cbCopyWalk.Enabled = true;
             cmbUltraBoss.Enabled = true;
             cbEnablePlugin.Checked = false;
+            cbUnfollow.Checked = false;
             onPause = false;
             ResetToken(true);
             if (!string.IsNullOrWhiteSpace(msgTemp))
@@ -864,16 +922,18 @@ namespace Grimoire.UI.Maid
 
         public void resetSpecials()
         {
-            if (Player.Map == "ascendeclipse" && Player.Cell != "r3")
+            string map = Player.Map;
+            string cell = Player.Cell;
+            if (map == "ascendeclipse" && cell != "r3")
             {
                 sunConvergenceCount = 0;
                 moonConvergenceCount = 0;
             }
-            if (Player.Map == "astralshrine" && Player.Cell != "r2")
+            if (map == "astralshrine" && cell != "r2")
             {
                 beholdOurStarfireCount = 0;
             }
-            if (Player.Map == "ultragramiel" && Player.Cell != "r2")
+            if (map == "ultragramiel" && cell != "r2")
             {
                 crystalCount = 0;
             }
@@ -917,12 +977,12 @@ namespace Grimoire.UI.Maid
                 case Keys.R:
                     // LockCell: R
                     e.SuppressKeyPress = true;
-                    cbUnfollow.Checked = cbUnfollow.Checked ? false : true;
+                    cbUnfollow.Checked = !cbUnfollow.Checked;
                     break;
                 case Keys.T:
                     // StopAttack: T
                     e.SuppressKeyPress = true;
-                    cbStopAttack.Checked = cbStopAttack.Checked ? false : true;
+                    cbStopAttack.Checked = !cbStopAttack.Checked;
                     break;
             }
         }
@@ -937,18 +997,18 @@ namespace Grimoire.UI.Maid
             {
                 case Keys.R:
                     // LockCell: R
-                    cbUnfollow.Checked = cbUnfollow.Checked ? false : true;
+                    cbUnfollow.Checked = !cbUnfollow.Checked;
                     break;
                 case Keys.T:
                     // StopAttack: T
-                    cbStopAttack.Checked = cbStopAttack.Checked ? false : true;
+                    cbStopAttack.Checked = !cbStopAttack.Checked;
                     break;
             }
         }
         /* Other Control */
-        public bool IsFocusedOnBox => this.ActiveControl != null && 
-		(this.ActiveControl is TextBox || this.ActiveControl is ComboBox) && 
-		this.ActiveControl.Enabled;
+        public bool IsFocusedOnBox => this.ActiveControl != null &&
+        (this.ActiveControl is TextBox || this.ActiveControl is ComboBox) &&
+        this.ActiveControl.Enabled;
 
         public void pauseFollow()
         {
@@ -972,13 +1032,16 @@ namespace Grimoire.UI.Maid
         {
             if (!cbEnablePlugin.Checked)
                 return;
+            Font prev = Root.Instance.maidStrip.Font;
             if (cbUnfollow.Checked)
             {
+                Root.Instance.maidStrip.Font = new Font(prev, prev.Style | FontStyle.Italic);
                 Proxy.Instance.UnregisterHandler(CJHandler);
                 if (cbCopyWalk.Checked) Proxy.Instance.UnregisterHandler(CopyWalkHandler);
             }
             else
             {
+                Root.Instance.maidStrip.Font = new Font(prev, prev.Style & ~FontStyle.Italic);
                 Proxy.Instance.RegisterHandler(CJHandler);
                 if (cbCopyWalk.Checked) Proxy.Instance.RegisterHandler(CopyWalkHandler);
             }
@@ -997,9 +1060,11 @@ namespace Grimoire.UI.Maid
                 Player.CancelAutoAttack();
                 Player.CancelTarget();
                 Player.Rest();
+                Root.Instance.maidStrip.ForeColor = Color.FromArgb(240, 50, 50);
             }
             else
             {
+                Root.Instance.maidStrip.ForeColor = Color.FromArgb(220, 220, 220);
                 lbStopAttackBg.BackColor = System.Drawing.Color.Transparent;
                 stopwatch.Stop();
                 this.Text = "Maid Remake";
@@ -1052,19 +1117,21 @@ namespace Grimoire.UI.Maid
             bool act = true;
             if (msg.Contains("shattering"))
             {
-                switch (cmbUltraBoss.SelectedItem.ToString())
+                switch (selectedMode)
                 {
                     case "Gramiel L1":
                     case "Gramiel L2":
                         if (monId != 2)
                             return false;
                         crystalCount++;
+                        Player.AttackMonster("id." + monId);
                         debug($"Defense shattering 'Left Crystal' count: {crystalCount}");
                         break;
                     case "Gramiel R1":
                     case "Gramiel R2":
                         if (monId != 3)
                             return false;
+                        Player.AttackMonster("id." + monId);
                         crystalCount++;
                         debug($"Defense shattering 'Right Crystal' count: {crystalCount}");
                         break;
@@ -1086,7 +1153,7 @@ namespace Grimoire.UI.Maid
                 beholdOurStarfireCount++;
                 debug($"Behold our starfire count: {beholdOurStarfireCount}");
             }
-            switch (cmbUltraBoss.SelectedItem.ToString())
+            switch (selectedMode)
             {
                 case "Asc.Solstice P1":
                     act = sunConvergenceCount % 2 != 0 || !msg.Contains("sun converge");
@@ -1120,7 +1187,7 @@ namespace Grimoire.UI.Maid
 
         private void cmbUltraBoss_SelectedIndexChanged(object sender, EventArgs e)
         {
-            switch (cmbUltraBoss.SelectedItem.ToString())
+            switch (selectedMode)
             {
                 case "None":
                     tbSpecialMsg.Enabled = true;
@@ -1168,7 +1235,7 @@ namespace Grimoire.UI.Maid
         private void cmbPreset_SelectedIndexChanged(object sender, EventArgs e)
         {
             ClassPreset.cbClear();
-            switch (cmbPreset.SelectedItem.ToString())
+            switch (selectedPreset)
             {
                 case "LR":
                     ClassPreset.LR();
@@ -1235,10 +1302,10 @@ namespace Grimoire.UI.Maid
                 LockedMapForm.Instance.Show(this);
             }
         }
-
-        private void btnSave_Click(object sender, EventArgs e)
+        #region configSave_Load
+        private MaidConfig saveConfig()
         {
-            MaidConfig maidConfig = new MaidConfig
+            return new MaidConfig
             {
                 Target = cmbGotoUsername.Text,
                 SkillList = tbSkillList.Text,
@@ -1264,6 +1331,10 @@ namespace Grimoire.UI.Maid
                 AntiCounter = cbAntiCounter.Checked,
                 UltraBossExtra = cmbUltraBoss.SelectedIndex,
             };
+        }
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+
 
             string configFolder = Path.Combine(Application.StartupPath, "Config");
             if (!Directory.Exists(configFolder))
@@ -1280,7 +1351,7 @@ namespace Grimoire.UI.Maid
                 {
                     try
                     {
-                        File.WriteAllText(saveFileDialog.FileName, JsonConvert.SerializeObject(maidConfig, Formatting.Indented));
+                        File.WriteAllText(saveFileDialog.FileName, JsonConvert.SerializeObject(saveConfig(), Formatting.Indented));
                         string[] path = saveFileDialog.FileName.Split('\\');
                         gbConfig.Text = $"Config : {path[path.Length - 1]}";
                     }
@@ -1307,37 +1378,89 @@ namespace Grimoire.UI.Maid
                 if (openFileDialog.ShowDialog() == DialogResult.OK &&
                     TryDeserialize(File.ReadAllText(openFileDialog.FileName), out MaidConfig config))
                 {
-                    gbConfig.Text = $"Config : {openFileDialog.SafeFileName}";
-                    cmbUltraBoss.SelectedIndex = config.UltraBossExtra;
-                    cmbGotoUsername.Text = config.Target;
-                    tbSkillList.Text = config.SkillList;
-                    numSkillDelay.Value = config.SkillDelay;
-                    cbWaitSkill.Checked = config.WaitSkill;
-                    cbStopIf.Checked = config.StopFailedGoto;
-                    cbHandleLockedMap.Checked = config.LockedZoneHandler;
-                    LockedMapForm.Instance.tbLockedMapAlternative.Text = config.LockedZoneHandlerMaps;
-                    cbWhitelistMap.Checked = config.WhitelistMap;
-                    WhitelistMapForm.Instance.tbWhitelistMap.Text = config.WhitelistMapMaps;
-                    numRelogDelay.Value = config.RelogDelay;
-                    cbEnableGlobalHotkey.Checked = config.GlobalHotkey;
-                    cbUseHeal.Checked = config.SafeSkill;
-                    tbHealSkill.Text = config.SafeSkillList;
-                    numHealthPercent.Value = config.SafeSkillHP;
-                    cbBuffIfStop.Checked = config.BuffStopAttack;
-                    tbBuffSkill.Text = config.BuffStopAttackList;
-                    cbAttackPriority.Checked = config.AttackPriority;
-                    tbAttPriority.Text = config.AttackPriorityMonster;
-                    cbCopyWalk.Checked = config.CopyWalk;
-                    tbSpecialMsg.Text = config.SpecialMsg;
-                    numSkillAct.Value = config.SpecialAct;
-                    cbAntiCounter.Checked = config.AntiCounter;
+                    string file_name = openFileDialog.SafeFileName;
+                    ApplyConfig(config, file_name);
                 }
             }
-            if (cbEnableGlobalHotkey.Checked)
-                this.KeyDown -= hotkey; //Global hotkey will disable instance hotkey
-
         }
+        private void AutoLoadConfig()
+        {
+            string configFolder = Path.Combine(Application.StartupPath, "Config");
+            string autoConfig = Path.Combine(configFolder, "autoload.json");
 
+            if (!File.Exists(autoConfig))
+                return;
+
+            if (!TryDeserialize(File.ReadAllText(autoConfig), out MaidConfig config))
+                return;
+
+            ApplyConfig(config, Path.GetFileName(autoConfig));
+        }
+        private void ApplyConfig(MaidConfig config, string fileName)
+        {
+            gbConfig.Text = $"Config : {fileName}";
+            if (!string.IsNullOrEmpty(config.LockedZoneHandlerMaps))
+                LockedMapForm.Instance.tbLockedMapAlternative.Text = config.LockedZoneHandlerMaps;
+            if (!string.IsNullOrEmpty(config.WhitelistMapMaps))
+                WhitelistMapForm.Instance.tbWhitelistMap.Text = config.WhitelistMapMaps;
+            if (!string.IsNullOrEmpty(config.SkillList))
+                tbSkillList.Text = config.SkillList;
+            if (!string.IsNullOrEmpty(config.BuffStopAttackList))
+                tbBuffSkill.Text = config.BuffStopAttackList;
+            if (!string.IsNullOrEmpty(config.Target))
+                cmbGotoUsername.Text = config.Target;
+            if (!string.IsNullOrEmpty(config.SafeSkillList))
+                tbHealSkill.Text = config.SafeSkillList;
+            if (!string.IsNullOrEmpty(config.AttackPriorityMonster))
+                tbAttPriority.Text = config.AttackPriorityMonster;
+            if (!string.IsNullOrEmpty(config.SpecialMsg))
+                tbSpecialMsg.Text = config.SpecialMsg;
+
+            if (config.SkillDelay.HasValue)
+                numSkillDelay.Value = config.SkillDelay.Value;
+            if (config.UltraBossExtra.HasValue)
+                cmbUltraBoss.SelectedIndex = config.UltraBossExtra.Value;
+            if (config.RelogDelay.HasValue)
+                numRelogDelay.Value = config.RelogDelay.Value;
+            if (config.SafeSkillHP.HasValue)
+                numHealthPercent.Value = config.SafeSkillHP.Value;
+            if (config.SpecialAct.HasValue)
+                numSkillAct.Value = config.SpecialAct.Value;
+
+            cbWaitSkill.Checked = config.WaitSkill ?? cbWaitSkill.Checked;
+            cbStopIf.Checked = config.StopFailedGoto ?? cbStopIf.Checked;
+            cbHandleLockedMap.Checked = config.LockedZoneHandler ?? cbHandleLockedMap.Checked;
+            cbWhitelistMap.Checked = config.WhitelistMap ?? cbWhitelistMap.Checked;
+            cbEnableGlobalHotkey.Checked = config.GlobalHotkey ?? cbEnableGlobalHotkey.Checked;
+            cbUseHeal.Checked = config.SafeSkill ?? cbUseHeal.Checked;
+            cbBuffIfStop.Checked = config.BuffStopAttack ?? cbBuffIfStop.Checked;
+            cbAttackPriority.Checked = config.AttackPriority ?? cbAttackPriority.Checked;
+            cbCopyWalk.Checked = config.CopyWalk ?? cbCopyWalk.Checked;
+            cbAntiCounter.Checked = config.AntiCounter ?? cbAntiCounter.Checked;
+            /*cmbUltraBoss.SelectedIndex = config.UltraBossExtra;
+			cmbGotoUsername.Text = config.Target;
+			tbSkillList.Text = config.SkillList;
+			numSkillDelay.Value = config.SkillDelay;
+			cbWaitSkill.Checked = config.WaitSkill;
+			cbStopIf.Checked = config.StopFailedGoto;
+			cbHandleLockedMap.Checked = config.LockedZoneHandler;
+			LockedMapForm.Instance.tbLockedMapAlternative.Text = config.LockedZoneHandlerMaps;
+			cbWhitelistMap.Checked = config.WhitelistMap;
+			WhitelistMapForm.Instance.tbWhitelistMap.Text = config.WhitelistMapMaps;
+			numRelogDelay.Value = config.RelogDelay;
+			cbEnableGlobalHotkey.Checked = config.GlobalHotkey;
+			cbUseHeal.Checked = config.SafeSkill;
+			tbHealSkill.Text = config.SafeSkillList;
+			numHealthPercent.Value = config.SafeSkillHP;
+			cbBuffIfStop.Checked = config.BuffStopAttack;
+			tbBuffSkill.Text = config.BuffStopAttackList;
+			cbAttackPriority.Checked = config.AttackPriority;
+			tbAttPriority.Text = config.AttackPriorityMonster;
+			cbCopyWalk.Checked = config.CopyWalk;
+			tbSpecialMsg.Text = config.SpecialMsg;
+			numSkillAct.Value = config.SpecialAct;
+			cbAntiCounter.Checked = config.AntiCounter;*/
+        }
         private bool TryDeserialize(string json, out MaidConfig config)
         {
             try
@@ -1349,7 +1472,7 @@ namespace Grimoire.UI.Maid
             config = null;
             return false;
         }
-
+        #endregion
         private void cbPartyCmd_CheckedChanged(object sender, EventArgs e)
         {
             if (cbPartyCmd.Checked)
