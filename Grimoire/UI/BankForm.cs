@@ -21,32 +21,29 @@ namespace Grimoire.UI
             InitializeComponent();
         }
 
-        private void button2_ClickAsync(object sender, EventArgs e)
+        private async void bankAll_ClickAsync(object sender, EventArgs e)
         {
             List<InventoryItem> inventory = Player.Inventory.Items;
 
             if (comboBox2.SelectedItem == null)
             {
-                MessageBox.Show("Please select AC or Non-AC", "Error!", MessageBoxButtons.OK,MessageBoxIcon.Error);
+                MessageBox.Show("Please select AC or Non-AC", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             foreach (InventoryItem n in inventory)
             {
                 if (n.IsAcItem && comboBox2.SelectedIndex == 0 && !n.IsEquipped)
-                {
                     Player.Bank.TransferToBank(n.Name);
-                    Task.Delay(70);
-                }
                 else if (Player.Bank.AvailableSlots > 0 && !n.IsAcItem && comboBox2.SelectedIndex == 1 && !n.IsEquipped)
-                {
                     Player.Bank.TransferToBank(n.Name);
-                    Task.Delay(70);
-                }
+                else continue;
+
+                await Task.Delay(100);
             }
             return;
         }
 
-        private void button1_ClickAsync(object sender, EventArgs e)
+        private async void button1_ClickAsync(object sender, EventArgs e)
         {
             List<InventoryItem> inventory = Player.Inventory.Items;
             string[] wep = new string[9]
@@ -61,10 +58,10 @@ namespace Grimoire.UI
                 "Staff",
                 "Wand",
             };
-            object box1 = comboBox1.SelectedItem;
+            object category = comboBox1.SelectedItem;
             object box2 = comboBox2.SelectedItem;
             bool isAC = false;
-            if (box1 == null)
+            if (category == null)
             {
                 MessageBox.Show("Please select Item type", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -78,35 +75,27 @@ namespace Grimoire.UI
             {
                 isAC = true;
             }
-            foreach (InventoryItem n in inventory)
+            foreach (InventoryItem i in inventory)
             {
-                bool flag = n.IsAcItem == isAC && !n.IsEquipped && n.Name.ToLower() != "treasure potion";
+                bool flag = i.IsAcItem == isAC && !i.IsEquipped && i.Name.ToLower() != "treasure potion";
 
-                if (checkBox1.Checked)
+                if (cbAllExcept.Checked)
                 {
-                    if (box1.ToString() == "Weapons" && !wep.Contains(n.Category) && flag)
-                    {
-                        Player.Bank.TransferToBank(n.Name);
-                        Task.Delay(70);
-                    }
-                    else if (n.Category != box1.ToString() && flag)
-                    {
-                        Player.Bank.TransferToBank(n.Name);
-                        Task.Delay(70);
-                    }
+                    if (category.ToString() == "Weapons" && !wep.Contains(i.Category) && flag)
+                        Player.Bank.TransferToBank(i.Name);
+                    else if (i.Category != category.ToString() && flag)
+                        Player.Bank.TransferToBank(i.Name);
+                    else continue;
+                    await Task.Delay(70);
                 }
                 else
                 {
-                    if (box1.ToString() == "Weapons" && wep.Contains(n.Category) && flag)
-                    {
-                        Player.Bank.TransferToBank(n.Name);
-                        Task.Delay(70);
-                    }
-                    else if (n.Category == box1.ToString() && flag)
-                    {
-                        Player.Bank.TransferToBank(n.Name);
-                        Task.Delay(70);
-                    }
+                    if (category.ToString() == "Weapons" && wep.Contains(i.Category) && flag)
+                        Player.Bank.TransferToBank(i.Name);
+                    else if (i.Category == category.ToString() && flag)
+                        Player.Bank.TransferToBank(i.Name);
+                    else continue;
+                    await Task.Delay(70);
                 }
             }
             return;

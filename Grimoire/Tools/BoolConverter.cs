@@ -12,7 +12,8 @@ namespace Grimoire.Tools
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            return reader.Value.ToString() == "1";
+            string val = reader.Value.ToString().ToLower();
+            return val == "1" || val == "true";
         }
 
         public override bool CanConvert(Type objectType)

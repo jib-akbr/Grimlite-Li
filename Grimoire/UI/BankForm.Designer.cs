@@ -37,7 +37,7 @@ namespace Grimoire.UI
             this.comboBox2 = new DarkUI.Controls.DarkComboBox();
             this.label2 = new DarkUI.Controls.DarkLabel();
             this.button2 = new DarkUI.Controls.DarkButton();
-            this.checkBox1 = new DarkUI.Controls.DarkCheckBox();
+            this.cbAllExcept = new DarkUI.Controls.DarkCheckBox();
             this.SuspendLayout();
             // 
             // label1
@@ -113,23 +113,23 @@ namespace Grimoire.UI
             this.button2.Size = new System.Drawing.Size(81, 23);
             this.button2.TabIndex = 2;
             this.button2.Text = "Bank All";
-            this.button2.Click += new System.EventHandler(this.button2_ClickAsync);
+            this.button2.Click += new System.EventHandler(this.bankAll_ClickAsync);
             // 
-            // checkBox1
+            // cbAllExcept
             // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(24, 97);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(142, 17);
-            this.checkBox1.TabIndex = 4;
-            this.checkBox1.Text = "Bank all except selected";
+            this.cbAllExcept.AutoSize = true;
+            this.cbAllExcept.Location = new System.Drawing.Point(24, 97);
+            this.cbAllExcept.Name = "cbAllExcept";
+            this.cbAllExcept.Size = new System.Drawing.Size(142, 17);
+            this.cbAllExcept.TabIndex = 4;
+            this.cbAllExcept.Text = "Bank all except selected";
             // 
             // BankForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(194, 151);
-            this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.cbAllExcept);
             this.Controls.Add(this.comboBox2);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
@@ -158,6 +158,6 @@ namespace Grimoire.UI
         private DarkComboBox comboBox2;
         private DarkLabel label2;
         private DarkButton button2;
-        private DarkCheckBox checkBox1;
+        private DarkCheckBox cbAllExcept;
     }
 }

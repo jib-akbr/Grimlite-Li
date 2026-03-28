@@ -113,6 +113,7 @@ namespace Grimoire.UI
 			BotManager.Instance.chkEnable.Checked = false;
 			if (Player.IsLoggedIn) Player.Logout();
 			Root.Instance.InitFlashMovie(tbGameSWF.Text);
+			Root.Instance.LoadCharSelect();
 			await Task.Delay(2000);
 			btnLoadSWF.Enabled = true;
 			lblSwfInfo.Text = "";
