@@ -3,6 +3,7 @@ using Grimoire.Game;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Grimoire.Botting.Commands.Combat
@@ -36,8 +37,10 @@ namespace Grimoire.Botting.Commands.Combat
 		public bool AntiCounter { get; set; } = false;
 		public string QuestId { get; set; }
 		public int DelayAfterKill { get; set; } = 500;
-
-		public async Task Execute(IBotEngine instance)
+		
+		
+		public async Task Execute(IBotEngine instance) => await Execute(instance, CancellationToken.None);
+		public async Task Execute(IBotEngine instance, CancellationToken token)
 		{
 			string Monster = (instance.IsVar(this.Monster) ? Configuration.Tempvariable[instance.GetVar(this.Monster)] : this.Monster);
 			string ItemName = ((instance.IsVar(this.ItemName) ? Configuration.Tempvariable[instance.GetVar(this.ItemName)] : this.ItemName)).Trim();
@@ -48,7 +51,7 @@ namespace Grimoire.Botting.Commands.Combat
 				KillPriority = KillPriority,
 				AntiCounter = AntiCounter
 			};
-
+			
 			int id;
 			if (int.TryParse(QuestId, out id))
 			{
@@ -62,7 +65,7 @@ namespace Grimoire.Botting.Commands.Combat
 						Player.IsAlive && 
 						!Player.Quests.CanComplete(id))
 				{
-					await kill.Execute(instance);
+					await kill.Execute(instance, token);
 					await Task.Delay(DelayAfterKill);
 				}
 			}
@@ -78,11 +81,12 @@ namespace Grimoire.Botting.Commands.Combat
 				{
 					while (instance.IsRunning && 
 						Player.IsLoggedIn && 
-						Player.IsAlive &&
+						Player.IsAlive && !token.IsCancellationRequested &&
 						!Enumerable.Range(0, itemsName.Length).All(i => Player.Inventory.ContainsItem(itemsName[i], quantities[i]))
 						)
 					{
-						await kill.Execute(instance);
+						//await kill.Execute(instance);
+						await kill.Execute(instance,token);
 						await Task.Delay(DelayAfterKill);
 					}
 				}
@@ -90,15 +94,15 @@ namespace Grimoire.Botting.Commands.Combat
 				{
 					while (instance.IsRunning && 
 						Player.IsLoggedIn && 
-						Player.IsAlive &&
-						!Player.TempInventory.ContainsItem(ItemName, Quantity))
+						Player.IsAlive && !token.IsCancellationRequested &&
+                        !Player.TempInventory.ContainsItem(ItemName, Quantity))
 					{
-						await kill.Execute(instance);
+						await kill.Execute(instance,token);
 						await Task.Delay(DelayAfterKill);
 					}
 				}
-
-				Player.CancelTarget();
+				if (Player.HasTarget)
+					Player.CancelTarget();
 				await Task.Delay(500);
 			}
 		}

@@ -2,6 +2,7 @@
 using Grimoire.Game;
 using Grimoire.Tools;
 using Grimoire.UI;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Grimoire.Botting.Commands.Combat
@@ -29,9 +30,8 @@ namespace Grimoire.Botting.Commands.Combat
             string[] _Cells = instance.ResolveVars(Cell).Split(',');
             string[] _pad = instance.ResolveVars(Pad).Split(',');
 
-            if (ItemType == ItemType.Items)
-                if (Player.Inventory.ContainsItem(_Items, _Qty)) return;
-            else if (Player.TempInventory.ContainsItem(_Items, _Qty)) return;
+            if (itemcollected(_Items, _Qty))
+                return;
 
             CmdJoin join = new CmdJoin
             {
@@ -67,6 +67,7 @@ namespace Grimoire.Botting.Commands.Combat
             var monitorTask = Task.Run(async () =>
             {
                 int i = 0;
+                Player.MoveToCell(_Cells[i], _pad[i]);
                 while (running && instance.IsRunning)
                 {
                     if (!Player.Map.Equals(_Map.Split('-')[0]))
@@ -87,7 +88,7 @@ namespace Grimoire.Botting.Commands.Combat
                     {
                         string pad = (i < _pad.Length) ? _pad[i] : "Left";
                         Player.MoveToCell(_Cells[i], pad);
-                        LogForm.Instance.devDebug($"Cell : {_Cells[i]} [{i + 1}/{_Cells.Length}]");
+                        //LogForm.Instance.devDebug($"Cell : {_Cells[i]} [{i + 1}/{_Cells.Length}]");
                     }
 
                     // This loop is needed to wait init monster loaded from clientside
@@ -97,18 +98,49 @@ namespace Grimoire.Botting.Commands.Combat
                         i = 0;
                 }
             });
-
-            await killFor.Execute(instance);
-
+            CancellationTokenSource cts = new CancellationTokenSource();
+            _ = Task.Run(async () =>
+            {
+                while (!itemcollected(_Items, _Qty) && instance.IsRunning && Player.IsLoggedIn)
+                    await Task.Delay(500);
+                cts?.Cancel();
+                //LogForm.Instance.devDebug($"Cts Canceled");
+            });
+            //killFor.setCts(cts);
+            await killFor.Execute(instance,cts.Token);
             running = false;
             await monitorTask;
+
+            cts.Dispose();
+        }
+
+        private bool itemcollected(string item, string qty)
+        {
+            if (ItemType == ItemType.Items)
+                return Player.Inventory.ContainsItem(item, qty);
+            else
+                return Player.TempInventory.ContainsItem(item, qty);
         }
 
         public override string ToString()
         {
+			string shortmap = Shorten(Map,5);
+            if (int.TryParse(QuestId, out _))
+            {
+                return $"Quest [{QuestId}]: {shortmap}, [{Monster}]";
+            }
             string itemType = ItemType == ItemType.Items ? "Items" : "Temps";
-            return $"Hunt {itemType} {Quantity}x {ItemName}";
+            return $"Hunt {itemType}: {shortmap}, {Quantity}x {ItemName}";
         }
-
+		
+		private string Shorten(string text, int max)
+		{
+			if (string.IsNullOrEmpty(text))
+				return text;
+		
+			return text.Length > max
+				? text.Substring(0, max) + "..."
+				: text;
+		}
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Grimoire.Botting;
 using Grimoire.Tools;
 using Newtonsoft.Json.Linq;
 
@@ -22,7 +23,7 @@ namespace Grimoire.Game.Data
 
         public int SafeValue { get; set; }
         public bool waitCd { get; set; } = false;
-
+        public string aura { get; set; }
         public static string GetSkillName(string index)
         {
             return Flash.Call<string>("GetSkillName", new string[]{index});
@@ -38,9 +39,9 @@ namespace Grimoire.Game.Data
                 //debug($"{selfskill}");
                 return selfskill != "h"; //H or F/S [H - monster/hostile, F/S - Friendly/self]
             }
-            catch 
-            { 
-                return false; 
+            catch
+            {
+                return false;
             }
         }
 
@@ -106,7 +107,48 @@ namespace Grimoire.Game.Data
                 //Player.UseSkill(s.Index);
             }
         }
+        public bool hasaura()
+        {
+            if (string.IsNullOrWhiteSpace(aura))
+                return true;
 
+            string op;
+            if (this.aura.Contains("!="))
+                op = "!=";
+            else if (this.aura.Contains(">="))
+                op = ">=";
+            else if (this.aura.Contains("<="))
+                op = "<=";
+            else if (this.aura.Contains("="))
+                op = "=";
+            else
+                return true;
+
+            string[] parts = this.aura.Split(
+                new[] { op },
+                StringSplitOptions.RemoveEmptyEntries
+            );
+
+            if (parts.Length != 2)
+                return true;
+
+            return Compare(parts, op);
+        }
+        bool Compare(string[] aura, string op)
+        {
+            int c = Player.GetAuras(true, aura[0]); //Self aura only
+            //int.TryParse(cur, out int c);
+            int.TryParse(aura[1], out int t);
+
+            switch (op)
+            {
+                case ">=": return c >= t;
+                case "<=": return c < t;
+                case "=": return c == t;
+                case "!=": return c != t;
+                default: return true;
+            }
+        }
         private void useSkill(string Index)
         {
             if (Player.EquippedClass.EqualsIgnoreCase("Chrono Shadow"))
@@ -136,6 +178,8 @@ namespace Grimoire.Game.Data
                 skillText = $"[{safeType} {safeTypeS} {SafeValue}%] {Index}: {skillName}";
             else if (Type == SkillType.Label)
                 skillText = $"{Text}";
+            else if (!string.IsNullOrWhiteSpace(aura))
+                skillText = $"{Index}: {skillName} [Aura : {aura}]";
             else //normal
                 skillText = $"{Index}: {skillName}";
             return waitCd ? $"[Wait] {skillText}" : skillText;

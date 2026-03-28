@@ -19,7 +19,8 @@ namespace Grimoire.Botting.Commands.Combat
 
         private bool onPause = false;
 
-        public async Task Execute(IBotEngine instance)
+        public async Task Execute(IBotEngine instance) => await Execute(instance, CancellationToken.None);
+        public async Task Execute(IBotEngine instance, CancellationToken token)
         {
             BotData.BotState = BotData.State.Combat;
 
@@ -34,12 +35,10 @@ namespace Grimoire.Botting.Commands.Combat
             string Monster = instance.IsVar(this.Monster) ? Configuration.Tempvariable[instance.GetVar(this.Monster)] : this.Monster;
 
             //waiting monster to respawn for 3s
-            await instance.WaitUntil(() => World.IsMonsterAvailable(Monster), null, 3);
+            await instance.WaitUntil(() => World.IsMonsterAvailable(Monster), timeout: 3);
 
             if (instance.Configuration.WaitForAllSkills)
-            {
                 await Task.Delay(Player.AllSkillsAvailable);
-            }
 
             if (!instance.IsRunning || !Player.IsAlive || !Player.IsLoggedIn)
                 return;
@@ -54,11 +53,12 @@ namespace Grimoire.Botting.Commands.Combat
             //Console.WriteLine("Mon:" + Monster);
             Player.AttackMonster(Monster);
 
+            _token = token;
             if (instance.Configuration.Skills.Count > 0)
                 await UseSkillsSet(instance);
-
-            Player.CancelTarget(); //timeout increased to 20 for Autoattack/empty skills users
-            await instance.WaitUntil(() => !Player.HasTarget && !onPause, timeout: 20);
+            await instance.WaitUntil(() => _token.IsCancellationRequested || !Player.HasTarget && !onPause, timeout: 40);
+            if (Player.HasTarget)
+                Player.CancelTarget();//timeout increased to 40 for Autoattack/empty skills users
 
             if (AntiCounter)
             {
@@ -66,24 +66,23 @@ namespace Grimoire.Botting.Commands.Combat
                 Flash.FlashCall -= AntiCounterHandler;
             }
 
-            _cts?.Cancel(false);
-            _cts?.Dispose();
+            //_cts?.Cancel(false);
+            //_cts?.Dispose();
         }
 
-        private static CancellationTokenSource _cts;
+        private static CancellationToken _token;
 
         private static int Index = 0;
 
         private static string _lastBotSkill;
         private async Task UseSkillsSet(IBotEngine instance)
         {
-            _cts = new CancellationTokenSource();
-
             int ClassIndex = 0;
             bool flag = BotData.SkillSet != null && BotData.SkillSet.ContainsKey("[" + BotData.BotSkill + "]");
             if (flag)
                 ClassIndex = BotData.SkillSet["[" + BotData.BotSkill + "]"] + 1;
 
+            //skill order here won't get reset unless preset changed
             int Count = instance.Configuration.Skills.Count - 1;
             if (Index > Count)
             {
@@ -101,7 +100,7 @@ namespace Grimoire.Botting.Commands.Combat
             }
 
 
-            while (!_cts.IsCancellationRequested && !onPause && Player.HasTarget && Player.GetTargetHealth() > 0)
+            while (!_token.IsCancellationRequested && !onPause && Player.HasTarget && Player.GetTargetHealth() > 0)
             {
                 switch (this.Monster.ToLower())
                 {
@@ -150,6 +149,7 @@ namespace Grimoire.Botting.Commands.Combat
 
                 //Moved to ensure not causing crazy atk spam
                 await Task.Delay(instance.Configuration.SkillDelay);
+
                 Skill s = instance.Configuration.Skills[Index];
                 if (s.Type == Skill.SkillType.Label)
                 {
@@ -161,6 +161,12 @@ namespace Grimoire.Botting.Commands.Combat
                 if (!Player.IsAlive)
                     return;
 
+                if (!s.hasaura())
+                {
+                    Index = (Index < Count) ? Index + 1 : ClassIndex;
+                    continue;
+                }
+
                 if (instance.Configuration.WaitForSkill || s.waitCd)
                 {
                     BotManager.Instance.OnSkillIndexChanged(Index);
@@ -168,6 +174,12 @@ namespace Grimoire.Botting.Commands.Combat
                 }
 
                 s.ExecuteSkill();
+
+                if (s.waitCd && !s.hasaura())
+                    await Task.Delay(200);
+
+                // if (_token.IsCancellationRequested || onPause || !Player.HasTarget)
+                // return;
 
                 //Reset back when reaching end of skill list index
                 Index = (Index < Count) ? Index + 1 : ClassIndex;

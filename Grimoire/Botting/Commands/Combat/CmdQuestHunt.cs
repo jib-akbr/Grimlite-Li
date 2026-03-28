@@ -7,6 +7,7 @@ using Grimoire.UI;
 using System;
 using System.Linq;
 using Grimoire.Networking;
+using System.Threading;
 
 namespace Grimoire.Botting.Commands.Combat
 {
@@ -33,14 +34,14 @@ namespace Grimoire.Botting.Commands.Combat
             if (doQuest)
             {
 
-                if (!Player.Quests.QuestTree.Exists(q => q.Id == QID))
+                if (!Player.Quests.HasQuest(QID))
                 {
                     Player.Quests.Load(QID);
-                    await instance.WaitUntil(() => Player.Quests.QuestTree.Any((Game.Data.Quest q) => q.Id == QID));
+                    await instance.WaitUntil(() => Player.Quests.HasQuest(QID),interval:200);
                 }
 
                 Game.Data.Quest quest = Player.Quests.Quest(QID);
-                int progress = Player.Quests.progress(quest.Id);
+                int progress = Player.Quests.progress((int)quest.ISlot);
                 //int.Parse(Flash.CallGameFunction2("world.getQuestValue", quest.ISlot));
 
                 //Checks if the quest require questchains
@@ -50,18 +51,17 @@ namespace Grimoire.Botting.Commands.Combat
                 if (!quest.IsInProgress)
                 {
                     quest.Accept();
-                    await instance.WaitUntil(() => !Player.Quests.IsInProgress(QID), timeout: 3);
+                    await instance.WaitUntil(() => quest.IsInProgress, timeout: 3);
                 }
-
+				else
+					quest.GhostAccept();
                 var reqs = quest.RequiredItems;
                 if (items.Length < reqs.Count)
                     Array.Resize(ref items, reqs.Count);
                 if (monsters.Length < reqs.Count)
                     Array.Resize(ref monsters, reqs.Count);
 
-                await joinmap(Map, instance);
-
-                for (int i = 0; i < reqs.Count && instance.IsRunning; i++)
+                for (int i = 0; i < reqs.Count && Player.IsAlive && instance.IsRunning; i++)
                 {
                     string name = reqs[i].Name;
                     string qty = reqs[i].Quantity.ToString();
@@ -70,38 +70,46 @@ namespace Grimoire.Botting.Commands.Combat
                     if (items[i] == null)
                         items[i] = "";
 
+                    if (itemCollected(name, qty))
+                        continue;
+
                     LogForm.Instance.devDebug($"Name = {name} | Qty = {qty}");
                     // if (!Player.Map.Equals(Map.Split('-')[0].ToLower()))
-
+                    await joinmap(Map, instance);
 
                     if (int.TryParse(items[i], out int mapitemid))
                         await getMap(mapitemid, qty);
                     else
-                        await hunt(name, qty, monsters[i] ?? "*", instance);
+                        await hunt(name, qty, 
+					string.IsNullOrWhiteSpace(monsters[i]) ? "*" : monsters[i], 
+					instance);
                 }
-                if (quest.CanComplete)
+				await Task.Delay(500);
+                if (quest.CanComplete){
                     quest.Complete();
-                await Task.Delay(600);
+					await instance.WaitUntil(() => !quest.IsInProgress, interval: 600, timeout:5);
+				}
                 return;
             }
             #endregion
             #region non-quest
-            await joinmap(Map, instance);
             for (int i = 0; i < items.Length && instance.IsRunning; i++)
             {
                 string qty = i < quantities.Length ? quantities[i] : "1";
                 string monster = i < monsters.Length ? monsters[i] : "*";
 
-                if (itemCollected(items[i], quantities[i]))
+                if (itemCollected(items[i], qty))
                     continue;
 
+                //LogForm.Instance.devDebug($"Name = {name} | Qty = {qty}");
+                await joinmap(Map, instance);
                 // if (!Player.Map.Equals(Map.Split('-')[0].ToLower()))
                 if (int.TryParse(items[i], out int mapitemid))
                     await getMap(mapitemid, qty);
                 else
                     await hunt(items[i], qty, monster, instance);
 
-                await Task.Delay(600);
+                // await Task.Delay(600);
             }
             #endregion
         }
@@ -109,14 +117,14 @@ namespace Grimoire.Botting.Commands.Combat
         async Task hunt(string item, string qty, string target, IBotEngine instance)
         {
             List<string> targetCell = World.GetMonsterCells(target);
-            
+
             int _maxcell;
             if (targetCell.Count >= maxcell)
                 _maxcell = maxcell;
             else
                 _maxcell = targetCell.Count;
 
-            string[] _monsters = new string[]{"*"};
+            string[] _monsters = new string[] { "*" };
             if (target != "*")
                 _monsters = target
                         .Split('&')
@@ -127,10 +135,18 @@ namespace Grimoire.Botting.Commands.Combat
             {
                 Monster = target,
             };
-            if (targetCell.Count > 0)
+            CancellationTokenSource cts = new CancellationTokenSource();
+            _ = Task.Run(async () =>
+            {
+                while (instance.IsRunning && Player.IsLoggedIn && Player.IsAlive && !itemCollected(item, qty))
+                    await Task.Delay(500);
+                cts?.Cancel();
+                //LogForm.Instance.devDebug($"Cts Canceled");
+            });
+            if (targetCell.Count > 0 && _maxcell > 0)
             {
                 int i = 0;
-                while (!itemCollected(item, qty) && instance.IsRunning)
+                while (!cts.Token.IsCancellationRequested)
                 {
                     //LogForm.Instance.devDebug("is it bugging??");
                     //Variable is reused but it doesnt matter, im just lazy to create a new one
@@ -138,27 +154,41 @@ namespace Grimoire.Botting.Commands.Combat
                     {
                         kill.Monster = target;
                         Player.AttackMonster(target);
-                        await kill.Execute(instance);
+                        await kill.Execute(instance, cts.Token);
                         continue;
                     }
                     if (Player.Cell != targetCell[i])
                     {
                         Player.MoveToCell(targetCell[i], "Left");
-                        LogForm.Instance.devDebug($"Cell : {targetCell[i]} [{i + 1}/{_maxcell}]");
+                        LogForm.Instance.AppendDebug($"Cell : {targetCell[i]} [{i + 1}/{_maxcell}]");
                     }
                     await instance.WaitUntil(() => World.IsMonsterAvailable("*"), interval: 50);
                     if (++i >= _maxcell)
                         i = 0;
                 }
             }
+			else
+			{
+				Player.MoveToCell(Cell, Pad);
+				while (!cts.Token.IsCancellationRequested)
+                {
+					await kill.Execute(instance, cts.Token);
+				}
+			}
+            cts?.Dispose();
         }
 
         async Task getMap(int mapitemid, string sqty)
         {
-            Player.MoveToCell("Cut1", "Left");
-            await Task.Delay(1000);
-            if (!World.Cells.Contains("Cut1"))
-                Player.MoveToCell("Enter", "Spawn");
+			if (Player.Cell != "Cut1") {
+				Player.MoveToCell("Cut1", "Left");
+				await Task.Delay(300);
+				if (!World.Cells.Contains("Cut1")) {
+					Player.MoveToCell("Enter", "Spawn");
+					await Task.Delay(300);
+					Player.MoveToCell("Enter", "Spawn");
+				}
+			}
 
             int qty = int.Parse(sqty);
 
@@ -167,8 +197,11 @@ namespace Grimoire.Botting.Commands.Combat
                 await Proxy.Instance.SendToServer($"%xt%zm%getMapItem%1%{mapitemid}%");
                 await Task.Delay(600);
 
-                if (!Player.recentMapItem.TryGetValue(mapitemid, out string itemName) || itemName?.Equals("blank") == true)
+                if (!Player.recentMapItem.TryGetValue(mapitemid, out string itemName))
                     continue;
+                itemName = itemName.Split('(')[0].Trim(); 
+                //Split in here is used for cutting logged mapitem with following format :
+                //"mapItemName (mapname)"
                 if (itemCollected(itemName, sqty))
                     break;
             }
@@ -255,7 +288,7 @@ namespace Grimoire.Botting.Commands.Combat
                 int _maxlen = Math.Max(items.Length, monsters.Length);
                 for (int i = 0; i < _maxlen; i++)
                 {
-                    string item = (i < items.Length) ? items[i].Trim() : "";
+                    string item= (i < items.Length) ? items[i].Trim() : "";
                     string mob = (i < monsters.Length) ? monsters[i].Trim() : "";
 
                     if (string.IsNullOrEmpty(item) && string.IsNullOrEmpty(mob))
@@ -274,8 +307,11 @@ namespace Grimoire.Botting.Commands.Combat
 
             for (int i = 0; i < items.Length; i++)
             {
-                //parts += $"{i + 1}-{items[i]} x{quantities[i]} [{monsters[i]}]";
-                _parts.Add($"{i + 1}-{items[i]} x{quantities[i]} [{monsters[i]}]");
+                //parts += $"{i + 1}-{items[i]} x{quantities[i]} [{monsters[i]}]";if (items.Length < reqs.Count)
+                string mon = (i < monsters.Length) ? monsters[i] : "1";
+                string qty = (i < quantities.Length) ? quantities[i] : "*" ;
+                _parts.Add($"{items[i]} [{mon}] x{qty}");
+                //This thing is really fragile SMH
             }
             return $"Hunt : {string.Join(" | ", _parts)}";
         }
