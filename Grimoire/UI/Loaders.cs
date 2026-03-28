@@ -235,6 +235,8 @@ namespace Grimoire.UI
                     break;
             }
 
+            try
+            {
             switch (cbGrab.SelectedIndex)
             {
                 case 0:
@@ -267,6 +269,11 @@ namespace Grimoire.UI
                 case 7:
                     Grabber.GrabAllMonsters(treeGrabbed);
                     break;
+            }
+            }
+            catch (Exception ex)
+            {
+                LogForm.Instance.devDebug($"[Fatal Error] : {ex}");
             }
             treeGrabbed.EndUpdate();
         }
@@ -615,7 +622,7 @@ namespace Grimoire.UI
 
         private async Task acceptBatchAsync(List<int> listQuest, bool ghost)
         {
-            Player.Quests.Get(listQuest);
+            Player.Quests.Load(listQuest);
             await Task.Delay(1000);
             for (int i = 0; i < listQuest.Count; i++)
             {

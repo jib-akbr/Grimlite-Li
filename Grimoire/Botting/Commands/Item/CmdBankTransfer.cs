@@ -1,4 +1,5 @@
 using Grimoire.Game;
+using Grimoire.UI;
 using System.Threading.Tasks;
 
 namespace Grimoire.Botting.Commands.Item
@@ -19,23 +20,23 @@ namespace Grimoire.Botting.Commands.Item
 
         public async Task Execute(IBotEngine instance)
         {
-            BotData.BotState = BotData.State.Others;
-            string ItemName = (instance.IsVar(this.ItemName) ? Configuration.Tempvariable[instance.GetVar(this.ItemName)] : this.ItemName);
-            if (TransferFromBank)
+            BotData.BotState = BotData.State.Transaction;
+            string ItemName = instance.ResolveVars(this.ItemName);
+            await Player.ExitCombat(2000);
+			
+            if (TransferFromBank && Player.Bank.GetItemByName(ItemName) != null)
             {
-                if (Player.Bank.GetItemByName(ItemName) != null)
-                {
-                    Player.Bank.TransferFromBank(ItemName);
-                    //await instance.WaitUntil(() => Player.Inventory.ContainsItem(ItemName, "*"));
-                    await Task.Delay(500);
-                }
+                Player.Bank.TransferFromBank(ItemName);
+                await instance.WaitUntil(() => Player.Inventory.ContainsItem(ItemName, "*"),interval:200);
+                // await Task.Delay(500);
             }
-            else if (Player.Inventory.GetItemByName(ItemName) != null)
+            else if (!TransferFromBank && Player.Inventory.GetItemByName(ItemName) != null)
             {
                 Player.Bank.TransferToBank(ItemName);
-                //await instance.WaitUntil(() => !Player.Inventory.ContainsItem(ItemName, "*"));
-                await Task.Delay(500);
-            }
+                await instance.WaitUntil(() => !Player.Inventory.ContainsItem(ItemName, "*"),interval:200);
+                // await Task.Delay(500);
+            }else
+				LogForm.Instance.devDebug($"[Bank] {ItemName} not found within your "+(TransferFromBank?"Bank":"Inventory"));
         }
 
         public override string ToString()

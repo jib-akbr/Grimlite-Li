@@ -52,7 +52,7 @@ namespace Grimoire.UI
         public DarkLabel lblVersion;
         private DarkNumericUpDown numStoryQuestId;
         private DarkButton btnUnlockMap;
-        private DarkButton btnIceSpiritIcetormarena;
+        private DarkButton btnUltraQuest;
         private DarkTextBox tbGeneratedPacket;
         public DarkLabel darkLabel1;
         private DarkButton btnCopyPacket;
@@ -207,7 +207,8 @@ namespace Grimoire.UI
             this.btnTwins = new DarkUI.Controls.DarkButton();
             this.btnTercess = new DarkUI.Controls.DarkButton();
             this.grpTravel = new DarkUI.Controls.DarkGroupBox();
-            this.btnIceSpiritIcetormarena = new DarkUI.Controls.DarkButton();
+            this.darkButton1 = new DarkUI.Controls.DarkButton();
+            this.btnUltraQuest = new DarkUI.Controls.DarkButton();
             this.btnKlunk = new DarkUI.Controls.DarkButton();
             this.numPriv = new DarkUI.Controls.DarkNumericUpDown();
             this.btnPolish = new DarkUI.Controls.DarkButton();
@@ -237,7 +238,6 @@ namespace Grimoire.UI
             this.numStoryQuestId = new DarkUI.Controls.DarkNumericUpDown();
             this.btnUnlockMap = new DarkUI.Controls.DarkButton();
             this.lblVersion = new DarkUI.Controls.DarkLabel();
-            this.darkButton1 = new DarkUI.Controls.DarkButton();
             this.grpTravel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numPriv)).BeginInit();
             this.aweGroup.SuspendLayout();
@@ -331,7 +331,7 @@ namespace Grimoire.UI
             // grpTravel
             // 
             this.grpTravel.Controls.Add(this.darkButton1);
-            this.grpTravel.Controls.Add(this.btnIceSpiritIcetormarena);
+            this.grpTravel.Controls.Add(this.btnUltraQuest);
             this.grpTravel.Controls.Add(this.btnKlunk);
             this.grpTravel.Controls.Add(this.numPriv);
             this.grpTravel.Controls.Add(this.btnPolish);
@@ -353,15 +353,25 @@ namespace Grimoire.UI
             this.grpTravel.TabStop = false;
             this.grpTravel.Text = "Fast travels";
             // 
+            // darkButton1
+            // 
+            this.darkButton1.Checked = false;
+            this.darkButton1.Location = new System.Drawing.Point(6, 358);
+            this.darkButton1.Name = "darkButton1";
+            this.darkButton1.Size = new System.Drawing.Size(152, 23);
+            this.darkButton1.TabIndex = 10;
+            this.darkButton1.Text = "Bypass All";
+            this.darkButton1.Click += new System.EventHandler(this.chkBypass_clicked);
+            // 
             // btnIceSpiritIcetormarena
             // 
-            this.btnIceSpiritIcetormarena.Checked = false;
-            this.btnIceSpiritIcetormarena.Location = new System.Drawing.Point(6, 329);
-            this.btnIceSpiritIcetormarena.Name = "btnIceSpiritIcetormarena";
-            this.btnIceSpiritIcetormarena.Size = new System.Drawing.Size(152, 23);
-            this.btnIceSpiritIcetormarena.TabIndex = 9;
-            this.btnIceSpiritIcetormarena.Text = "Ice Spirit (icestormarena)";
-            this.btnIceSpiritIcetormarena.Click += new System.EventHandler(this.btnIceSpiritIcetormarena_Click);
+            this.btnUltraQuest.Checked = false;
+            this.btnUltraQuest.Location = new System.Drawing.Point(6, 334);
+            this.btnUltraQuest.Name = "btnIceSpiritIcetormarena";
+            this.btnUltraQuest.Size = new System.Drawing.Size(152, 23);
+            this.btnUltraQuest.TabIndex = 9;
+            this.btnUltraQuest.Text = "Ultraboss & Daily";
+            this.btnUltraQuest.Click += new System.EventHandler(this.btnUltras);
             // 
             // btnKlunk
             // 
@@ -690,16 +700,6 @@ namespace Grimoire.UI
             this.lblVersion.TabIndex = 15;
             this.lblVersion.Text = "Story Quest ID that required to unlock the map";
             // 
-            // darkButton1
-            // 
-            this.darkButton1.Checked = false;
-            this.darkButton1.Location = new System.Drawing.Point(6, 358);
-            this.darkButton1.Name = "darkButton1";
-            this.darkButton1.Size = new System.Drawing.Size(152, 23);
-            this.darkButton1.TabIndex = 10;
-            this.darkButton1.Text = "Bypass All";
-            this.darkButton1.Click += new System.EventHandler(this.chkBypass_clicked);
-            // 
             // Travel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -737,8 +737,11 @@ namespace Grimoire.UI
             Instance = new Travel();
         }
 
-        private void btnBinky_Click(object sender, EventArgs e)
+        private async void btnBinky_Click(object sender, EventArgs e)
         {
+            string toClient1 = "{\"t\":\"xt\",\"b\":{\"r\":-1,\"o\":{\"cmd\":\"updateQuest\",\"iValue\":20,\"iIndex\":126}}}";
+            await Proxy.Instance.SendToClient(toClient1);
+
             ExecuteTravel(new List<IBotCommand>
             {
                 CreateJoinCommand("doomvault", "r5", "Left")
@@ -863,11 +866,16 @@ namespace Grimoire.UI
             btnNecroDungeon.Enabled = true;
         }
 
-        private async void btnIceSpiritIcetormarena_Click(object sender, EventArgs e)
+        private async void btnUltras(object sender, EventArgs e)
         {
-            btnIceSpiritIcetormarena.Enabled = false;
-            await SkipMap("client {\"t\":\"xt\",\"b\":{\"r\":-1,\"o\":{\"cmd\":\"levelUp\",\"intExpToLevel\":\"26580000\",\"intLevel\":100}}}", "icestormarena", "r3c", "Left");
-            btnIceSpiritIcetormarena.Enabled = true;
+            btnUltraQuest.Enabled = false;
+            List<int> li = new List<int>
+              { 8152, 8153, 8154, 9350, 9803, 1677, 1678,   
+				8653, 9091,									//daily
+                8300, 8397, 8547, 8692, 8746, 9173, 10301 };//weekly
+            Player.Quests.Load(li);
+            //await SkipMap("client {\"t\":\"xt\",\"b\":{\"r\":-1,\"o\":{\"cmd\":\"levelUp\",\"intExpToLevel\":\"26580000\",\"intLevel\":100}}}", "icestormarena", "r3c", "Left");
+            btnUltraQuest.Enabled = true;
         }
 
         private async void btnUnlockMap_Click(object sender, EventArgs e)
@@ -875,12 +883,12 @@ namespace Grimoire.UI
             btnUnlockMap.Enabled = false;
             tbGeneratedPacket.Text = "";
             int questId = (int)numStoryQuestId.Value;
-            bool questOnTree = Player.Quests.QuestTree.Exists(q => q.Id == questId);
+            bool questOnTree = Player.Quests.HasQuest(questId);
             int waitCount = 0;
             if (!questOnTree)
             {
                 Player.Quests.Load(questId);
-                while (!questOnTree && waitCount < 8)
+                while (!Player.Quests.HasQuest(questId) && waitCount < 8)
                 {
                     await Task.Delay(500);
                     waitCount++;
@@ -888,7 +896,7 @@ namespace Grimoire.UI
             }
             try
             {
-                Quest quest = Player.Quests.QuestTree.Find(q => q.Id == questId);
+                Quest quest = Player.Quests.Quest(questId);
                 string packet = "{\"t\":\"xt\",\"b\":{\"r\":-1,\"o\":{\"cmd\":\"updateQuest\",\"iValue\":" + quest.IValue + ",\"iIndex\":" + quest.ISlot + "}}}";
                 await Proxy.Instance.SendToClient(packet);
                 tbGeneratedPacket.Text = packet;

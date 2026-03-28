@@ -144,7 +144,7 @@ namespace Grimoire.UI
 			if (ClientConfig.GetValue(ClientConfig.C_LOG_DEBUG_SWF) == "true")
 			{
 				Console.WriteLine(msg);
-				AppendDebug(msg,doAnyway:true);
+				AppendDebug(msg,true,true);
 			}
         }
 		public void AppendDebug(string text, bool ignoreInvoke = true, bool doAnyway = false)

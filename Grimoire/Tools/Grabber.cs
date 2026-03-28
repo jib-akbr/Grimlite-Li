@@ -10,6 +10,7 @@ using Grimoire.Botting;
 //using BrowserForm = Grimoire.UI.BrowserForm;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Collections;
 
 namespace Grimoire.Tools
 {
@@ -25,16 +26,16 @@ namespace Grimoire.Tools
         {
             List<String> listItem = new List<string>();
 
-            List<Quest> questTree = Player.Quests.QuestTree;
-            foreach (Quest q in questTree)
+            //foreach (Quest q in questTree)
+            //{
+            //    if (q.Id == idQuest)
+            //    {
+            //    }
+            //}
+            Quest q = Player.Quests.Quest(idQuest);
+            foreach (InventoryItem item in q.Rewards)
             {
-                if (q.Id == idQuest)
-                {
-                    foreach (InventoryItem item in q.Rewards)
-                    {
-                        listItem.Add(item.Name);
-                    }
-                }
+                listItem.Add(item.Name);
             }
 
             return listItem;
@@ -44,16 +45,18 @@ namespace Grimoire.Tools
         {
             List<String> listItem = new List<string>();
 
-            List<Quest> questTree = Player.Quests.QuestTree;
-            foreach (Quest q in questTree)
+            //List<Quest> questTree = Player.Quests.QuestTree;
+            //foreach (Quest q in questTree)
+            //{
+            //    if (q.Id == idQuest)
+            //    {
+            //    }
+            //}
+            //Old code above lacks performance
+            Quest q = Player.Quests.Quest(idQuest);
+            foreach (InventoryItem item in q.RequiredItems)
             {
-                if (q.Id == idQuest)
-                {
-                    foreach (InventoryItem item in q.RequiredItems)
-                    {
-                        listItem.Add(item.Name);
-                    }
-                }
+                listItem.Add(item.Name);
             }
 
             return listItem;
@@ -61,59 +64,64 @@ namespace Grimoire.Tools
 
         public static void GrabQuests(TreeView tree, OrderBy orderBy)
         {
-            List<Quest> list = Player.Quests.QuestTree?.OrderBy((Quest q) => q.Name).ToList();
+            Player.Quests.QuestTreeRefresh();
+            List<Quest> list = Player.Quests.QuestTree;//?.OrderBy((Quest q) => q.Name).ToList();
             switch (orderBy)
             {
                 case OrderBy.Name:
-                    list = Player.Quests.QuestTree?.OrderBy((Quest q) => q.Name).ToList();
+                default:
+                    list = list?.OrderBy((Quest q) => q.Name).ToList();
                     break;
                 case OrderBy.Id:
-                    list = Player.Quests.QuestTree?.OrderBy((Quest q) => q.Id).ToList();
+                    list = list?.OrderBy((Quest q) => q.Id).ToList();
                     break;
             }
 
             if (list != null && list.Count > 0)
             {
-                foreach (Quest item in list)
+                foreach (Quest quest in list)
                 {
-                    TreeNode treeNode = tree.Nodes.Add($"{item.Id} - {item.Name}");
-                    treeNode.Nodes.Add($"ID: {item.Id}");
-                    if (item.ISlot > 0) treeNode.Nodes.Add($"iSlot: {item.ISlot}");
-                    if (item.IValue > 0) treeNode.Nodes.Add($"iValue: {item.IValue}");
-                    treeNode.Nodes.Add($"Description: {Shorten(item.Description, 32)}");
-                    treeNode.ContextMenuStrip = MenuQuest(item.Id);
-                    //List<InventoryItem> requiredItems = new List<InventoryItem>();
-                    List<InventoryItem> requiredItems = item.RequiredItems;
-                    if (requiredItems != null && requiredItems.Count > 0)
+                    TreeNode treeNode = tree.Nodes.Add($"{quest.Id} - {quest.Name}");
+                    // treeNode.Nodes.Add($"ID: {item.Id}");
+                    // List<InventoryItem> requiredItems = item.RequiredItems;
+                    if (quest.ISlot > 0)
+                        treeNode.Nodes.Add($"iSlot: {quest.ISlot}");
+                    if (quest.IValue > 0)
+                        treeNode.Nodes.Add($"iValue: {quest.IValue}");
+                    treeNode.Nodes.Add($"Description: {Shorten(quest.Description, 32)}");
+                    if (quest.RequiredItems != null && quest.RequiredItems.Count > 0)
                     {
                         TreeNode treeNode2 = treeNode.Nodes.Add("Required items");
-                        treeNode2.ContextMenuStrip = MenuItems(requiredItems);
-                        foreach (InventoryItem req in requiredItems)
+                        treeNode2.ContextMenuStrip = MenuItems(quest.RequiredItems);
+                        foreach (InventoryItem req in quest.RequiredItems)
                         {
-                            TreeNode treeNode3 = treeNode2.Nodes.Add(req.Name);
+                            TreeNode treeNode3 = treeNode2.Nodes.Add(req.Name + (req.Quantity > 1 ? " x" + req.Quantity : ""));
                             treeNode3.ContextMenuStrip = MenuItem(req);
                             treeNode3.Nodes.Add($"ID: {req.Id}");
-                            treeNode3.Nodes.Add($"Quantity: {req.Quantity}");
+                            // treeNode3.Nodes.Add($"Quantity: {req.Quantity}");
                             treeNode3.Nodes.Add("Temporary: " + (req.IsTemporary ? "Yes" : "No"));
                             treeNode3.Nodes.Add($"Description: {Shorten(req.Description, 32)}");
                         }
                     }
-                    List<InventoryItem> rewards = item.Rewards;
+                    treeNode.ContextMenuStrip = MenuQuest(quest.Id, quest.RequiredItems);
+                    //List<InventoryItem> requiredItems = new List<InventoryItem>();
+
+                    List<InventoryItem> rewards = quest.Rewards;
                     if (rewards != null && rewards.Count > 0)
                     {
                         TreeNode treeNode4 = treeNode.Nodes.Add("Rewards");
-                        treeNode4.ContextMenuStrip = MenuItems(item.Rewards);
-                        foreach (InventoryItem reward in item.Rewards)
+                        treeNode4.ContextMenuStrip = MenuItems(quest.Rewards);
+                        foreach (InventoryItem reward in quest.Rewards)
                         {
-                            TreeNode treeNode5 = treeNode4.Nodes.Add(reward.Name);
+                            TreeNode treeNode5 = treeNode4.Nodes.Add(reward.Name + (reward.Quantity > 1 ? " x" + reward.Quantity : ""));
                             treeNode5.ContextMenuStrip = MenuItem(reward);
                             treeNode5.Nodes.Add($"ID: {reward.Id}");
-                            treeNode5.Nodes.Add($"Quantity: {reward.Quantity}");
+                            // treeNode5.Nodes.Add($"Quantity: {reward.Quantity}");
                             treeNode5.Nodes.Add(string.Concat($"Drop chance: ", reward.DropChance.Contains("100") ? "Guaranteed" : reward.DropChance + "%"));
-                            ItemBase reward2 = item.oRewards.Find(x => x.Name == reward.Name);
+                            ItemBase reward2 = quest.oRewards.Find(x => x.Name == reward.Name);
                             treeNode5.Nodes.Add($"Category: {reward2.Category}");
-                            treeNode5.Nodes.Add($"Description: {Shorten(reward2.Description,32)}");
-                            if (!string.IsNullOrEmpty(reward2.File))
+                            treeNode5.Nodes.Add($"Description: {Shorten(reward2.Description, 32)}");
+                            if (!string.IsNullOrEmpty(reward2.File) && !string.IsNullOrEmpty(reward2.Link))
                             {
                                 treeNode5.ContextMenuStrip = MenuItem(reward2);
                                 treeNode5.Nodes.Add($"sFile: {reward2.File}");
@@ -124,9 +132,9 @@ namespace Grimoire.Tools
                 }
             }
         }
-        
+
         private static string Shorten(string s, int max)
-        { 
+        {
             if (string.IsNullOrEmpty(s)) return "";
             return s.Length > max ? s.Substring(0, max) + "..." : s;
         }
@@ -147,7 +155,7 @@ namespace Grimoire.Tools
                         TreeNode treeNode2 = treeNode.Nodes.Add("Items");
                         foreach (InventoryItem item2 in item.Items)
                         {
-                            TreeNode treeNode3 = treeNode2.Nodes.Add(item2.Name);
+                            TreeNode treeNode3 = treeNode2.Nodes.Add(item2.Name + (item2.Quantity > 1 ? " x" + item2.Quantity : ""));
                             treeNode3.ContextMenuStrip = Wiki(item2);
                             treeNode3.Nodes.Add($"Shop item ID: {item2.ShopItemId}");
                             treeNode3.Nodes.Add($"ID: {item2.Id}");
@@ -155,6 +163,7 @@ namespace Grimoire.Tools
                             treeNode3.Nodes.Add($"Category: {item2.Category}");
                             treeNode3.Nodes.Add($"Level: {item2.Level}");
                             treeNode3.Nodes.Add($"Description: {Shorten(item2.Description, 32)}");
+                            treeNode3.Nodes.Add($"Stack: {item2.Quantity}/{item2.MaxStack}");
                             if (item2.IsEquippableNonItem || item2.IsWeapon)
                             {
                                 treeNode3.Nodes.Add($"sFile: {item2.File}");
@@ -168,9 +177,11 @@ namespace Grimoire.Tools
 
         public static void GrabQuestIds(TreeView tree, OrderBy orderBy)
         {
-            List<Quest> list = Player.Quests.QuestTree?.OrderBy((Quest q) => q.Name).ToList();
+            Player.Quests.QuestTreeRefresh();
+            List<Quest> list = Player.Quests.QuestTree;//?.OrderBy((Quest q) => q.Name).ToList();
             switch (orderBy)
             {
+                default:
                 case OrderBy.Name:
                     list = list.OrderBy((Quest q) => q.Name).ToList();
                     break;
@@ -292,7 +303,7 @@ namespace Grimoire.Tools
         public static void GrabAllMonsters(TreeView tree)
         {
             List<Monster> list = World.GetAllMonsters();
-			switch (Loaders.order)
+            switch (Loaders.order)
             {
                 case OrderBy.Name:
                     list = list.OrderBy(m => m.Name).ToList();
@@ -488,7 +499,7 @@ namespace Grimoire.Tools
             };
             toolStripMenuItem4.Click += delegate (object S, EventArgs E)
             {
-                Player.Quests.Quest(QuestID).Complete(max:true);
+                Player.Quests.Quest(QuestID).Complete(max: true);
             };
             contextMenuStrip.Items.Add(toolStripMenuItem4);
 
@@ -500,12 +511,23 @@ namespace Grimoire.Tools
                 };
                 toolStripMenuItem5.Click += delegate (object S, EventArgs E)
                 {
-                    string longString = 
-                    $"\"ItemName\" : \"{string.Join(",", Items.Select(i => i.Name))}\",\n"+
+                    string longString =
+                    $"\"ItemName\" : \"{string.Join(",", Items.Select(i => i.Name))}\",\n" +
                     $"\"Quantity\" : \"{string.Join(",", Items.Select(i => i.Quantity))}\"";
                     Clipboard.SetText(longString);
                 };
                 contextMenuStrip.Items.Add(toolStripMenuItem5);
+                ToolStripMenuItem progres = new ToolStripMenuItem
+                {
+                    Text = "Copy Bypass Packet"
+                };
+                progres.Click += delegate (object S, EventArgs E)
+                {
+                    var quest = Player.Quests.Quest(QuestID);
+                    string longString = "{\"t\":\"xt\",\"b\":{\"r\":-1,\"o\":{\"cmd\":\"updateQuest\",\"iValue\":" + quest.IValue + ",\"iIndex\":" + quest.ISlot + "}}}"; ;
+                    Clipboard.SetText(longString);
+                };
+                contextMenuStrip.Items.Add(progres);
             }
             return contextMenuStrip;
         }
@@ -513,59 +535,58 @@ namespace Grimoire.Tools
         private static ContextMenuStrip MenuItems(List<InventoryItem> Items)
         {
             ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
-            ToolStripMenuItem toolStripMenuItem = new ToolStripMenuItem
+            ToolStripMenuItem bothlist = new ToolStripMenuItem
             {
                 Text = "Add all to both"
             };
-            ToolStripMenuItem toolStripMenuItem1 = new ToolStripMenuItem
+            ToolStripMenuItem whitelist = new ToolStripMenuItem
             {
                 Text = "Add all to whitelist"
             };
-            ToolStripMenuItem toolStripMenuItem2 = new ToolStripMenuItem
+            ToolStripMenuItem unbanklist = new ToolStripMenuItem
             {
                 Text = "Add all to unbank list"
             };
-            ToolStripMenuItem toolStripMenuItem3 = new ToolStripMenuItem
+            ToolStripMenuItem searchWiki = new ToolStripMenuItem
             {
                 Text = "Search all on Wiki"
             };
-            toolStripMenuItem.Click += delegate (object S, EventArgs E)
+            bothlist.Click += delegate (object S, EventArgs E)
             {
                 AddDrops(S, E, Items);
                 AddItems(S, E, Items);
             };
-            toolStripMenuItem1.Click += delegate (object S, EventArgs E)
+            whitelist.Click += delegate (object S, EventArgs E)
             {
                 AddDrops(S, E, Items);
             };
-            toolStripMenuItem2.Click += delegate (object S, EventArgs E)
+            unbanklist.Click += delegate (object S, EventArgs E)
             {
                 AddDrops(S, E, Items);
             };
-            toolStripMenuItem3.Click += delegate (object S, EventArgs E)
+            searchWiki.Click += delegate (object S, EventArgs E)
             {
                 foreach (InventoryItem Item in Items)
                 {
                     Process.Start("https://aqwwiki.wikidot.com/search:site/q/" + Item.Name.Replace(" ", "+"));
                 }
             };
-            ToolStripMenuItem toolStripMenuItem4 = new ToolStripMenuItem
+            ToolStripMenuItem copyReqs = new ToolStripMenuItem
             {
                 Text = "Copy all"
             };
-            toolStripMenuItem4.Click += delegate (object S, EventArgs E)
+            copyReqs.Click += delegate (object S, EventArgs E)
             {
-                string longString;
-                string name = $"\"ItemName\" : \" {string.Join(",", Items.Select(i => i.Name))} \"";
-                string qty = $"\"Quantity\" : \" {string.Join(",", Items.Select(i => i.Quantity))} \"";
-                longString = $"{name}\"\n{qty}\"";
+                var longString =
+                    $"\"ItemName\" : \"{string.Join(",", Items.Select(i => i.Name))}\"\n" +
+                    $"\"Quantity\" : \"{string.Join(",", Items.Select(i => i.Quantity))}\"";
                 Clipboard.SetText(longString);
             };
-            contextMenuStrip.Items.Add(toolStripMenuItem);
-            contextMenuStrip.Items.Add(toolStripMenuItem1);
-            contextMenuStrip.Items.Add(toolStripMenuItem2);
-            contextMenuStrip.Items.Add(toolStripMenuItem3);
-            contextMenuStrip.Items.Add(toolStripMenuItem4);
+            contextMenuStrip.Items.Add(bothlist);
+            contextMenuStrip.Items.Add(whitelist);
+            contextMenuStrip.Items.Add(unbanklist);
+            contextMenuStrip.Items.Add(searchWiki);
+            contextMenuStrip.Items.Add(copyReqs);
             return contextMenuStrip;
         }
 
@@ -746,9 +767,18 @@ namespace Grimoire.Tools
 
         private static void AddDrops(object s, EventArgs e, List<InventoryItem> Items)
         {
+            HashSet<string> Drops = BotManager.Instance.lstDrops.Items
+                .Cast<object>()
+                .Where(x => x != null)
+                .Select(x => x.ToString())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
             foreach (InventoryItem Item in Items)
             {
-                AddDrop(s, e, Item);
+                if (!Drops.Contains(Item.Name))
+                {
+                    Drops.Add(Item.Name);
+                    AddDrop(s, e, Item);
+                }
             }
         }
 

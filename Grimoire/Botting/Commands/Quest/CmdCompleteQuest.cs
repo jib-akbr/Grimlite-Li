@@ -19,8 +19,8 @@ namespace Grimoire.Botting.Commands.Quest
         public async Task Execute(IBotEngine instance)
         {
             await instance.WaitUntil(() => World.IsActionAvailable(LockActions.TryQuestComplete));
-            bool provokeMons = instance.Configuration.ProvokeMonsters;
 
+            bool provokeMons = instance.Configuration.ProvokeMonsters;
             //if (!Player.Quests.AcceptedQuests.Contains(Quest)) Quest.Accept();
             //if (Player.Quests.CanComplete(Quest.Id) && instance.IsRunning && Player.IsLoggedIn)
             //{
@@ -28,7 +28,7 @@ namespace Grimoire.Botting.Commands.Quest
             if (provokeMons) instance.Configuration.ProvokeMonsters = false;
             if (instance.Configuration.ExitCombatBeforeQuest)
             {
-                Player.MoveToCell(Player.Cell, Player.Pad);
+                Player.refreshCell();
                 await instance.WaitUntil(() => Player.CurrentState != Player.State.InCombat);
                 await Task.Delay(1000);
             }
@@ -43,8 +43,9 @@ namespace Grimoire.Botting.Commands.Quest
 
             if (ReAccept)
             {
-                await Task.Delay(1500);
-                Quest.Accept();
+                // await Task.Delay(1500);
+				await instance.WaitUntil(() => !(Quest.IsInProgress && Quest.CanComplete),interval:400,timeout:10);
+                Quest.GhostAccept();
             }
 			else
 			{

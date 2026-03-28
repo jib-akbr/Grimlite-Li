@@ -33,27 +33,41 @@ namespace Grimoire.Botting
             }
         }
 
+        public static async Task WaitUntil(Func<bool> condition, int timeout = 15, int interval = 1000)
+        {
+            int iterations = 0;
+            while (!condition() && (iterations < timeout || timeout == -1))
+            {
+                await Task.Delay(interval);
+                iterations++;
+            }
+        }
+
         public static bool RequiresDelay(this IBotCommand cmd)
         {
-            if (cmd is StatementCommand || cmd is CmdIndex || cmd is CmdLabel || cmd is CmdGotoLabel || cmd is CmdBlank || cmd is CmdSkillSet)
+            if (cmd is StatementCommand || cmd is CmdIndex || cmd is CmdLabel || cmd is CmdGotoLabel
+                || cmd is CmdBlank || cmd is CmdBlank3 || cmd is CmdSkillSet)
                 return false;
             return true;
         }
 
-        
+
 
         public static void LoadAllQuests(this IBotEngine instance)
         {
             List<int> list = new List<int>();
-			
-			HashSet<int> loadedQuests = new HashSet<int>(
-				Player.Quests.QuestTree?.Select(q => q.Id) ?? Enumerable.Empty<int>()
-			);
-			
+
+            HashSet<int> loadedQuests = new HashSet<int>(
+                Player.Quests.QuestTree?.Select(q => q.Id) ?? Enumerable.Empty<int>()
+            );
+
             void AddUnique(int id)
             {
-                if (!list.Contains(id) && !loadedQuests.Contains(id))
+                if (!loadedQuests.Contains(id))
+                {
+                    loadedQuests.Add(id);
                     list.Add(id);
+                }
             }
             foreach (IBotCommand command in instance.Configuration.Commands)
             {
@@ -64,7 +78,7 @@ namespace Grimoire.Botting
                 else if (command is CmdAddQuestList AddQList)
                     AddUnique(AddQList.Id);
                 else if (command is CmdQuestHunt Hunt)
-                    if (Hunt.QID != 0) AddUnique(Hunt.QID);                
+                    if (Hunt.QID != 0) AddUnique(Hunt.QID);
             } //changed to not load the quest (again) if already loaded
             foreach (var q in instance.Configuration.Quests)
                 AddUnique(q.Id);
@@ -74,14 +88,16 @@ namespace Grimoire.Botting
                 Task.Run(async () =>
                 {
                     instance.paused = true;
+                    await Task.Delay(100);
                     const int batchSize = 30; //max GetQuest
                     for (int i = 0; i < list.Count; i += batchSize)
                     {
                         int take = Math.Min(batchSize, list.Count - i);
                         var batch = list.GetRange(i, take);
-                        Player.Quests.Get(batch);
+                        Player.Quests.GetQuests(batch);
                         await Task.Delay(600);
                     }
+                    await WaitUntil(() => Player.Quests.HasQuest(list[list.Count - 1]), interval: 100);
                     instance.paused = false;
                 });
             }
@@ -95,28 +111,28 @@ namespace Grimoire.Botting
                 if (command is CmdAddQuestList cmdAddQuestList)
                 {
                     var remove = new CmdRemoveQuestList
-					{
+                    {
                         Id = cmdAddQuestList.Id,
                         ItemId = cmdAddQuestList.ItemId,
                         SafeRelogin = cmdAddQuestList.SafeRelogin,
-					};
-					await remove.Execute(instance);
+                    };
+                    await remove.Execute(instance);
                 }
             }
         }
 
         public static void LoadBankItems(this IBotEngine instance)
         {
-			if (instance.Configuration.Commands.Any((IBotCommand c) =>
-				c is CmdBankSwap || 
-                c is CmdBankTransfer || 
-                c is CmdInBank || 
-                c is CmdNotInBank || 
-                c is CmdInBankOrInvent || 
-                c is CmdNotInBankAndInvent || 
+            if (instance.Configuration.Commands.Any((IBotCommand c) =>
+                c is CmdBankSwap ||
+                c is CmdBankTransfer ||
+                c is CmdInBank ||
+                c is CmdNotInBank ||
+                c is CmdInBankOrInvent ||
+                c is CmdNotInBankAndInvent ||
                 c is CmdBankList))
-			{
-				//Player.Bank.LoadItems();
+            {
+                //Player.Bank.LoadItems();
                 Player.Bank.GetBank();
             }
         }

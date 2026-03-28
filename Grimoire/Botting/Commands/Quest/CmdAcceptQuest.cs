@@ -26,10 +26,10 @@ namespace Grimoire.Botting.Commands.Quest
             BotData.BotState = BotData.State.Quest;
             int id = this.Quest.Id;
 
-            if (!Player.Quests.QuestTree.Any(q => q.Id == id))
+            if (!Player.Quests.HasQuest(id))
             {
                 Player.Quests.Load(id);
-                await instance.WaitUntil(() => Player.Quests.QuestTree.Any(q => q.Id == id), timeout:3);
+                await instance.WaitUntil(() => Player.Quests.HasQuest(id), timeout:3);
             }
 
             var Quest = Player.Quests.Quest(id);
@@ -39,9 +39,10 @@ namespace Grimoire.Botting.Commands.Quest
                 return;
             }
 
-            if (Quest.IValue <= Player.Quests.progress(Quest.Id) && Quest.ISlot != 0 && Quest.IsNotRepeatable)
+            if (Quest.IValue <= Player.Quests.progress((int)Quest.ISlot) 
+                && Quest.ISlot != 0 && Quest.IsNotRepeatable)
             {
-                LogForm.Instance.devDebug($"[Quest] Skipping quest since requirement satisfied ({Quest.ISlot}) : {Player.Quests.progress(id)}/{Quest.IValue}");
+                LogForm.Instance.devDebug($"[Quest] Skipping quest since requirement satisfied ({id} - {Quest.ISlot}) : {Player.Quests.progress((int)Quest.ISlot)}/{Quest.IValue}");
                 return;
             }
 

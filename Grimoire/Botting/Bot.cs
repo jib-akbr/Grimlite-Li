@@ -29,23 +29,36 @@ namespace Grimoire.Botting
 
         public string ResolveVars(string value)
         {
+            string result = value.Replace("{PLAYERNAME}", Player.Username);
+            int safe = 0;
             // Match and replace all Tempvariable ex : "[var1]*[var2]"
-            string replaced = Regex.Replace(value, @"\[(.*?)\]", match =>
+            // value = value.
+            while (safe++ < 5) //5 Depths variable support
             {
-                string key = match.Groups[1].Value;
-                if (Configuration.Tempvariable.ContainsKey(key))
-                    return Configuration.Tempvariable[key];
-                if (Configuration.Tempvalues.ContainsKey(key))
-                    return Configuration.Tempvalues[key].ToString();
+                string previous = result; //saves to check if its same for twice
 
-                LogForm.Instance.AppendDebug($"[Var Error] Key for [{match.Value}] not found");
-                return match.Value;
-            });
+                result = Regex.Replace(result, @"\[(.*?)\]", match =>
+                {
+                    string key = match.Groups[1].Value;
+
+                    if (Configuration.Tempvariable.TryGetValue(key, out var var1))
+                        return var1;
+
+                    if (Configuration.Tempvalues.TryGetValue(key, out var var2))
+                        return var2.ToString();
+
+                    LogForm.Instance.AppendDebug($"[Var Error] Key for {match.Value} not found/Undefined");
+                    return match.Value;
+                });
+
+                if (previous == result)
+                    break;
+            }
 
             // Try to evaluate if the whole string is math operation (only support -,+,*,/)
-            string evaluated = TryEvaluateExpression(replaced);
+            string evaluated = TryEvaluateExpression(result);
 
-            //LogForm.Instance.AppendDebug($"Raw : {value}\r\nReplaced : {replaced}\r\nEvaluated/Final : {evaluated}");
+            //LogForm.Instance.AppendDebug($"Raw : {value}\r\nresult : {result}\r\nEvaluated/Final : {evaluated}");
             return evaluated;
         }
 
@@ -150,11 +163,12 @@ namespace Grimoire.Botting
             _questDelayCounter = new Stopwatch();
             _boostDelayCounter = new Stopwatch();
             World.ItemDropped += OnItemDropped;
-            Player.Quests.QuestsLoaded += OnQuestsLoaded;
+            //Player.Quests.QuestsLoaded += OnQuestsLoaded; commented to change with initQuestList
             Player.Quests.QuestCompleted += OnQuestCompleted;
             _questDelayCounter.Start();
-            this.LoadAllQuests();
+            this.LoadAllQuests(); //Handles to load all quest within commandlist
             this.LoadBankItems();
+            this.initQuestList(); //Quest Configuration related
             CheckBoosts();
             _boostDelayCounter.Start();
             OptionsManager.Start();
@@ -172,14 +186,14 @@ namespace Grimoire.Botting
                     BotData.SkillSet.Add(Configuration.Skills[i].Text.ToUpper(), i);
                 }
             }
-			Configuration.Instance.keepLagKiller = false;
+            Configuration.Instance.keepLagKiller = false;
         }
 
         public void Stop()
         {
             _ctsBot?.Cancel(throwOnFirstException: false);
             World.ItemDropped -= OnItemDropped;
-            Player.Quests.QuestsLoaded -= OnQuestsLoaded;
+            //Player.Quests.QuestsLoaded -= OnQuestsLoaded;
             Player.Quests.QuestCompleted -= OnQuestCompleted;
             _questDelayCounter.Stop();
             _boostDelayCounter.Stop();
@@ -211,7 +225,7 @@ namespace Grimoire.Botting
                     //Death handling system
                     OptionsManager.Stop(); //Ensure to stop provoke until respawned
                     World.SetSpawnPoint();
-                    await this.WaitUntil(() => Player.IsAlive, () => IsRunning && Player.IsLoggedIn,timeout:10);
+                    await this.WaitUntil(() => Player.IsAlive, () => IsRunning && Player.IsLoggedIn, timeout: 10);
                     await Task.Delay(1000);
                     Index = Configuration.RestartUponDeath ? 0 : Index - 1;
                     OptionsManager.Start();
@@ -219,7 +233,7 @@ namespace Grimoire.Botting
 
                 if (!Player.IsLoggedIn)
                 {
-					//Relogin system
+                    //Relogin system
                     LogForm.Instance.AppendDebug($"[{DateTime.Now:HH:mm:ss}] Disconnected. Last cmd: [{Index}]{lastCommand}");
                     StopQuestList();
                     StopBackGroundSpammer();
@@ -313,11 +327,11 @@ namespace Grimoire.Botting
         {
             if (_ctsQuestList != null && !_ctsQuestList.IsCancellationRequested)
                 StopQuestList(); //Ensure restarting QuestList
-
-            if (Configuration.Quests.Count == 0)
+            cacheQuestList();
+            if (_questListCache.Count == 0)
                 return;
             //Moved to Avoid creating tokens when no QList at all
-            
+
             _ctsQuestList = new CancellationTokenSource();
             var token = _ctsQuestList.Token;
             int questDelay = (int)BotManager.Instance.numQuestDelay.Value;
@@ -328,12 +342,22 @@ namespace Grimoire.Botting
             {
                 qFailures.Add(quest.Id, 0);
             }
-            
+
             try
             {
                 while (!_ctsBot.IsCancellationRequested && !token.IsCancellationRequested && Player.IsLoggedIn)
                 {
-                    Quest quest = Configuration.Quests.FirstOrDefault((Quest q) => q.CanComplete);
+                    Quest quest = null;
+
+                    foreach (var q in _questListCache.Values)
+                    {
+                        if (q.CanComplete)
+                        {
+                            quest = q;
+                            break;
+                        }
+                    }
+                    await Task.Delay(500, token);
                     if (quest != null)
                     {
                         BotData.State TempState = BotData.BotState;
@@ -353,8 +377,9 @@ namespace Grimoire.Botting
                             }
                             else
                             {
-                                qFailures[quest.Id] = f++;
-                                Console.WriteLine($"qFailures[{quest.Id}] : {f++}");
+                                f++;
+                                qFailures[quest.Id] = f;
+                                Console.WriteLine($"qFailures[{quest.Id}] : {f}");
                             }
                         }
                         else
@@ -364,10 +389,6 @@ namespace Grimoire.Botting
 
                         BotData.BotState = TempState;
                         _onCompletingQuest = false;
-                    }
-                    else
-                    {
-                        await Task.Delay(questDelay, token);
                     }
                 }
             }
@@ -422,7 +443,7 @@ namespace Grimoire.Botting
                 if (provokeMons) this.Configuration.ProvokeMonsters = false;
                 if (Configuration.ExitCombatBeforeRest)
                 {
-                    Player.MoveToCell(Player.Cell, Player.Pad);
+                    Player.refreshCell();
                     await Task.Delay(2000);
                 }
                 Player.Rest();
@@ -442,7 +463,7 @@ namespace Grimoire.Botting
                 if (provokeMons) this.Configuration.ProvokeMonsters = false;
                 if (Configuration.ExitCombatBeforeRest)
                 {
-                    Player.MoveToCell(Player.Cell, Player.Pad);
+                    Player.refreshCell();
                     await Task.Delay(2000);
                 }
                 Player.Rest();
@@ -500,11 +521,10 @@ namespace Grimoire.Botting
             }
         }
 
-        private void OnQuestsLoaded(List<Quest> quests)
+        /*private void OnQuestsLoaded(List<Quest> quests)
         {
             //triggers when Loading the quest for the first time
-            List<Quest> qs = quests.Where((Quest q) => 
-                Configuration.Quests.Any((Quest qq) => qq.Id == q.Id)).ToList();
+            List<Quest> qs = quests.Where((Quest q) => Configuration.Quests.Any((Quest qq) => qq.Id == q.Id)).ToList();
             int count = qs.Count;
             if (qs.Count <= 0)
             {
@@ -521,18 +541,64 @@ namespace Grimoire.Botting
                         qs[i].Accept();
                         await Task.Delay(1000);
                     }
-                    else LogForm.Instance.devDebug($"Quest [{i}/{qs.Count}]: {qs[i]} Alr accepted");
+                    else 
+                        LogForm.Instance.devDebug($"Quest [{i}/{qs.Count}]: {qs[i]} Alr accepted");
+                }
+                paused = false;
+            });
+        }*/
+        private void cacheQuestList()
+        {
+            _questListCache.Clear();
+            foreach (var q in Configuration.Quests)
+                _questListCache[q.Id] = q;
+        }
+        private void initQuestList()
+        {
+            //triggers when Loading the quest for the first time
+            cacheQuestList();
+
+            if (_questListCache.Count <= 0)
+                return;
+
+            Task.Run(async () =>
+            {
+                paused = true;
+                int total = _questListCache.Count;
+                int i = 0;
+                await Task.Delay(100);
+                foreach (var q in _questListCache.Values)
+                {
+                    await BotUtilities.WaitUntil(() => Player.Quests.HasQuest(q.Id), interval: 500);
+                    i++;
+                    if (total >= 4)
+                    {
+                        LogForm.Instance.devDebug($"Accepting Quest (Ghost) : {q} [{i}/{total}]");
+                        await Task.Delay(600);
+                        q.GhostAccept();
+                    }
+                    else if (!q.IsInProgress)
+                    {
+                        LogForm.Instance.devDebug($"Accepting Quest : {q} [{i}/{total}]");
+                        await Task.Delay(1000);
+                        q.Accept();
+                    }
+                    else LogForm.Instance.devDebug($"Quest [{i}/{total}]: {q} Alr accepted");
                 }
                 paused = false;
             });
         }
-
+        private Dictionary<int, Quest> _questListCache = new Dictionary<int, Quest>();
         private void OnQuestCompleted(CompletedQuest quest)
         {
+            if (!_questListCache.TryGetValue(quest.Id, out var q))
+                return;
+
             Task.Run(async () =>
             {
                 await Task.Delay(600);
-                Configuration.Quests.FirstOrDefault((Quest q) => q.Id == quest.Id)?.GhostAccept();
+                q.GhostAccept();
+                // Configuration.Quests.FirstOrDefault((Quest q) => q.Id == quest.Id)?.GhostAccept();
             });
         }
     }
