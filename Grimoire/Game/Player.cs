@@ -2,6 +2,7 @@ using Grimoire.Botting;
 using Grimoire.Botting.Commands.Map;
 using Grimoire.Game.Data;
 using Grimoire.Tools;
+using Grimoire.UI;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,30 @@ namespace Grimoire.Game
             _cachedUserID = 0;
             Quests.QuestTreeRefresh();
             DropUi.instance.clearDrop();
+        }
+
+        //public static int UserID => Flash.Call<int>("UserID", new object[0]);
+        private static int _cachedUserID = 0;
+        public static int UserID
+        {
+            get
+            {
+                int now = Environment.TickCount;
+                // Cek setiap 5000ms saja
+                if ((now - _checkguard) > 5000 || _cachedUserID == 0)
+                {
+                    try
+                    {
+                        _cachedUserID = Flash.Call<int>("UserID", new object[0]);
+                    }
+                    catch
+                    {
+                        _cachedUserID = 0;
+                    }
+                    _checkguard = now;
+                }
+                return _cachedUserID;
+            }
         }
 
         public static Bank Bank
@@ -106,7 +131,22 @@ namespace Grimoire.Game
         /// <summary>
         /// Grabs Player Equipped Class string (FULLY UPPERCASE).
         /// </summary>
-        public static string EquippedClass => Flash.Call<string>("Class", new string[0]);
+        public static string EquippedClass
+        {
+            get
+            {
+                int now = Environment.TickCount;
+                // check with 500ms cd
+                if ((now - _checkguard) > 500)
+                {
+                    _equippedClass = Flash.Call<string>("Class", new string[0]);
+                    _checkguard = now;
+                }
+                return _equippedClass;
+            }
+        }
+        private static string _equippedClass;
+        private static int _checkguard;
 
         /// <summary>
         /// Checks if Logged in.
@@ -180,6 +220,7 @@ namespace Grimoire.Game
         /// Gets gold int.
         /// </summary>
         public static int Gold => Flash.Call<int>("Gold", new string[0]);
+        public static int Coins => int.Parse(Flash.GetGameObject("world.myAvatar.objData.intCoins"));
 
         /// <summary>
         /// Checks if the player has a target.
@@ -211,7 +252,7 @@ namespace Grimoire.Game
         /// Checks if int skill is available (i think if its also off cooldown).
         /// 0 = Skill is ready to use, else is the remaining cooldown in Miliseconds.
         /// </summary>
-        /// <param name="index"></param>
+        /// <param name="index">Skill index</param>
         public static int SkillAvailable(string index) => Flash.Call<int>("SkillAvailable", new string[1] { index });
 
         /// <summary>
@@ -359,14 +400,25 @@ namespace Grimoire.Game
         /// </summary>
         /// <param name="isSelf">False = enemy | True = self aura</param>
         /// <param name="auraName"></param>
-        public static int GetAuras(bool isSelf, string auraName) => Flash.Call<int>("GetAurasValue", isSelf.ToString(), auraName);
-        public static bool AuraDuration(bool isSelf, string auraName, int target)
+        public static int GetAuras(bool isSelf, string auraName)
         {
+            if (isSelf) return (int)AuraManager.Instance.GetValue(auraName);
+
+            return Flash.Call<int>("GetAurasValue", isSelf.ToString(), auraName);
+        }
+        public static int AuraDuration(bool isSelf, string auraName, int target)
+        {
+            if (isSelf)
+            {
+                return (int)AuraManager.Instance.GetRemainingTime(auraName);
+            }
+
             string[] aura = (Flash.Call<string>("AuraDuration", isSelf.ToString(), auraName).Split('/'));
-            if (aura.Length < 2) return false;
+            if (aura.Length < 2) 
+                return 0;
             int.TryParse(aura[1], out int runTime);
             runTime /= 1000;
-            return runTime > target;
+            return runTime;
         }
 
         public static bool isRejectingAllDrop { get; set; } = false;

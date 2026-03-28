@@ -481,9 +481,9 @@ namespace Grimoire.Tools
 					break;*/
                 case "resPlayerTimed":
                     //Ensure remove all auras when respawn (aura might stuck when received packet loss)
-					Flash.Call("ResetAura", new string[0]);
-					break;
-					
+                    Flash.Call("ResetAura", new string[0]);
+                    break;
+
                 case "getMapItem":
                     int itemId = int.Parse(packet.Split('%')[5]);
                     if (Player.recentMapItem.TryGetValue(itemId, out var itemName) && itemName?.Equals("blank") == false)
@@ -497,18 +497,18 @@ namespace Grimoire.Tools
                         {
 
                             var handler = new MapItemHandler(cts, itemId);
-                        Proxy.Instance.RegisterHandler(handler);
+                            Proxy.Instance.RegisterHandler(handler);
                             bool timeout = false;
-                        try
-                        {
+                            try
+                            {
                                 await Task.Delay(2000, cts.Token);
                                 timeout = true;
-                        }
+                            }
                             finally
-                        {
+                            {
                                 if (timeout)
                                     LogForm.Instance.devDebug("[MapItemHandler] Nothing came out");
-                        Proxy.Instance.UnregisterHandler(handler);
+                                Proxy.Instance.UnregisterHandler(handler);
                                 _activeMapItemTasks.TryRemove(itemId, out _);
                             }
                         }
@@ -539,8 +539,9 @@ namespace Grimoire.Tools
         {
             //Console.WriteLine($"server: {packet}");
             //case "aura+":
-            dynamic ptext = JsonConvert.DeserializeObject<dynamic>(packet);
-            JObject bigObject = (JObject)ptext["b"]["o"];
+            // dynamic ptext = JsonConvert.DeserializeObject<dynamic>(packet);
+            JObject ptext = JObject.Parse(packet);
+			JObject bigObject = (JObject)ptext["b"]["o"];
             JArray actions = (JArray)bigObject["a"];
             if (actions != null)
             {
@@ -548,16 +549,57 @@ namespace Grimoire.Tools
                 {
                     string cmd = (string)action["cmd"];
                     string tInf = (string)action["tInf"];
-                    if (cmd == "aura+" && tInf == $"p:{Player.UserID}")
+                    if (cmd == "aura-" && action["aura"]?["nam"] != null && tInf == $"p:{Player.UserID}")
                     {
+                        string name = (string)(action["aura"]?["nam"]);
+                        AuraManager.Instance.RemoveAura(name);
+                        //LogForm.Instance.devDebug($"[AuraManager] -{name}");
+                    }
 
-                        if ((bool)action["auras"][0]["isNew"]) { }
-                        //desc += "Aura added:";
-                        else { }
-                        //desc += "Aura refreshed:";
+                    JArray arr_auras = (JArray)action["auras"];
+                    if (arr_auras == null)
+                        continue;
+                    foreach (JObject aura in arr_auras)
+                    {
+                        string name = (string)aura["nam"];
+
+                        if (cmd == "aura+" && tInf == $"p:{Player.UserID}")
+                        {
+                            double value = aura["val"]?.Value<double>() ?? 1;
+                            int duration = (int)aura["dur"];
+
+                            if ((bool)aura["isNew"] || value != 1)
+                                 AuraManager.Instance.ApplyAura(name, value, duration);
+                            else AuraManager.Instance.AuraIncrement(name);
+                            //LogForm.Instance.devDebug($"[AuraManager] +{name} {duration}s " + (value!=1 ? value.ToString() : "+1"));
+                        }
+                        
+
+                        string msg = (string)(aura?["msgOn"]);
+                        if (string.IsNullOrEmpty(msg))
+                            continue;
+                        Configuration.LastAuraMessages.Add(msg);
+                        Configuration.AnimationTriggered = true;
                     }
                 }
             }
+
+            //Letme ask zee first if should i move his handlerAnims here or nah
+            /*JArray anims = (JArray)bigObject?["anims"];
+            if (anims != null)
+            {
+                foreach (JObject anim in anims)
+                {
+                    string msg = anim?["msg"]?.ToString()?.ToLower();
+                    if (msg != null && !string.IsNullOrEmpty(msg))
+                    {
+                        // Store animation message for bot statement commands
+                        Configuration.LastAnimationMessage = msg;
+                        Configuration.AnimationTriggered = true;
+                    }
+                }
+            }*/
+
             return packet;
         }
 
@@ -567,7 +609,7 @@ namespace Grimoire.Tools
             Configuration.Tempvariable["Username"] = Call<string>("GetUsername", new string[0]);
             string[] nameColor = ClientConfig.GetValue(ClientConfig.C_NAME_COLOR).Split(',');
             bool ismember = Call<bool>("IsMember", new string[0]);
-            if (ismember && nameColor.Length > 1)
+            if (ismember && nameColor.Length > 1 && nameColor[1] != "0")
             {
                 Call("ChangeColorName", nameColor[1]);
             }
@@ -595,6 +637,14 @@ namespace Grimoire.Tools
                     case "loadInventoryBig":
                         Player.Bank.GetBank();
                         break;
+
+                    case "moveToArea":
+                        AuraManager.Instance.Update();
+                        break;
+						
+					case "clearAuras":
+						AuraManager.Instance.ClearAllAura();
+						break;
 
                     case "getDrop":
                         if (Convert.ToInt32(data.bSuccess) == 1)
