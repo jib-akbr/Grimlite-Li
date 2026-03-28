@@ -530,5 +530,12 @@
       "Description1": "Animation message",
       "Description2": "Skill to use"
     },
+    {
+      "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdDelayedAnims, Grimoire",
+      "Tag": "Monster",
+      "Text": "Delayed Anims",
+      "Description1": "Animation message",
+      "Description2": "Skill to use"
+    },
   ]
 }

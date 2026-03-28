@@ -19,10 +19,12 @@ namespace Grimoire.Botting.Commands.Misc
                     instance.Index = oldIndex;
                     instance.LoadBankItems();
                     instance.LoadAllQuests();
+					if (oldConfig?.Quests.Count > 0)
+						instance.StartQuestList();
 					BotData.BotSkill = null;
                 }
             }
-            catch (Exception e)
+            catch //(Exception e)
             {
                 //MessageBox.Show(e.ToString());
             }
