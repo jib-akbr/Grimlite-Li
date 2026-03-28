@@ -105,6 +105,26 @@ namespace Grimoire.Game
         public static string EquippedClass => Flash.Call<string>("Class", new string[0]);
 
         /// <summary>
+        /// Grabs Player Equipped Weapon name.
+        /// </summary>
+        public static string EquippedWeapon => Flash.Call<string>("Weapon", new string[0]);
+
+        /// <summary>
+        /// Grabs Player Equipped Armor name.
+        /// </summary>
+        public static string EquippedArmor => Flash.Call<string>("Armor", new string[0]);
+
+        /// <summary>
+        /// Grabs Player Equipped Helm name.
+        /// </summary>
+        public static string EquippedHelm => Flash.Call<string>("Helm", new string[0]);
+
+        /// <summary>
+        /// Grabs Player Equipped Cape name.
+        /// </summary>
+        public static string EquippedCape => Flash.Call<string>("Cape", new string[0]);
+
+        /// <summary>
         /// Checks if Logged in.
         /// </summary>
         public static bool IsLoggedIn => Flash.Call<bool>("IsLoggedIn", new string[0]);

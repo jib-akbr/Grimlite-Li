@@ -1768,7 +1768,7 @@ namespace Grimoire.UI
             }
             catch
             {
-                LogForm.Instance.AppendDebug("Error while loading skill preset for " + Player.EquippedClass + "\r\n");
+                LogForm.Instance?.AppendDebug("Error while loading skill preset for " + Player.EquippedClass + "\r\n");
             }
             return listSkill;
         }
@@ -1832,6 +1832,13 @@ namespace Grimoire.UI
 			BotData.BotState = BotData.State.Combat;
             while (chkAutoAttack.Checked)
             {
+                // Exit if no monsters in the room
+                if (World.VisibleMonsters.Count == 0)
+                {
+                    await Task.Delay(1000);
+                    continue;
+                }
+
                 if (BotData.BotState == BotData.State.Combat)
                 {
                     if (!Player.HasTarget) Player.AttackMonster("*");
@@ -1840,7 +1847,7 @@ namespace Grimoire.UI
                     {
                         await SpecialClassCombo();
                     }
-                    if (listSkill.Count > 0)
+                    if (listSkill.Count > 0 && i < listSkill.Count)
                     {
                         if (listSkill[i].Type == Skill.SkillType.Label)
                         {
@@ -1867,7 +1874,7 @@ namespace Grimoire.UI
                 else
                 {
                     // Reset dodge detector when auto attack is disabled
-                    UI.LogForm.Instance.AppendDebug($"[chkAutoAttack] ⏹️ Auto attack disabled - resetting skills");
+                    UI.LogForm.Instance?.AppendDebug($"[chkAutoAttack] ⏹️ Auto attack disabled - resetting skills");
                     Grimoire.Botting.Commands.Combat.DodgeDetector.Reset();
                     
                     await Task.Delay(5000);
