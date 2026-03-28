@@ -108,12 +108,12 @@ namespace Grimoire.Tools
                     return;
                 }
                 string map = Player.Map;
-                if (!string.IsNullOrEmpty(map) && !map.Equals("name", StringComparison.OrdinalIgnoreCase) && !map.Equals("battleon", StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrEmpty(map) && !map.EqualsIgnoreCase("name") && !map.EqualsIgnoreCase("battleon"))
                 {
                     break;
                 }
             }
-            if (Player.Map.Equals("battleon", StringComparison.OrdinalIgnoreCase))
+            if (Player.Map.EqualsIgnoreCase("battleon"))
             {
                 Player.Logout();
             }

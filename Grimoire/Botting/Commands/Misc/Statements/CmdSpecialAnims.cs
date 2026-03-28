@@ -120,4 +120,102 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             return $"Special Anims: {Value1} {(string.IsNullOrEmpty(Value2) ? "" : "| Skill: " + Value2)}";
         }
     }
+
+    public class CmdDelayedAnims : StatementCommand, IBotCommand
+    {
+        public CmdDelayedAnims()
+        {
+            Tag = "Monster";
+            Text = "Delayed Anims";
+            Description1 = "Animation message (or messages, comma-separated)";
+            Description2 = "Skill to use (optional)";
+        }
+
+        public int delayPreskill { get; set; } = 0;
+        public string target { get; set; } = "*";
+
+        public async Task Execute(IBotEngine instance)
+        {
+            string raw = instance.ResolveVars(Value1);
+            string lastMessage = Configuration.LastAnimationMessage?.ToLower();
+
+            // Normalise and support comma-separated search terms like Maid does
+            string[] message = string.IsNullOrWhiteSpace(raw)
+                ? Array.Empty<string>()
+                : raw.ToLower()
+                     .Split(',')
+                     .Select(t => t.Trim())
+                     .Where(t => !string.IsNullOrEmpty(t))
+                     .ToArray();
+
+            bool matched = !string.IsNullOrEmpty(lastMessage) && message.Length > 0 && Array.Exists(message, t => lastMessage.Contains(t));
+            bool auramatch = Array.Exists(message, t => 
+            Configuration.LastAuraMessages.Any(auramsg => t.Contains(auramsg)));
+            // Debug so we can see what the statement sees
+            // LogForm.Instance.AppendDebug($"[SpecialAnims] last='{lastMessage}' targets=[{string.Join(",", message)}] matched={matched}");
+
+            // Two modes:
+            // 1) If a skill index is provided (Value2):
+            //      - Never skip the next command.
+            //      - Only when the message matches, cast that skill (with retry) before continuing.
+            // 2) If no skill index is provided:
+            //      - Pure conditional: skip the next command while the message has NOT appeared.
+
+            string resolvedSkillIndex = null;
+            if (!string.IsNullOrWhiteSpace(Value2))
+            {
+                resolvedSkillIndex = instance.ResolveVars(Value2);
+                if (string.IsNullOrWhiteSpace(resolvedSkillIndex))
+                    resolvedSkillIndex = null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(resolvedSkillIndex))
+            {
+                // Skill mode: never skip, only react when the message matches
+                if (matched || auramatch)
+                {
+					if (pending != null)
+						return;
+					
+                    pending = Task.Run(async () =>
+                    {
+						try
+						{
+							await Task.Delay(delayPreskill);
+							instance.paused = true;
+							int cd = Player.SkillAvailable(Value2);
+							await Task.Delay(Math.Min(cd, 1500));
+							Player.AttackMonster(target);
+							Player.ForceUseSkill(Value2);
+							LogForm.Instance.devDebug($"Skill executed");
+                        } finally {
+						instance.paused = false;
+						pending = null;
+						}
+                    });
+
+                    if (auramatch)
+                    {
+                        Configuration.LastAuraMessages.Clear();
+                        LogForm.Instance.devDebug($"Msg {string.Join(",",message)}detected from Aura : Starting delay");
+                    }
+                    // Consume the last message so we don't keep matching the same text forever
+                    if (matched)
+                    {
+                        LogForm.Instance.devDebug($"Msg {string.Join(",", message)}detected from Anims : Starting delay");
+                        Configuration.LastAnimationMessage = string.Empty;
+                        Configuration.AnimationTriggered = false;
+                    }
+                }
+            }
+
+            // Let the bot continue with the next command (or the one after, if we skipped)
+            return;
+        }
+		private Task pending;
+        public override string ToString()
+        {
+            return $"Delay {delayPreskill}ms when msg: {Value1} {(string.IsNullOrEmpty(Value2) ? "" : "| Skill: " + Value2)}";
+        }
+    }
 }

@@ -10,6 +10,17 @@ namespace Grimoire.Botting
 {
     public static class Extensions
     {
+        public static bool EqualsIgnoreCase(this string a, string b)
+        {
+            return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+        }
+        public static bool ContainsIgnoreCase(this string source, string value)
+        {
+            if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(value))
+                return false;
+            return source.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         public static string Correct(this string str)
         {
             return !str.Contains("<false/>") && !str.Contains("<true/>") ? str : str.Replace("<false/>", bool.FalseString).Replace("<true/>", bool.TrueString);
@@ -38,14 +49,14 @@ namespace Grimoire.Botting
 
         public static string generatePastelHex(Random random, int mixR, int mixG, int mixB)
         {
-            int red =   random.Next(256);
+            int red = random.Next(256);
             int green = random.Next(256);
-            int blue =  random.Next(256);
+            int blue = random.Next(256);
 
             // mix the color
-            red =   (red + mixR) / 2;
+            red = (red + mixR) / 2;
             green = (green + mixG) / 2;
-            blue =  (blue + mixB) / 2;
+            blue = (blue + mixB) / 2;
             return string.Format("FF{0:X2}{1:X2}{2:X2}", red, green, blue);
         }
 

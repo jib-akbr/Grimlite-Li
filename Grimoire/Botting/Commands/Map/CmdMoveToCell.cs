@@ -29,7 +29,7 @@ namespace Grimoire.Botting.Commands.Map
             string Pad = instance.IsVar(this.Pad) ? Configuration.Tempvariable[instance.GetVar(this.Pad)] : this.Pad;
 
             // BotData.BotState = BotData.State.Others;
-            while (!Player.Cell.Equals(Cell, StringComparison.OrdinalIgnoreCase))
+            while (!Player.Cell.EqualsIgnoreCase(Cell))
             {
                 Player.MoveToCell(Cell, Pad);
                 await Task.Delay(500);

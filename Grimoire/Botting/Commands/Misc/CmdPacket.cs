@@ -55,7 +55,9 @@ namespace Grimoire.Botting.Commands.Misc
                 }*/
                 text = Bot.Instance.ResolveVars(Packet);
 
-                text = text.Replace("{ROOM_ID}", World.RoomId.ToString()).Replace("{ROOM_NUMBER}", World.RoomNumber.ToString()).Replace("PLAYERNAME", Player.Username);
+                text = text.Replace("{ROOM_ID}", World.RoomId.ToString())
+                           .Replace("{ROOM_NUMBER}", World.RoomNumber.ToString());
+                           //.Replace("PLAYERNAME", Player.Username);
                 text = text.Replace("{GETMAP}", Player.Map);
                 while (text.Contains("--"))
                 {

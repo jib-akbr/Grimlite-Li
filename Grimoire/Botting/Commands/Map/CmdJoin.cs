@@ -37,7 +37,7 @@ namespace Grimoire.Botting.Commands.Map
 
 			int _try = Try;
 
-			if (!MapName.Equals(Player.Map, StringComparison.OrdinalIgnoreCase))
+			if (!MapName.EqualsIgnoreCase(Player.Map))
 			{
 				if (!int.TryParse(RoomNumber, out int n) && RoomNumber != "")
 				{
@@ -48,7 +48,7 @@ namespace Grimoire.Botting.Commands.Map
                 using (new pauseProvoke(instance.Configuration))
                 {
 					//check for MapName, instead of Map 
-					while (_try > 0 && !MapName.Equals(Player.Map, StringComparison.OrdinalIgnoreCase)) 
+					while (_try > 0 && !MapName.EqualsIgnoreCase(Player.Map)) 
                     {
 						await this.TryJoin(instance, MapName, RoomNumber);
 						_try--;
@@ -59,9 +59,9 @@ namespace Grimoire.Botting.Commands.Map
 			if (_skipcell)
 				return;
 
-            if (MapName.Equals(Player.Map, StringComparison.OrdinalIgnoreCase))
+            if (MapName.EqualsIgnoreCase(Player.Map))
 			{
-				if (!Player.Cell.Equals(_Cell, StringComparison.OrdinalIgnoreCase))
+				if (!Player.Cell.EqualsIgnoreCase(_Cell))
 				{
 					Player.MoveToCell(_Cell, _Pad);
 					await Task.Delay(500);
@@ -91,7 +91,7 @@ namespace Grimoire.Botting.Commands.Map
 			}
 			String join = RoomNumber.Length > 0 ? $"{MapName}-{RoomNumber}" : MapName;
 			Player.JoinMap(join, _Cell, _Pad);
-			await instance.WaitUntil(() => Player.Map.Equals(MapName, StringComparison.OrdinalIgnoreCase), null, 5);
+			await instance.WaitUntil(() => Player.Map.EqualsIgnoreCase(MapName), null, 5);
 			await instance.WaitUntil(() => !World.IsMapLoading, null, 40);
 		}
 

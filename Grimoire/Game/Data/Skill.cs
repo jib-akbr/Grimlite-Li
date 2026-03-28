@@ -109,7 +109,7 @@ namespace Grimoire.Game.Data
 
         private void useSkill(string Index)
         {
-            if (Player.EquippedClass.IndexOf("Chrono Shadow", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (Player.EquippedClass.EqualsIgnoreCase("Chrono Shadow"))
             {
                 Player.ForceUseSkill(Index);
                 return;

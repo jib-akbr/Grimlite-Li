@@ -94,7 +94,7 @@ namespace Grimoire.Game
 				{
 					string name = token;
 					predicates.Add(m =>
-						m.Name?.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0
+                        m.Name.EqualsIgnoreCase(name)
 					);
 				}
 			}

@@ -1,3 +1,4 @@
+using Grimoire.Botting;
 using Grimoire.Tools;
 using System;
 using System.Collections.Generic;
@@ -11,12 +12,12 @@ namespace Grimoire.Game.Data
 
         public bool ContainsItem(string name, string qty)
         {
-            TempItem tempItem = Items.FirstOrDefault((TempItem i) => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            TempItem tempItem = Items.FirstOrDefault((TempItem i) => i.Name.EqualsIgnoreCase(name));
             if (tempItem == null)
             {
                 return false;
             }
-            if (!(qty == "*"))
+            if (qty != "*")
             {
                 return tempItem.Quantity >= int.Parse(qty);
             }

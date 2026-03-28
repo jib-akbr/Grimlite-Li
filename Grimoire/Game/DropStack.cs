@@ -61,7 +61,7 @@ namespace Grimoire.Game
 
         public async Task<bool> GetDrop(string itemName)
         {
-            InventoryItem inventoryItem = _drops.FirstOrDefault((InventoryItem d) => d.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
+            InventoryItem inventoryItem = _drops.FirstOrDefault((InventoryItem d) => d.Name.EqualsIgnoreCase(itemName));
             bool flag = inventoryItem != null;
             if (flag)
             {
@@ -141,7 +141,7 @@ namespace Grimoire.Game
 
         public bool Contains(string itemName)
         {
-            return _drops.FirstOrDefault((InventoryItem d) => d.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase)) != null;
+            return _drops.FirstOrDefault((InventoryItem d) => d.Name.EqualsIgnoreCase(itemName)) != null;
         }
     }
 }

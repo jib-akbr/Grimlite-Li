@@ -76,7 +76,7 @@ namespace Grimoire.Game.Data
         }
         public static void SellItem(string name, int qty = 1)
         {
-            var item = Player.Inventory.Items.Find(i => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            var item = Player.Inventory.Items.Find(i => i.Name.EqualsIgnoreCase(name));
             if (item == null)
                 return;
 

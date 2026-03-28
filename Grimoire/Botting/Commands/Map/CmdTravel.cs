@@ -30,7 +30,7 @@ namespace Grimoire.Botting.Commands.Map
             await WaitUntil(() => World.IsActionAvailable(LockActions.Transfer));
             string cmdMap = Map.Contains("-") ? Map.Split('-')[0] : Map;
             string map = Player.Map;
-            if (!cmdMap.Equals(map, StringComparison.OrdinalIgnoreCase))
+            if (!cmdMap.EqualsIgnoreCase(map))
             {
                 await WaitUntil(() => World.IsActionAvailable(LockActions.Transfer));
                 if (Player.CurrentState == Player.State.InCombat)
@@ -39,7 +39,7 @@ namespace Grimoire.Botting.Commands.Map
                     await WaitUntil(() => Player.CurrentState != Player.State.InCombat);
                 }
                 Player.JoinMap(Map, Cell, Pad);
-                await WaitUntil(() => Player.Map.Equals(cmdMap, StringComparison.OrdinalIgnoreCase));
+                await WaitUntil(() => Player.Map.EqualsIgnoreCase(cmdMap));
                 await WaitUntil(() => !World.IsMapLoading, 40);
             } else
             {

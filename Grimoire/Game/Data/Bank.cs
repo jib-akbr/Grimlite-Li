@@ -1,3 +1,4 @@
+using Grimoire.Botting;
 using Grimoire.Tools;
 using System;
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ namespace Grimoire.Game.Data
 
         public bool ContainsItemX(string itemName, string quantity = "*")
         {
-            InventoryItem inventoryItem = Items.FirstOrDefault((InventoryItem i) => i.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
+            InventoryItem inventoryItem = Items.FirstOrDefault((InventoryItem i) => i.Name.EqualsIgnoreCase(itemName));
             if (inventoryItem != null)
             {
                 if (!(quantity == "*"))
@@ -40,6 +41,10 @@ namespace Grimoire.Game.Data
             }
             return false;
         }
+        public bool ContainsItem(int id, int qty)
+        {//ItemId & quantity
+            return Items.FirstOrDefault((InventoryItem it) => it.Id == id)?.Quantity >= qty;
+        }
 
         public bool ContainsItem(string itemName, string quantity = "*")
         {
@@ -48,11 +53,9 @@ namespace Grimoire.Game.Data
             {
                 return false;
             }
-            else
+            else if (Int32.TryParse(quantity, out int qty))
             {
-                if (Int32.TryParse(quantity, out int qty))
-                    if (item.Quantity < qty)
-                        return false;
+                return item.Quantity >= qty;
             }
             return true;
         }

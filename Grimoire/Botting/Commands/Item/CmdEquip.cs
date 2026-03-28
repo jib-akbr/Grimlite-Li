@@ -38,7 +38,7 @@ namespace Grimoire.Botting.Commands.Item
             if (item == null)
             {
                 var kvp = InventoryItem.EnhancementNames
-                    .FirstOrDefault(p => p.Value.Equals(raw, StringComparison.OrdinalIgnoreCase));
+                    .FirstOrDefault(p => p.Value.EqualsIgnoreCase(raw));
                 if (!kvp.Equals(default(System.Collections.Generic.KeyValuePair<int, string>)))
                 {
                     int enhIdByName = kvp.Key;
@@ -59,7 +59,7 @@ namespace Grimoire.Botting.Commands.Item
             if (item == null)
             {
                 item = Player.Inventory.Items.FirstOrDefault(i =>
-                    i.IsEquippable && i.Name.Equals(raw, StringComparison.OrdinalIgnoreCase));
+                    i.IsEquippable && i.Name.EqualsIgnoreCase(raw));
             }
 
 			if (item == null) return;

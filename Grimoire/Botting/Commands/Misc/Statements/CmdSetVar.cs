@@ -1,5 +1,6 @@
 ﻿using Grimoire.Game;
 using Grimoire.Game.Data;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,19 +16,32 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 
         public Task Execute(IBotEngine instance)
         {
+            //var list = Player.Inventory.Items;
+            //foreach (var item in list)
+            //{
+            //    Console.WriteLine($"[{item.Id}] {item.Name} ({item.Category}) {item.IsEquipped}");
+            //}
             switch (Value1)
             {
                 case "{weapon}":
-                    Value2 = Player.Inventory.Items.FirstOrDefault(i => InventoryItem.Weapons.Contains(i.Category) && i.IsEquipped)?.Name;
+                    Value2 = Player.Inventory.Items.FirstOrDefault
+                    (i => InventoryItem.Weapons.Contains(i.Category) && i.IsEquipped)?.Name ?? "Error";
                     break;
                 case "{class}":
-                    Value2 = Player.Inventory.Items.FirstOrDefault(i => i.Category == "Class" && i.IsEquipped)?.Name;
+                    Value2 = Player.Inventory.Items.FirstOrDefault
+                    (i => i.Category == "Class" && i.IsEquipped)?.Name;
+                    break;
+                case "{nr10}":
+                    Value2 = Player.Inventory.Items.FirstOrDefault
+                    (i => i.Category == "Class" && i.Quantity < 300_000)?.Name ?? "Error";
                     break;
                 case "{helm}":
-                    Value2 = Player.Inventory.Items.FirstOrDefault(i => i.Category == "Helm" && i.IsEquipped)?.Name;
+                    Value2 = Player.Inventory.Items.FirstOrDefault
+                    (i => i.Category == "Helm" && i.IsEquipped)?.Name ?? "Error";
                     break;
                 case "{cape}":
-                    Value2 = Player.Inventory.Items.FirstOrDefault(i => i.Category == "Cape" && i.IsEquipped)?.Name;
+                    Value2 = Player.Inventory.Items.FirstOrDefault
+                    (i => i.Category == "Cape" && i.IsEquipped)?.Name ?? "Error";
                     break;
                 default:
                     break;
@@ -48,6 +62,7 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                 if (invitem != null)
                     RealVar = tempitem.Quantity.ToString();
             }*/ //experimental changes for  getting certain item's qty according to its name
+
             if (!Configuration.Tempvariable.ContainsKey(Value1))
                 Configuration.Tempvariable.Add(Value1, RealString);
             else

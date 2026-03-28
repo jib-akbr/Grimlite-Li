@@ -470,7 +470,7 @@ namespace Grimoire.Botting
         private void OnItemDropped(InventoryItem drop)
         {
             NotifyDrop(drop);
-            bool flag = Configuration.Drops.Any((string d) => d.Equals(drop.Name, StringComparison.OrdinalIgnoreCase));
+            bool flag = Configuration.Drops.Any((string d) => d.EqualsIgnoreCase(drop.Name));
             if (Configuration.EnablePickupAll)
             {
                 World.DropStack.GetDrop(drop.Id);
@@ -491,7 +491,7 @@ namespace Grimoire.Botting
 
         private void NotifyDrop(InventoryItem drop)
         {
-            if (Configuration.NotifyUponDrop.Count > 0 && Configuration.NotifyUponDrop.Any((string d) => d.Equals(drop.Name, StringComparison.OrdinalIgnoreCase)))
+            if (Configuration.NotifyUponDrop.Count > 0 && Configuration.NotifyUponDrop.Any((string d) => d.EqualsIgnoreCase(drop.Name)))
             {
                 for (int i = 0; i < 10; i++)
                 {

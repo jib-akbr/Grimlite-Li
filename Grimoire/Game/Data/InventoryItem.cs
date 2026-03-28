@@ -1,7 +1,7 @@
 using Grimoire.Tools;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Grimoire.Game.Data
@@ -10,7 +10,7 @@ namespace Grimoire.Game.Data
     {
         private string _name;
 
-        public static readonly string[] EquippableCategories = new string[14]
+        public static readonly HashSet<string> EquippableCategories = new HashSet<string>
         {
             "Sword",
             "Axe",
@@ -25,10 +25,12 @@ namespace Grimoire.Game.Data
             "Armor",
             "Helm",
             "Cape",
+            "Necklace",
+            "Misc",
             "Item"
         };
 
-        public static readonly string[] Weapons = new string[9]
+        public static readonly HashSet<string> Weapons = new HashSet<string>
         {
             "Sword",
             "Axe",
@@ -41,13 +43,14 @@ namespace Grimoire.Game.Data
             "Wand",
         };
 
-        public static readonly string[] EquippableNonWeapon = new string[5]
+        public static readonly HashSet<string> EquippableNonWeapon = new HashSet<string>
         {
             "Class",
             "Armor",
             "Helm",
             "Cape",
-            "Pet"
+            "Pet",
+            "Misc"
         };
 
         public enum forgeID
@@ -95,8 +98,8 @@ namespace Grimoire.Game.Data
         // Extended enhancement name mapping for special Luck patterns.
         // These are the iEnh IDs for Luck variants of Awe Blast / Health Vamp /
         // Mana Vamp / Powerword Die / Spiral Carve.
-        public static readonly System.Collections.Generic.Dictionary<int, string> EnhancementNames =
-            new System.Collections.Generic.Dictionary<int, string>
+        public static readonly Dictionary<int, string> EnhancementNames =
+            new Dictionary<int, string>
             {
                 { 52368, "Luck Spiral Carve" },
                 { 52369, "Luck Awe Blast" },
@@ -211,6 +214,7 @@ namespace Grimoire.Game.Data
         {
             get
             {
+                
                 if (string.IsNullOrEmpty(_name))
                 {
                     _name = World.ItemTree.FirstOrDefault((InventoryItem i) => i.Id == Id)?.Name;

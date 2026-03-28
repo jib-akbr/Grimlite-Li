@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Grimoire.Botting;
 using Grimoire.Game;
 using Newtonsoft.Json.Linq;
 
@@ -271,7 +272,7 @@ namespace Grimoire.Networking.Handlers
                     // Only require that the current map name contains "ultragramiel" (case-insensitive).
                     if (!Player.IsLoggedIn ||
                         string.IsNullOrEmpty(Player.Map) ||
-                        Player.Map.IndexOf("ultragramiel", StringComparison.OrdinalIgnoreCase) < 0)
+                        Player.Map.ContainsIgnoreCase("ultragramiel"))
                     {
                         await Task.Delay(2000, token);
                         continue;

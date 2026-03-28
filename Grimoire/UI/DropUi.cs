@@ -1,3 +1,4 @@
+﻿using Grimoire.Botting;
 ﻿using Grimoire.Game;
 using Grimoire.Game.Data;
 using System;
@@ -156,7 +157,7 @@ namespace Grimoire.UI
             // check existing
             foreach (ListViewItem i in listView.Items)
             {
-                if (i.Text.Equals(item.Name, StringComparison.OrdinalIgnoreCase))
+                if (i.Text.EqualsIgnoreCase(item.Name))
                 {
                     int qty = int.Parse(i.SubItems[1].Text);
                     i.SubItems[1].Text = (qty + item.Quantity).ToString();

@@ -149,9 +149,9 @@ namespace Grimoire.UI
                     //honestly i have no fucking idea how to implement this properly
                 }
                 bool hasMapProps = currentVars.Keys.Any(k =>
-    k.IndexOf("cell", StringComparison.OrdinalIgnoreCase) >= 0 ||
-    k.IndexOf("map", StringComparison.OrdinalIgnoreCase) >= 0 ||
-    k.IndexOf("pad", StringComparison.OrdinalIgnoreCase) >= 0);
+                    k.EqualsIgnoreCase("cell") ||
+                    k.EqualsIgnoreCase("map") ||
+                    k.EqualsIgnoreCase("pad"));
 
                 if (!hasMapProps)
                 {

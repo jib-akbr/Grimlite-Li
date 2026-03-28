@@ -1,3 +1,4 @@
+using Grimoire.Botting;
 using Grimoire.Tools;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace Grimoire.Game.Data
 
         public bool ContainsItemX(string name, string quantity)
         {
-            InventoryItem inventoryItem = Items.FirstOrDefault((InventoryItem i) => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            InventoryItem inventoryItem = Items.FirstOrDefault((InventoryItem i) => i.Name.EqualsIgnoreCase(name));
             if (inventoryItem != null)
             {
                 if (!(quantity == "*"))
@@ -35,11 +36,11 @@ namespace Grimoire.Game.Data
             return false;
         }
         #region waitItemTaken
-        public async Task<bool> WaitForItem(string itemName, int attempts = 3, int delayMS = 1000)
+       /* public async Task<bool> WaitForItem(string itemName, int attempts = 3, int delayMS = 1000)
         {
             for (int i = 0; i < attempts; i++)
             {
-                bool found = Player.Inventory.Items.Any(it => it.Name.Equals(itemName,StringComparison.OrdinalIgnoreCase)) ;
+                bool found = Player.Inventory.Items.Any(it => it.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
 
                 if (found)
                     return true;
@@ -60,24 +61,48 @@ namespace Grimoire.Game.Data
                 await Task.Delay(delayMS);
             }
             return false;
-        }
+        }*/
         #endregion
-        public bool ContainsItem(string itemName, string quantity = "*")
+        
+		public bool ContainsItem(string itemName, string quantity = "*")
         {
             InventoryItem item = Player.Inventory.GetItemByName(itemName);
             if (item == null)
             {
                 return false;
             }
-            else
+            else if (int.TryParse(quantity, out int qty))
             {
-                if (Int32.TryParse(quantity, out int qty))
-                    if (item.Quantity < qty)
-                        return false;
+                if (item.Category != "Class" && qty > item.MaxStack)
+                    qty = item.MaxStack;
+                return item.Quantity >= qty;
             }
             return true;
         }
-
+		
+        public bool ContainsItem(int id, int qty)
+        {
+            InventoryItem item = Items.FirstOrDefault((InventoryItem i) => i.Id == id);
+            if (item == null)
+            {
+                return false;
+            }
+            else if (item.Category != "Class" && qty > item.MaxStack)
+            {
+                qty = item.MaxStack;
+            }
+            return item.Quantity >= qty;
+            //return Items.FirstOrDefault((InventoryItem it) => it.Id == id)?.Quantity >= qty;
+        }
+		
+        public int GetItemQty(string format)
+        {//not yet used...
+            format = format.Replace(".qty", "");
+            return Items.FirstOrDefault(
+                (InventoryItem i) => i.Name.EqualsIgnoreCase(format)
+                )?.Quantity ?? 0;
+        }
+		
         public bool ContainsItem(InventoryItem item)
         {
             return Items.FirstOrDefault((InventoryItem target) => target.Id == item.Id)?.Quantity >= item.Quantity;
@@ -85,12 +110,10 @@ namespace Grimoire.Game.Data
 
         public bool ContainsMaxItem(string name)
         {
-            InventoryItem inventoryItem = Items.FirstOrDefault((InventoryItem i) => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-            if (inventoryItem != null)
-            {
-                return inventoryItem.Quantity >= inventoryItem.MaxStack;
-            }
-            return false;
+            InventoryItem inventoryItem = Items.FirstOrDefault((InventoryItem i) => i.Name.EqualsIgnoreCase(name));
+            if (inventoryItem == null)
+                return false;
+            return inventoryItem.Quantity >= inventoryItem.MaxStack;
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Grimoire.Botting;
 using Grimoire.Game;
 using Newtonsoft.Json.Linq;
 
@@ -29,7 +30,6 @@ namespace Grimoire.Networking.Handlers
 
         // Track death so we can reposition on respawn.
         private bool _wasDead = false;
-
         // Track zone position for continuous positioning (like decompiled plugin)
         private bool _inZone = false;
 
@@ -51,7 +51,7 @@ namespace Grimoire.Networking.Handlers
             _role = role;
 
             // On handler start, move to the starting position
-            if (Player.IsLoggedIn && Player.IsAlive && Player.Map.Equals("ultraspeaker", StringComparison.OrdinalIgnoreCase) && Player.Cell.Equals("Boss", StringComparison.OrdinalIgnoreCase))
+            if (Player.IsLoggedIn && Player.IsAlive && Player.Map.EqualsIgnoreCase("ultraspeaker") && Player.Cell.EqualsIgnoreCase("Boss"))
             {
                 Player.WalkToPoint("100", "321");
             }
@@ -96,7 +96,7 @@ namespace Grimoire.Networking.Handlers
                     }
 
                     // Only process if in Boss cell
-                    if (Player.Cell.Equals("Boss", StringComparison.OrdinalIgnoreCase))
+                    if (Player.Cell.EqualsIgnoreCase("Boss"))
                     {
                         // ================================
                         // AUTO-ATTACK MONSTER
@@ -171,7 +171,7 @@ namespace Grimoire.Networking.Handlers
                 string msgLower = customMessage.ToLowerInvariant();
                 bool isTruth = msgLower.Contains("truth");
                 bool isListen = msgLower.Contains("listen");
-                bool isEqual = msgLower.Contains("equal");
+                //bool isEqual = msgLower.Contains("equal");
 
                 // ==================================================
                 // ROTATION LOGIC (on truth/listen messages)
@@ -208,31 +208,31 @@ namespace Grimoire.Networking.Handlers
                         }
                     }
                     
-            // AP uses skill 2 after every zone (whenever OUT appears) - multiple attempts for reliability
-            if (step.zoneType == "OUT" && _role == SpeakerRole.AP)
-            {
-                Grimoire.UI.LogForm.Instance.AppendDebug($"[UltraSpeaker AP] Using skill 2 after zone completion");
-                await Task.Delay(300);
-                Player.UseSkill("2");
-                await Task.Delay(100);
-                Player.UseSkill("2");
-                await Task.Delay(100);
-                Player.UseSkill("2");
-            }
-            
-            // TAUNT (skill 5) based on rotation
-            // =========================
-            if (skillRole.HasValue && skillRole.Value == _role)
-            {
-                SetForceSkill("5", step.delay);
-            }
+                    // AP uses skill 2 after every zone (whenever OUT appears) - multiple attempts for reliability
+                    if (step.zoneType == "OUT" && _role == SpeakerRole.AP)
+                    {
+                        Grimoire.UI.LogForm.Instance.AppendDebug($"[UltraSpeaker AP] Using skill 2 after zone completion");
+                        await Task.Delay(300);
+                        Player.UseSkill("2");
+                        await Task.Delay(100);
+                        Player.UseSkill("2");
+                        await Task.Delay(100);
+                        Player.UseSkill("2");
+                    }
+                    
+                    // TAUNT (skill 5) based on rotation
+                    // =========================
+                    if (skillRole.HasValue && skillRole.Value == _role)
+                    {
+                        SetForceSkill("5", step.delay);
+                    }
 
-            // LR spams skill 1 on truth/listen
-            if (_role == SpeakerRole.LR)
-            {
-                Player.UseSkill("1");
-                Player.UseSkill("1");
-            }
+                    // LR spams skill 1 on truth/listen
+                    if (_role == SpeakerRole.LR)
+                    {
+                        Player.UseSkill("1");
+                        Player.UseSkill("1");
+                    }
                 }
             }
             catch
@@ -247,24 +247,28 @@ namespace Grimoire.Networking.Handlers
         {
             switch (count)
             {
-                case 0:  return ("LR",  null,  null,  0);
-                case 1:  return ("LOO", "DPS", "IN",  0);
-                case 2:  return ("AP",  "DPS", "OUT", 0);
-                case 3:  return ("LOO", null,  null,  500);
-                case 4:  return (null,  "LR",  "IN",  0);
-                case 5:  return ("LR",  "LR",  "OUT", 500);
-                case 6:  return (null,  null,  null,  0);
-                case 7:  return ("LOO", null,  null,  500);
-                case 8:  return (null,  "AP",  "IN",  0);
-                case 9:  return ("AP",  "AP",  "OUT", 0);
-                case 10: return ("LR",  null,  null,  500);
-                case 11: return (null,  "LOO", "IN",  0);
-                case 12: return ("LOO", "LOO", "OUT", 500);
-                case 13: return (null,  null,  null,  0);
-                case 14: return ("LR",  null,  null,  0);
-                case 15: 
+            /*T*/    case 0:  return ("LR",  null,  null,  0);
+            /*L*/    case 1:  return ("LOO", "DPS", "IN",  0);
+            
+			/*T*/    case 2:  return ("AP",  "DPS", "OUT", 0);
+            /*L*/    case 3:  return ("LOO", null,  null,  100);
+            /*T*/    case 4:  return (null,  "LR",  "IN",  0);
+            
+			/*L*/    case 5:  return ("LR",  "LR",  "OUT", 100);
+            /*T*/    case 6:  return (null,  null,  null,  0);
+            /*T*/    case 7:  return ("LOO", null,  null,  100);
+            /*L*/    case 8:  return (null,  "AP",  "IN",  0);
+            
+			/*T*/    case 9:  return ("AP",  "AP",  "OUT", 0);
+            /*L*/    case 10: return ("LR",  null,  null,  100);
+            /*T*/    case 11: return (null,  "LOO", "IN",  0);
+            
+			/*L*/    case 12: return ("LOO", "LOO", "OUT", 100);
+            /*T*/    case 13: return (null,  null,  null,  0);
+            /*T*/    case 14: return ("LR",  null,  null,  0);
+            /*L*/    case 15: 
                     _speakerCounter = 1;
-                    return ("LOO", "DPS", "IN",  500);
+                    return ("LOO", "DPS", "IN",  100);
                 default: return (null,  null,  null,  0);
             }
         }
@@ -344,10 +348,8 @@ namespace Grimoire.Networking.Handlers
 
                         // Spam skill 5 rapidly
                         Player.UseSkill("5");
-                        Player.UseSkill("5");
-                        Player.UseSkill("5");
-                        
                         await Task.Delay(30);
+                        Player.UseSkill("5");
                         
                         // Check if taunt succeeded
                         int focusStacks = Player.GetAuras(false, "Focus");

@@ -428,8 +428,8 @@ namespace Grimoire.UI.Maid
             var potion = Player.Inventory.Items.FirstOrDefault((InventoryItem i) =>
                 i.IsEquipped &&
                 i.Quantity >= 1 &&
-                potionNames.Any(pots => i.Name.IndexOf(pots, StringComparison.OrdinalIgnoreCase) >= 0));
-            if (potion != null)
+                potionNames.Any(pots => i.Name.ContainsIgnoreCase(pots)));
+            if (selectedMode == "Auto Potion" && potion != null)
             {
                 if (potion.Name.Contains("Potent") && Player.GetAuras(true, "Potent Honor Malice") == 0)
                 {
@@ -498,8 +498,7 @@ namespace Grimoire.UI.Maid
             if (Player.Map == "ultragramiel")
             {
                 // string target = Player.GetTargetName().ToLower();
-                if (Player.GetTargetName?.IndexOf("grace crystal", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    World.IsMonsterAvailable("grace crystal"))
+                if (Player.GetTargetName.EqualsIgnoreCase("grace crystal") || World.IsMonsterAvailable("grace crystal"))
                 {
                     CheckCrystalHealthBalance();
                     return;
@@ -760,6 +759,7 @@ namespace Grimoire.UI.Maid
             {
                 //if (monsterList[i].Equals(Player.GetTargetName(), StringComparison.OrdinalIgnoreCase))
                 if (currentTarget?.IndexOf(monsterList[i], StringComparison.OrdinalIgnoreCase) >= 0)
+                if (currentTarget.EqualsIgnoreCase(monsterList[i]) || 
                     return; //Made special for CSH non autoattack cases
 
                 if (World.IsMonsterAvailable(monsterList[i]))
