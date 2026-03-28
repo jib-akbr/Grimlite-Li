@@ -1,8 +1,11 @@
+using Grimoire.Botting;
 using Grimoire.Networking;
 using Grimoire.Tools;
+using Grimoire.UI;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Grimoire.Game.Data
 {
@@ -46,13 +49,126 @@ namespace Grimoire.Game.Data
 
         public static void BuyItemQty(string name, int qty)
         {
+
+            if (qty < 0)
+            {
+                dynamic sitem = GetShopItemData(name);
+                if (sitem != null)
+                    qty = MaximumShopBuys(sitem);
+                if (qty == 0)
+                {
+                    LogForm.Instance.devDebug($"[MaxBuy] Buy skipped due to max/requirement not meet");
+                    return;
+                }
+            }
             Flash.Call("BuyItemQty", new string[] { name, qty.ToString() });
         }
-
         public static void BuyItemQty(int itemId, int shopItemId, int qty)
         {
+            if (qty < 0)
+            {
+                dynamic sitem = GetShopItemData(itemId, shopItemId);
+                if (sitem != null)
+                    qty = MaximumShopBuys(sitem);
+                
+                if (qty == 0)
+                {
+                    LogForm.Instance.devDebug($"[MaxBuy] Buy skipped due to max/requirement not meet");
+                    return;
+                }
+            }
             Flash.Call("BuyItemQtyById", new string[] { qty.ToString(), itemId.ToString(), shopItemId.ToString() });
         }
+		
+        #region Maximum_buy_stuff
+        //code extracted from SKuA Corebots
+        private static dynamic GetShopItemData(int itemID, int shopItemID = 0)
+        {
+            return GetShopItemData(item =>
+            item?.ItemID == itemID,
+            shopItemID);
+        }
+        private static dynamic GetShopItemData(string itemName, int shopItemID = 0)
+        {
+            return GetShopItemData(item =>
+            itemName.EqualsIgnoreCase((string)item?.sName),
+            shopItemID);
+        }
+        public static int MaximumShopBuys(dynamic shopItem)
+        {
+            if (shopItem == null)
+                return 0;
+
+            var owned = Player.Inventory.Items.FirstOrDefault(x => x.Id == (int)shopItem.ItemID);
+
+            if ((string)shopItem.sES == "ar")
+                return 1;
+
+            int stackRemaining = owned != null
+                ? (int)shopItem.iStk - owned.Quantity
+                : (int)shopItem.iStk;
+
+            int perBuy = (int)shopItem.iQty;
+
+            // berapa kali bisa beli berdasarkan stack
+            int stackLimit = stackRemaining / perBuy;
+
+            if (stackLimit < 1)
+                return 0;
+
+            int maxBuys = stackLimit;
+
+            // ===== Currency Limit =====
+            if ((int)shopItem.iCost > 0)
+            {
+                int currency = (int)shopItem.bCoins == 1 ? Player.Coins : Player.Gold;
+                int currencyLimit = currency / (int)shopItem.iCost;
+
+                maxBuys = Math.Min(maxBuys, currencyLimit);
+            }
+
+            // ===== Merged Limit =====
+            if (shopItem.turnin != null)
+            {
+                foreach (var merge_req in shopItem.turnin)
+                {
+                    var material = Player.Inventory.Items
+                        .FirstOrDefault(x => x.Id == (int)merge_req.ItemID);
+
+                    if (material == null)
+                        return 0;
+
+                    int materialLimit = material.Quantity / (int)merge_req.iQty;
+
+                    if (materialLimit == 0)
+                        return 0;
+
+                    maxBuys = Math.Min(maxBuys, materialLimit);
+                }
+            }
+            maxBuys *= perBuy;
+
+            return Math.Min(maxBuys, 100000);
+        }
+        private static dynamic GetShopItemData(Func<dynamic, bool> match, int shopItemID = 0)
+        {
+            dynamic[] shopItems = Flash.Instance
+                .GetGameObject<dynamic[]>("world.shopinfo.items");
+
+            if (shopItems == null)
+                return null;
+
+            foreach (dynamic item in shopItems)
+            {
+                if (match(item) && (shopItemID == 0 || item?.ShopItemID == shopItemID))
+                {
+                    return item;
+                }
+            }
+
+            return null;
+        }
+        #endregion
 
 
         public static void ResetShopInfo()

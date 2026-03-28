@@ -26,12 +26,12 @@ namespace Grimoire.Botting.Commands.Item
             string _ItemName = instance.ResolveVars(ItemName);
             int _qty = int.Parse(instance.ResolveVars(Qty));
             await instance.WaitUntil(() => World.IsActionAvailable(LockActions.SellItem));
-            InventoryItem item = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => i.Name.Equals(_ItemName, StringComparison.OrdinalIgnoreCase));
+            InventoryItem item = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => i.Name.EqualsIgnoreCase(_ItemName));
             if (item != null)
             {
                 using (new pauseProvoke(instance.Configuration))
                 {
-                    await Player.ExitCombat();
+                    await Player.ExitCombat(2000);
                     Shop.SellItem(_ItemName, _qty);
                     await instance.WaitUntil(() => !Player.Inventory.ContainsItem(item.Name, item.Quantity.ToString()),timeout:3);
                 }
