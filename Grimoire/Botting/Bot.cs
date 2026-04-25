@@ -320,7 +320,6 @@ namespace Grimoire.Botting
             if (Configuration.Quests.Count == 0)
                 return;
 
-            LogForm.Instance.devDebug($"QuestList Started");
             qFailures.Clear();
             foreach (var quest in Configuration.Quests)
             {
@@ -352,7 +351,6 @@ namespace Grimoire.Botting
                             else
                             {
                                 qFailures[quest.Id] = f++;
-                                Console.WriteLine($"qFailures[{quest.Id}] : {f++}");
                             }
                         }
                         else
@@ -506,18 +504,28 @@ namespace Grimoire.Botting
             {
                 return;
             }
+
             Task.Run(async () =>
             {
                 for (int i = 0; i < count; i++)
                 {
                     paused = true;
-                    if (!qs[i].IsInProgress)
+                    Quest currentQuest = qs[i];
+
+                    if (!currentQuest.IsInProgress)
                     {
-                        LogForm.Instance.devDebug($"Accepting Quest : {qs[i]} [{i + 1}/{qs.Count}]");
-                        qs[i].Accept();
-                        await Task.Delay(1000);
+                        int attempts = 0;
+                        int maxAttempts = 3;
+
+                        while (!Player.Quests.IsInProgress(currentQuest.Id) && attempts < maxAttempts)
+                        {
+                            currentQuest.Accept();
+                            await Task.Delay(600);
+                            attempts++;
+                        }
                     }
-                    else LogForm.Instance.devDebug($"Quest [{i}/{qs.Count}]: {qs[i]} Alr accepted");
+
+                    await Task.Delay(400);
                 }
                 paused = false;
             });
@@ -528,7 +536,43 @@ namespace Grimoire.Botting
             Task.Run(async () =>
             {
                 await Task.Delay(600);
-                Configuration.Quests.FirstOrDefault((Quest q) => q.Id == quest.Id)?.GhostAccept();
+
+                var configQuest = Configuration.Quests.FirstOrDefault((Quest q) => q.Id == quest.Id);
+                if (configQuest == null)
+                {
+                    return;
+                }
+
+                // Ensure quest is loaded from server
+                if (!Player.Quests.QuestTree.Any(q => q.Id == quest.Id))
+                {
+                    Player.Quests.Load(quest.Id);
+
+                    // Wait for quest to load
+                    int waitCount = 0;
+                    while (!Player.Quests.QuestTree.Any(q => q.Id == quest.Id) && waitCount < 5)
+                    {
+                        await Task.Delay(200);
+                        waitCount++;
+                    }
+                }
+
+                var serverQuest = Player.Quests.QuestTree.FirstOrDefault(q => q.Id == quest.Id);
+                if (serverQuest == null)
+                {
+                    return;
+                }
+
+                // Try to accept the quest with retry logic
+                int attempts = 0;
+                int maxAttempts = 3;
+
+                while (!Player.Quests.IsInProgress(quest.Id) && attempts < maxAttempts)
+                {
+                    serverQuest.Accept();
+                    await Task.Delay(800);
+                    attempts++;
+                }
             });
         }
     }
