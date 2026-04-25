@@ -262,6 +262,7 @@
     <Compile Include="Grimoire\Botting\Commands\Map\CmdTravel.cs" />
     <Compile Include="Grimoire\Botting\Commands\Map\CmdWalk.cs" />
     <Compile Include="Grimoire\Botting\Commands\Map\CmdYulgar.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Map\CmdZoneHandler.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdBackgroundPacket.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdBankList.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdBeep.cs" />

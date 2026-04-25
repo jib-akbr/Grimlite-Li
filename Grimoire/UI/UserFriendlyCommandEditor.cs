@@ -1,5 +1,7 @@
 using DarkUI.Controls;
 using DarkUI.Forms;
+using Grimoire.Botting.Commands.Map;
+using Grimoire.Botting.Commands.Misc;
 using Grimoire.Botting.Commands.Misc.Statements;
 using Grimoire.Botting.Commands.Quest;
 using Grimoire.Game;
@@ -87,6 +89,71 @@ namespace Grimoire.UI
             }
         }
 
+        private static int AddZoneEntry(Panel panel, int yPos, string label, string x, string y, int index, dynamic zones)
+        {
+            // Zone Label
+            panel.Controls.Add(new DarkLabel()
+            {
+                Text = $"Zone {(char)('A' + index)}",
+                Size = new System.Drawing.Size(50, 20),
+                Location = new System.Drawing.Point(10, yPos + 2),
+                Anchor = AnchorStyles.Left | AnchorStyles.Top
+            });
+            
+            var tbLabel = new DarkTextBox()
+            {
+                Name = $"tbZoneLabel{index}",
+                Text = label,
+                Size = new System.Drawing.Size(70, 20),
+                Location = new System.Drawing.Point(65, yPos),
+                Anchor = AnchorStyles.Left | AnchorStyles.Top,
+                MaxLength = 10
+            };
+            panel.Controls.Add(tbLabel);
+            
+            // X coordinate
+            var tbX = new DarkTextBox()
+            {
+                Name = $"tbZoneX{index}",
+                Text = x,
+                Size = new System.Drawing.Size(60, 20),
+                Location = new System.Drawing.Point(140, yPos),
+                Anchor = AnchorStyles.Left | AnchorStyles.Top
+            };
+            panel.Controls.Add(tbX);
+            
+            // Y coordinate
+            var tbY = new DarkTextBox()
+            {
+                Name = $"tbZoneY{index}",
+                Text = y,
+                Size = new System.Drawing.Size(60, 20),
+                Location = new System.Drawing.Point(205, yPos),
+                Anchor = AnchorStyles.Left | AnchorStyles.Top
+            };
+            panel.Controls.Add(tbY);
+            
+            // Remove button (X) - only for zones not at index 0
+            if (index < zones?.Count ?? 0)
+            {
+                var btnRemove = new DarkUI.Controls.DarkButton()
+                {
+                    Text = "✕",
+                    Size = new System.Drawing.Size(22, 20),
+                    Location = new System.Drawing.Point(270, yPos),
+                    Anchor = AnchorStyles.Right | AnchorStyles.Top,
+                    ForeColor = System.Drawing.Color.FromArgb(220, 100, 100)
+                };
+                btnRemove.Click += (s, e) =>
+                {
+                    zones.RemoveAt(index);
+                };
+                panel.Controls.Add(btnRemove);
+            }
+            
+            return yPos + 30;
+        }
+
         public static string Show(object obj)
         {
             cmdObj = obj;
@@ -127,15 +194,436 @@ namespace Grimoire.UI
                     skipList.Remove("Value6");
                 }
                 
+                // Zone Handler needs special handling for Zone, Move, ExtraZones
+                if (obj.GetType().Name == "CmdZoneHandler")
+                {
+                    skipList.Add("Zone"); // Handle specially
+                    skipList.Add("Move"); // Handle specially
+                    skipList.Add("ExtraZones"); // Handle specially
+                    skipList.Add("HandledCommands"); // Don't show in UI
+                }
+                
                 string[] skip = skipList.ToArray();
                 Dictionary<string, KeyValuePair<DarkLabel, DarkTextBox>> currentVars = new Dictionary<string, KeyValuePair<DarkLabel, DarkTextBox>>();
                 bool isAuraCommand = obj.GetType().Name == "CmdPlayerAuraGreaterThan" || obj.GetType().Name == "CmdPlayerAuraLessThan" || 
                                      obj.GetType().Name == "CmdPlayerAuraEquals" || obj.GetType().Name == "CmdTargetAuraGreaterThan" ||
                                      obj.GetType().Name == "CmdTargetAuraLessThan" || obj.GetType().Name == "CmdTargetAuraEquals";
                 
+                bool isZoneHandlerCommand = obj.GetType().Name == "CmdZoneHandler";
+                
                 int multiAuraStartY = -1;
                 DarkCheckBox chkMultipleAuras = null;
                 Panel pnlMultipleAuras = null;
+                
+                // Setup Zone Handler UI if this is a CmdZoneHandler
+                if (isZoneHandlerCommand)
+                {
+                    // Zone field (Zone 1)
+                    commandEditor.Controls.Add(new DarkLabel()
+                    {
+                        Text = "Zone",
+                        Size = new System.Drawing.Size(60, 20),
+                        Location = new System.Drawing.Point(25, currentY + 2),
+                        Anchor = AnchorStyles.Left | AnchorStyles.Top
+                    });
+                    
+                    var tbZone = new DarkTextBox()
+                    {
+                        Name = "tbZoneField",
+                        Text = content["Zone"]?.ToString() ?? "",
+                        Size = new System.Drawing.Size(160, 20),
+                        Location = new System.Drawing.Point(90, currentY),
+                        Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left
+                    };
+                    commandEditor.Controls.Add(tbZone);
+                    currentVars.Add("Zone", new KeyValuePair<DarkLabel, DarkTextBox>(null, tbZone));
+                    currentY += 35;
+                    
+                    // Move field (X,Y format) - Zone 1
+                    commandEditor.Controls.Add(new DarkLabel()
+                    {
+                        Text = "Move X,Y",
+                        Size = new System.Drawing.Size(60, 20),
+                        Location = new System.Drawing.Point(25, currentY + 2),
+                        Anchor = AnchorStyles.Left | AnchorStyles.Top
+                    });
+                    
+                    var tbMove = new DarkTextBox()
+                    {
+                        Name = "tbMove",
+                        Text = content["Move"]?.ToString() ?? "0,0",
+                        Size = new System.Drawing.Size(160, 20),
+                        Location = new System.Drawing.Point(90, currentY),
+                        Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left
+                    };
+                    commandEditor.Controls.Add(tbMove);
+                    currentVars.Add("Move", new KeyValuePair<DarkLabel, DarkTextBox>(null, tbMove));
+                    currentY += 35;
+                    
+                    // Multiple Zones checkbox
+                    var chkMultipleZones = new DarkCheckBox()
+                    {
+                        Name = "chkMultipleZones",
+                        Text = "Multiple Zones",
+                        Size = new System.Drawing.Size(160, 20),
+                        Location = new System.Drawing.Point(25, currentY),
+                        Checked = !string.IsNullOrEmpty(content["ExtraZones"]?.ToString()) && content["ExtraZones"].ToString() != "[]",
+                        Anchor = AnchorStyles.Left | AnchorStyles.Top
+                    };
+                    commandEditor.Controls.Add(chkMultipleZones);
+                    currentY += 30;
+                    
+                    // Multiple zones panel
+                    Panel pnlMultipleZones = new Panel()
+                    {
+                        Name = "pnlMultipleZones",
+                        Size = new System.Drawing.Size(290, 0),
+                        Location = new System.Drawing.Point(15, currentY),
+                        BackColor = System.Drawing.Color.FromArgb(36, 36, 46),
+                        BorderStyle = BorderStyle.None,
+                        Visible = false,
+                        Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right
+                    };
+                    commandEditor.Controls.Add(pnlMultipleZones);
+                    
+                    int zoneAnimationSpeed = 8;
+                    int zoneCurrentHeight = 0;
+                    Timer zoneAnimationTimer = new Timer();
+                    EventHandler zoneTickHandler = null;
+                    int zoneTargetHeight = 80; // Zone 2 pair
+                    
+                    // Declare attachRemoveZoneHandler so it can be used in refreshZonePanelUI
+                    Action<int> attachRemoveZoneHandler = null;
+                    
+                    // Helper function to refresh the entire panel UI (like Multiple Auras)
+                    Action refreshZonePanelUI = null;
+                    refreshZonePanelUI = () =>
+                    {
+                        pnlMultipleZones.Controls.Clear();
+                        int panelY = 10;
+                        
+                        // Zone 2 - always add first (like Aura 2)
+                        try
+                        {
+                            string extraZonesJson = content["ExtraZones"]?.ToString() ?? "[]";
+                            JArray extraZones = JArray.Parse(extraZonesJson);
+                            
+                            if (extraZones.Count > 0)
+                            {
+                                var zone2 = extraZones[0];
+                                
+                                // Zone 2 Label
+                                pnlMultipleZones.Controls.Add(new DarkLabel()
+                                {
+                                    Text = "Zone 2",
+                                    Size = new System.Drawing.Size(60, 20),
+                                    Location = new System.Drawing.Point(10, panelY + 2),
+                                    Anchor = AnchorStyles.Left | AnchorStyles.Top
+                                });
+                                
+                                var tbZone2 = new DarkTextBox()
+                                {
+                                    Name = "tbZone2",
+                                    Text = zone2["Zone"]?.ToString() ?? "",
+                                    Size = new System.Drawing.Size(160, 20),
+                                    Location = new System.Drawing.Point(80, panelY),
+                                    Anchor = AnchorStyles.Left | AnchorStyles.Top
+                                };
+                                pnlMultipleZones.Controls.Add(tbZone2);
+                                panelY += 30;
+                                
+                                // Move 2 Label
+                                pnlMultipleZones.Controls.Add(new DarkLabel()
+                                {
+                                    Text = "Move X,Y",
+                                    Size = new System.Drawing.Size(60, 20),
+                                    Location = new System.Drawing.Point(10, panelY + 2),
+                                    Anchor = AnchorStyles.Left | AnchorStyles.Top
+                                });
+                                
+                                var tbMove2 = new DarkTextBox()
+                                {
+                                    Name = "tbMove2",
+                                    Text = zone2["Move"]?.ToString() ?? "0,0",
+                                    Size = new System.Drawing.Size(160, 20),
+                                    Location = new System.Drawing.Point(80, panelY),
+                                    Anchor = AnchorStyles.Left | AnchorStyles.Top
+                                };
+                                pnlMultipleZones.Controls.Add(tbMove2);
+                                panelY += 30;
+                            }
+                            else
+                            {
+                                // No extra zones yet, just show empty Zone 2 pair
+                                pnlMultipleZones.Controls.Add(new DarkLabel()
+                                {
+                                    Text = "Zone 2",
+                                    Size = new System.Drawing.Size(60, 20),
+                                    Location = new System.Drawing.Point(10, panelY + 2),
+                                    Anchor = AnchorStyles.Left | AnchorStyles.Top
+                                });
+                                
+                                var tbZone2 = new DarkTextBox()
+                                {
+                                    Name = "tbZone2",
+                                    Text = "",
+                                    Size = new System.Drawing.Size(160, 20),
+                                    Location = new System.Drawing.Point(80, panelY),
+                                    Anchor = AnchorStyles.Left | AnchorStyles.Top
+                                };
+                                pnlMultipleZones.Controls.Add(tbZone2);
+                                panelY += 30;
+                                
+                                pnlMultipleZones.Controls.Add(new DarkLabel()
+                                {
+                                    Text = "Move X,Y",
+                                    Size = new System.Drawing.Size(60, 20),
+                                    Location = new System.Drawing.Point(10, panelY + 2),
+                                    Anchor = AnchorStyles.Left | AnchorStyles.Top
+                                });
+                                
+                                var tbMove2 = new DarkTextBox()
+                                {
+                                    Name = "tbMove2",
+                                    Text = "0,0",
+                                    Size = new System.Drawing.Size(160, 20),
+                                    Location = new System.Drawing.Point(80, panelY),
+                                    Anchor = AnchorStyles.Left | AnchorStyles.Top
+                                };
+                                pnlMultipleZones.Controls.Add(tbMove2);
+                                panelY += 30;
+                            }
+                            
+                            // Add any additional zones (3+) with Click to remove (clickable label)
+                            for (int i = 1; i < extraZones.Count; i++)
+                            {
+                                var zone = extraZones[i];
+                                
+                                // Zone N Label (clickable to remove)
+                                var lblZoneN = new DarkLabel()
+                                {
+                                    Text = $"Zone {i + 2}",
+                                    Size = new System.Drawing.Size(60, 20),
+                                    Location = new System.Drawing.Point(10, panelY + 2),
+                                    Anchor = AnchorStyles.Left | AnchorStyles.Top,
+                                    Cursor = Cursors.Hand
+                                };
+                                int zoneIdx = i;
+                                lblZoneN.Click += (s, e) =>
+                                {
+                                    attachRemoveZoneHandler(zoneIdx);
+                                };
+                                pnlMultipleZones.Controls.Add(lblZoneN);
+                                
+                                var tbZoneN = new DarkTextBox()
+                                {
+                                    Name = $"tbZone{i + 2}",
+                                    Text = zone["Zone"]?.ToString() ?? "",
+                                    Size = new System.Drawing.Size(160, 20),
+                                    Location = new System.Drawing.Point(80, panelY),
+                                    Anchor = AnchorStyles.Left | AnchorStyles.Top
+                                };
+                                pnlMultipleZones.Controls.Add(tbZoneN);
+                                panelY += 30;
+                                
+                                // Move N Label
+                                pnlMultipleZones.Controls.Add(new DarkLabel()
+                                {
+                                    Text = "Move X,Y",
+                                    Size = new System.Drawing.Size(60, 20),
+                                    Location = new System.Drawing.Point(10, panelY + 2),
+                                    Anchor = AnchorStyles.Left | AnchorStyles.Top
+                                });
+                                
+                                var tbMoveN = new DarkTextBox()
+                                {
+                                    Name = $"tbMove{i + 2}",
+                                    Text = zone["Move"]?.ToString() ?? "0,0",
+                                    Size = new System.Drawing.Size(160, 20),
+                                    Location = new System.Drawing.Point(80, panelY),
+                                    Anchor = AnchorStyles.Left | AnchorStyles.Top
+                                };
+                                pnlMultipleZones.Controls.Add(tbMoveN);
+                                panelY += 30;
+                            }
+                        }
+                        catch { }
+                        
+                        // + button to add more zones
+                        var btnAddZone = new DarkUI.Controls.DarkButton()
+                        {
+                            Name = "btnAddZone",
+                            Text = "+",
+                            Size = new System.Drawing.Size(30, 25),
+                            Location = new System.Drawing.Point(10, panelY),
+                            Anchor = AnchorStyles.Left | AnchorStyles.Top
+                        };
+                        pnlMultipleZones.Controls.Add(btnAddZone);
+                        
+                        // Set panel height to fit all content
+                        pnlMultipleZones.Height = panelY + 40;
+                        
+                        // Update target height for animation
+                        zoneTargetHeight = panelY + 40;
+                        
+                        // Reattach add button handler
+                        btnAddZone.Click += (s, e) =>
+                        {
+                            // Store old panel height BEFORE making changes
+                            int oldPanelHeight = pnlMultipleZones.Height;
+                            
+                            try
+                            {
+                                JArray extraZones = new JArray();
+                                
+                                // Collect all zone pair data from textboxes in panel
+                                var zoneBoxes = pnlMultipleZones.Controls.OfType<DarkTextBox>()
+                                    .Where(t => t.Name.StartsWith("tbZone"))
+                                    .OrderBy(t => int.Parse(t.Name.Substring(6)))
+                                    .ToList();
+                                
+                                var moveBoxes = pnlMultipleZones.Controls.OfType<DarkTextBox>()
+                                    .Where(t => t.Name.StartsWith("tbMove"))
+                                    .OrderBy(t => int.Parse(t.Name.Substring(6)))
+                                    .ToList();
+                                
+                                // Add all current zones to array
+                                for (int i = 0; i < zoneBoxes.Count && i < moveBoxes.Count; i++)
+                                {
+                                    extraZones.Add(new JObject
+                                    {
+                                        { "Zone", zoneBoxes[i].Text ?? "" },
+                                        { "Move", moveBoxes[i].Text ?? "0,0" }
+                                    });
+                                }
+                                
+                                // Add new empty zone
+                                extraZones.Add(new JObject
+                                {
+                                    { "Zone", "" },
+                                    { "Move", "0,0" }
+                                });
+                                
+                                content["ExtraZones"] = extraZones.ToString();
+                                
+                                // Rebuild the panel - this will calculate the correct new height
+                                refreshZonePanelUI();
+                                
+                                // Adjust window based on actual height change
+                                int newPanelHeight = pnlMultipleZones.Height;
+                                int heightIncrease = newPanelHeight - oldPanelHeight;
+                                commandEditor.Size = new Size(commandEditor.Size.Width, commandEditor.Size.Height + heightIncrease);
+                            }
+                            catch { }
+                        };
+                    };
+                    
+                    // Define the remove handler for zones
+                    attachRemoveZoneHandler = (zoneIdx) =>
+                    {
+                        int index = zoneIdx;
+                        
+                        // Remove from ExtraZones array
+                        var existingExtra = content["ExtraZones"]?.ToString() ?? "[]";
+                        JArray extraZones = null;
+                        try
+                        {
+                            extraZones = JArray.Parse(existingExtra);
+                            if (index >= 1 && index < extraZones.Count)
+                            {
+                                extraZones.RemoveAt(index);
+                                content["ExtraZones"] = extraZones.Count > 0 ? extraZones.ToString() : "[]";
+                            }
+                        }
+                        catch { }
+                        
+                        // Store old height before refresh
+                        int oldPanelHeight = pnlMultipleZones.Height;
+                        
+                        // Rebuild the panel - this will calculate the correct new height
+                        refreshZonePanelUI();
+                        
+                        // Now adjust the command editor window based on the actual height change
+                        int newPanelHeight = pnlMultipleZones.Height;
+                        int heightReduction = oldPanelHeight - newPanelHeight;
+                        commandEditor.Size = new Size(commandEditor.Size.Width, commandEditor.Size.Height - heightReduction);
+                    };
+                    
+                    chkMultipleZones.CheckedChanged += (s, e) =>
+                    {
+                        zoneAnimationTimer.Stop();
+                        
+                        // Remove old tick handler if it exists
+                        if (zoneTickHandler != null)
+                            zoneAnimationTimer.Tick -= zoneTickHandler;
+                        
+                        zoneAnimationTimer.Interval = 30;
+                        
+                        zoneTickHandler = (sender, args) =>
+                        {
+                            if (chkMultipleZones.Checked)
+                            {
+                                // Expanding
+                                zoneCurrentHeight = Math.Min(zoneCurrentHeight + zoneAnimationSpeed, zoneTargetHeight);
+                                pnlMultipleZones.Height = zoneCurrentHeight;
+                                commandEditor.Size = new Size(commandEditor.Size.Width, commandEditor.Size.Height + zoneAnimationSpeed);
+                                
+                                if (zoneCurrentHeight >= zoneTargetHeight)
+                                {
+                                    pnlMultipleZones.Height = zoneTargetHeight;
+                                    zoneAnimationTimer.Stop();
+                                }
+                            }
+                            else
+                            {
+                                // Collapsing
+                                zoneCurrentHeight = Math.Max(zoneCurrentHeight - zoneAnimationSpeed, 0);
+                                pnlMultipleZones.Height = zoneCurrentHeight;
+                                commandEditor.Size = new Size(commandEditor.Size.Width, commandEditor.Size.Height - zoneAnimationSpeed);
+                                
+                                if (zoneCurrentHeight <= 0)
+                                {
+                                    pnlMultipleZones.Visible = false;
+                                    pnlMultipleZones.Height = 0;
+                                    zoneAnimationTimer.Stop();
+                                }
+                            }
+                        };
+                        zoneAnimationTimer.Tick += zoneTickHandler;
+                        
+                        if (chkMultipleZones.Checked)
+                        {
+                            pnlMultipleZones.Visible = true;
+                            // Refresh panel BEFORE starting animation to calculate correct height
+                            refreshZonePanelUI();
+                            // Recalculate target height based on actual panel content
+                            zoneTargetHeight = pnlMultipleZones.Height;
+                            // Reset panel height to 0 so animation starts from 0
+                            pnlMultipleZones.Height = 0;
+                            zoneCurrentHeight = 0;
+                            zoneAnimationTimer.Start();
+                        }
+                        else
+                        {
+                            zoneCurrentHeight = pnlMultipleZones.Height;
+                            zoneAnimationTimer.Start();
+                        }
+                    };
+                    
+                    // If checkbox is checked on load, initialize panel
+                    if (chkMultipleZones.Checked)
+                    {
+                        pnlMultipleZones.Visible = true;
+                        refreshZonePanelUI();
+                        // Also need to expand the commandEditor window height to show the panel
+                        commandEditor.Size = new Size(commandEditor.Size.Width, commandEditor.Size.Height + pnlMultipleZones.Height);
+                        currentY += 10;
+                    }
+                    else
+                    {
+                        currentY += 40;
+                    }
+                }
                 
                 foreach (KeyValuePair<string, JToken> item in content)
                 {
@@ -824,6 +1312,63 @@ namespace Grimoire.UI
                         content["Value5"] = "";
                         content["Value6"] = "";
                         content["ExtraAuras"] = "[]";
+                    }
+                    
+                    // Handle Zone Handler data collection
+                    if (isZoneHandlerCommand)
+                    {
+                        // Collect Zone field (Zone 1)
+                        var tbZone = commandEditor.Controls.OfType<DarkTextBox>()
+                            .FirstOrDefault(t => t.Name == "tbZoneField");
+                        if (tbZone != null)
+                            content["Zone"] = tbZone.Text;
+                        
+                        // Collect Move field (X,Y format)
+                        var tbMove = commandEditor.Controls.OfType<DarkTextBox>()
+                            .FirstOrDefault(t => t.Name == "tbMove");
+                        if (tbMove != null)
+                            content["Move"] = tbMove.Text;
+                        
+                        // Collect Multiple Zones if checkbox is checked
+                        var chkMultipleZones = commandEditor.Controls.OfType<DarkCheckBox>()
+                            .FirstOrDefault(c => c.Name == "chkMultipleZones");
+                        
+                        if (chkMultipleZones != null && chkMultipleZones.Checked)
+                        {
+                            var pnlMultipleZones = commandEditor.Controls.OfType<Panel>()
+                                .FirstOrDefault(p => p.Name == "pnlMultipleZones");
+                            
+                            if (pnlMultipleZones != null)
+                            {
+                                JArray zones = new JArray();
+                                
+                                // Find all zone textboxes in the panel and build array
+                                var zoneBoxes = pnlMultipleZones.Controls.OfType<DarkTextBox>()
+                                    .Where(t => t.Name.StartsWith("tbZone"))
+                                    .OrderBy(t => int.Parse(t.Name.Substring(6)))
+                                    .ToList();
+                                
+                                var moveBoxes = pnlMultipleZones.Controls.OfType<DarkTextBox>()
+                                    .Where(t => t.Name.StartsWith("tbMove"))
+                                    .OrderBy(t => int.Parse(t.Name.Substring(6)))
+                                    .ToList();
+                                
+                                for (int i = 0; i < zoneBoxes.Count && i < moveBoxes.Count; i++)
+                                {
+                                    zones.Add(new JObject
+                                    {
+                                        { "Zone", zoneBoxes[i].Text ?? "" },
+                                        { "Move", moveBoxes[i].Text ?? "0,0" }
+                                    });
+                                }
+                                
+                                content["ExtraZones"] = zones.Count > 0 ? zones.ToString() : "[]";
+                            }
+                        }
+                        else
+                        {
+                            content["ExtraZones"] = "[]";
+                        }
                     }
                     
                     if (currentVars.ContainsKey("Quest"))

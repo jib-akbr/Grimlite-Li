@@ -61,6 +61,7 @@ namespace Grimoire.UI
 		private DarkTextBox txtPad;
 		private DarkTextBox txtCell;
 		private DarkButton btnJoin;
+		private DarkButton btnZoneHandler;
 		private DarkTextBox txtJoinPad;
 		private DarkTextBox txtJoinCell;
 		private DarkTextBox txtJoin;
@@ -422,6 +423,7 @@ namespace Grimoire.UI
             this.txtPad = new DarkUI.Controls.DarkTextBox();
             this.txtCell = new DarkUI.Controls.DarkTextBox();
             this.btnJoin = new DarkUI.Controls.DarkButton();
+            this.btnZoneHandler = new DarkUI.Controls.DarkButton();
             this.txtJoinPad = new DarkUI.Controls.DarkTextBox();
             this.txtJoinCell = new DarkUI.Controls.DarkTextBox();
             this.txtJoin = new DarkUI.Controls.DarkTextBox();
@@ -1646,6 +1648,7 @@ namespace Grimoire.UI
             this.tabMap.Controls.Add(this.txtPad);
             this.tabMap.Controls.Add(this.txtCell);
             this.tabMap.Controls.Add(this.btnJoin);
+            this.tabMap.Controls.Add(this.btnZoneHandler);
             this.tabMap.Controls.Add(this.txtJoinPad);
             this.tabMap.Controls.Add(this.txtJoinCell);
             this.tabMap.Controls.Add(this.txtJoin);
@@ -1889,7 +1892,7 @@ namespace Grimoire.UI
             this.txtCell.Leave += new System.EventHandler(this.TextboxLeave);
             // 
             // btnJoin
-            // 
+            //
             this.btnJoin.Checked = false;
             this.btnJoin.Location = new System.Drawing.Point(6, 99);
             this.btnJoin.Name = "btnJoin";
@@ -1897,7 +1900,17 @@ namespace Grimoire.UI
             this.btnJoin.TabIndex = 29;
             this.btnJoin.Text = "Join map";
             this.btnJoin.Click += new System.EventHandler(this.btnJoin_Click);
-            // 
+            //
+            // btnZoneHandler
+            //
+            this.btnZoneHandler.Checked = false;
+            this.btnZoneHandler.Location = new System.Drawing.Point(6, 126);
+            this.btnZoneHandler.Name = "btnZoneHandler";
+            this.btnZoneHandler.Size = new System.Drawing.Size(112, 22);
+            this.btnZoneHandler.TabIndex = 30;
+            this.btnZoneHandler.Text = "Zone Handler";
+            this.btnZoneHandler.Click += new System.EventHandler(this.btnZoneHandler_Click);
+            //
             // txtJoinPad
             // 
             this.txtJoinPad.Location = new System.Drawing.Point(62, 26);

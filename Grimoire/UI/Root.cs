@@ -1775,11 +1775,13 @@ namespace Grimoire.UI
 
         private async void chkAutoAttack_CheckedChanged(object sender, EventArgs e)
         {
-            if (!Player.IsLoggedIn || chkStartBot.Checked)
+            try
             {
-                chkAutoAttack.Checked = false;
-                return;
-            }
+                if (!Player.IsLoggedIn || chkStartBot.Checked)
+                {
+                    chkAutoAttack.Checked = false;
+                    return;
+                }
 
             List<Skill> listSkill = new List<Skill>();
             bool isCustomSkillset = false;
@@ -1832,8 +1834,8 @@ namespace Grimoire.UI
 			BotData.BotState = BotData.State.Combat;
             while (chkAutoAttack.Checked)
             {
-                // Exit if no monsters in the room
-                if (World.VisibleMonsters.Count == 0)
+                // Exit if no monsters in the room (using IsMonsterAvailable for better detection including bosses)
+                if (!World.IsMonsterAvailable("*"))
                 {
                     await Task.Delay(1000);
                     continue;
@@ -1847,23 +1849,24 @@ namespace Grimoire.UI
                     {
                         await SpecialClassCombo();
                     }
-                    if (listSkill.Count > 0 && i < listSkill.Count)
+                    if (listSkill != null && listSkill.Count > 0 && i < listSkill.Count)
                     {
-                        if (listSkill[i].Type == Skill.SkillType.Label)
+                        var currentSkill = listSkill[i];
+                        if (currentSkill != null && currentSkill.Type == Skill.SkillType.Label)
                         {
                             // Skip section markers entirely - don't execute, don't delay
-                            if (!string.IsNullOrEmpty(listSkill[i].Index) || 
-                                (listSkill[i].Text != null && listSkill[i].Text.Contains("|")))
+                            if (!string.IsNullOrEmpty(currentSkill.Index) || 
+                                (currentSkill.Text != null && currentSkill.Text.Contains("|")))
                             {
                                 // Execute aura statement commands even without target
-                                await listSkill[i].ExecuteSkill();
+                                await currentSkill.ExecuteSkill();
                                 await Task.Delay(100);
                             }
                             // Skip to next skill immediately for section markers
                         }
-                        else if (Player.HasTarget)
+                        else if (currentSkill != null && Player.HasTarget)
                         {
-                            await listSkill[i].ExecuteSkill();
+                            await currentSkill.ExecuteSkill();
                             await Task.Delay(100);
                         }
                     }
@@ -1881,11 +1884,20 @@ namespace Grimoire.UI
                     BotData.BotState = BotData.State.Combat;
                 }
             }
+            }
+            catch (Exception ex)
+            {
+                UI.LogForm.Instance?.AppendDebug($"[chkAutoAttack] Error: {ex.Message}");
+                chkAutoAttack.Checked = false;
+            }
         }
 
         private async Task SpecialClassCombo()
         {
-            string playerClass = Player.EquippedClass.ToLower();
+            try
+            {
+                string playerClass = Player.EquippedClass?.ToLower() ?? "";
+                if (string.IsNullOrEmpty(playerClass)) return;
 
             if (playerClass.Contains("chrono shadow"))
             {
@@ -1916,6 +1928,11 @@ namespace Grimoire.UI
                     useSkill("4");
                     await Task.Delay(200);
                 }
+            }
+            }
+            catch (Exception ex)
+            {
+                UI.LogForm.Instance?.AppendDebug($"[SpecialClassCombo] Error: {ex.Message}");
             }
         }
 

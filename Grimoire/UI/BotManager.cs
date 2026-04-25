@@ -1069,6 +1069,11 @@ namespace Grimoire.UI
             }
         }
 
+        private void btnZoneHandler_Click(object sender, EventArgs e)
+        {
+            AddCommand(new CmdZoneHandler(), (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
         private void cbJoinMapSwf_CheckedChanged(object sender, EventArgs e)
         {
             tbJoinMapSwf.Enabled = cbJoinMapSwf.Checked;
