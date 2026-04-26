@@ -20,14 +20,19 @@ namespace Grimoire.Botting.Commands.Map
         private string _moveX = "0";
         private string _moveY = "0";
         private bool _zoneMatched = false;
+        private bool _movedToPosition = false;
+        private string _currentZone = "";
 
-        [JsonProperty("Zone")]
+        [JsonProperty("Zone", Order = 1)]
         public string Zone { get; set; } = "";
 
-        [JsonProperty("Move")]
+        [JsonProperty("Default X,Y", Order = 2)]
+        public string Default { get; set; } = "";
+
+        [JsonProperty("Move X,Y", Order = 3)]
         public string Move { get; set; } = "0,0";
 
-        [JsonProperty("ExtraZones")]
+        [JsonProperty("ExtraZones", Order = 4)]
         public string ExtraZones { get; set; } = "[]";
 
         public string[] HandledCommands => new[] { "event" };
@@ -67,14 +72,76 @@ namespace Grimoire.Botting.Commands.Map
                         {
                             string zoneSet = args["zoneSet"]?.ToString() ?? "";
                             
-                            // Check primary zone first
-                            if (zoneSet.Equals(Zone, StringComparison.OrdinalIgnoreCase))
+                            // Check primary zone
+                            bool isZoneMatch = zoneSet.Equals(Zone, StringComparison.OrdinalIgnoreCase);
+                            
+                            // If not matched in primary, check extra zones
+                            if (!isZoneMatch)
                             {
-                                string[] coords = Move.Split(',');
+                                try
+                                {
+                                    JArray extraZones = JArray.Parse(ExtraZones ?? "[]");
+                                    foreach (var zone in extraZones)
+                                    {
+                                        string zoneLabel = zone["Zone"]?.ToString() ?? "";
+                                        if (zoneSet.Equals(zoneLabel, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            isZoneMatch = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                catch { }
+                            }
+                            
+                            // Zone just became active - walk to Move position
+                            if (isZoneMatch && !_movedToPosition)
+                            {
+                                _movedToPosition = true;
+                                _currentZone = zoneSet;
+                                
+                                // Find the corresponding move coordinates
+                                string moveValue = "0,0";
+                                if (zoneSet.Equals(Zone, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    moveValue = Move;
+                                }
+                                else
+                                {
+                                    try
+                                    {
+                                        JArray extraZones = JArray.Parse(ExtraZones ?? "[]");
+                                        foreach (var zone in extraZones)
+                                        {
+                                            string zoneLabel = zone["Zone"]?.ToString() ?? "";
+                                            if (zoneSet.Equals(zoneLabel, StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                moveValue = zone["Move"]?.ToString() ?? "0,0";
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    catch { }
+                                }
+                                
+                                // Walk to Move position
+                                string[] coords = moveValue.Split(',');
                                 string x = coords.Length > 0 ? coords[0].Trim() : "0";
                                 string y = coords.Length > 1 ? coords[1].Trim() : "0";
                                 Player.WalkToPoint(x, y);
+                                return;
+                            }
+                            
+                            // Zone is no longer active - walk to Default position
+                            if (!isZoneMatch && _movedToPosition && !string.IsNullOrWhiteSpace(Default))
+                            {
+                                string[] defaultCoords = Default.Split(',');
+                                string defX = defaultCoords.Length > 0 ? defaultCoords[0].Trim() : "0";
+                                string defY = defaultCoords.Length > 1 ? defaultCoords[1].Trim() : "0";
+                                Player.WalkToPoint(defX, defY);
+                                
                                 _zoneMatched = true;
+                                _movedToPosition = false;
                                 
                                 try
                                 {
@@ -83,33 +150,6 @@ namespace Grimoire.Botting.Commands.Map
                                 catch { }
                                 return;
                             }
-                            
-                            // Check extra zones
-                            try
-                            {
-                                JArray extraZones = JArray.Parse(ExtraZones ?? "[]");
-                                foreach (var zone in extraZones)
-                                {
-                                    string zoneLabel = zone["Zone"]?.ToString() ?? "";
-                                    if (zoneSet.Equals(zoneLabel, StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        string moveValue = zone["Move"]?.ToString() ?? "0,0";
-                                        string[] coords = moveValue.Split(',');
-                                        string x = coords.Length > 0 ? coords[0].Trim() : "0";
-                                        string y = coords.Length > 1 ? coords[1].Trim() : "0";
-                                        Player.WalkToPoint(x, y);
-                                        _zoneMatched = true;
-                                        
-                                        try
-                                        {
-                                            Proxy.Instance.UnregisterHandler(this);
-                                        }
-                                        catch { }
-                                        return;
-                                    }
-                                }
-                            }
-                            catch { }
                         }
                     }
                 }

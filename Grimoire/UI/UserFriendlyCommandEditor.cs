@@ -198,7 +198,8 @@ namespace Grimoire.UI
                 if (obj.GetType().Name == "CmdZoneHandler")
                 {
                     skipList.Add("Zone"); // Handle specially
-                    skipList.Add("Move"); // Handle specially
+                    skipList.Add("Default X,Y"); // Handle specially
+                    skipList.Add("Move X,Y"); // Handle specially
                     skipList.Add("ExtraZones"); // Handle specially
                     skipList.Add("HandledCommands"); // Don't show in UI
                 }
@@ -239,6 +240,27 @@ namespace Grimoire.UI
                     currentVars.Add("Zone", new KeyValuePair<DarkLabel, DarkTextBox>(null, tbZone));
                     currentY += 35;
                     
+                    // Default X,Y field
+                    commandEditor.Controls.Add(new DarkLabel()
+                    {
+                        Text = "Default X,Y",
+                        Size = new System.Drawing.Size(60, 20),
+                        Location = new System.Drawing.Point(25, currentY + 2),
+                        Anchor = AnchorStyles.Left | AnchorStyles.Top
+                    });
+                    
+                    var tbDefault = new DarkTextBox()
+                    {
+                        Name = "tbDefaultField",
+                        Text = content["Default X,Y"]?.ToString() ?? "",
+                        Size = new System.Drawing.Size(160, 20),
+                        Location = new System.Drawing.Point(90, currentY),
+                        Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left
+                    };
+                    commandEditor.Controls.Add(tbDefault);
+                    currentVars.Add("Default", new KeyValuePair<DarkLabel, DarkTextBox>(null, tbDefault));
+                    currentY += 35;
+                    
                     // Move field (X,Y format) - Zone 1
                     commandEditor.Controls.Add(new DarkLabel()
                     {
@@ -251,7 +273,7 @@ namespace Grimoire.UI
                     var tbMove = new DarkTextBox()
                     {
                         Name = "tbMove",
-                        Text = content["Move"]?.ToString() ?? "0,0",
+                        Text = content["Move X,Y"]?.ToString() ?? "0,0",
                         Size = new System.Drawing.Size(160, 20),
                         Location = new System.Drawing.Point(90, currentY),
                         Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left
@@ -1323,11 +1345,17 @@ namespace Grimoire.UI
                         if (tbZone != null)
                             content["Zone"] = tbZone.Text;
                         
+                        // Collect Default field
+                        var tbDefault = commandEditor.Controls.OfType<DarkTextBox>()
+                            .FirstOrDefault(t => t.Name == "tbDefaultField");
+                        if (tbDefault != null)
+                            content["Default X,Y"] = tbDefault.Text;
+                        
                         // Collect Move field (X,Y format)
                         var tbMove = commandEditor.Controls.OfType<DarkTextBox>()
                             .FirstOrDefault(t => t.Name == "tbMove");
                         if (tbMove != null)
-                            content["Move"] = tbMove.Text;
+                            content["Move X,Y"] = tbMove.Text;
                         
                         // Collect Multiple Zones if checkbox is checked
                         var chkMultipleZones = commandEditor.Controls.OfType<DarkCheckBox>()
