@@ -1,15 +1,33 @@
 using Grimoire.Botting;
 using Grimoire.Tools;
+using Grimoire.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web.Caching;
 
 namespace Grimoire.Game.Data
 {
     public class Inventory
     {
         public List<InventoryItem> Items => Flash.Call<List<InventoryItem>>("GetInventoryItems", new string[0]);
+
+        Dictionary<int, InventoryItem> _cache = new Dictionary<int, InventoryItem>();
+        public Dictionary<int, InventoryItem> Cache
+        {
+            get
+            {
+                var _items = Items;
+                _cache.Clear();
+                foreach (var item in _items)
+                {
+                    _cache[item.Id] = item;
+                }
+                return _cache;
+            }
+        }
+
 
         public InventoryItem GetItemByName(string name)
         {
@@ -36,35 +54,35 @@ namespace Grimoire.Game.Data
             return false;
         }
         #region waitItemTaken
-       /* public async Task<bool> WaitForItem(string itemName, int attempts = 3, int delayMS = 1000)
-        {
-            for (int i = 0; i < attempts; i++)
-            {
-                bool found = Player.Inventory.Items.Any(it => it.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
+        /* public async Task<bool> WaitForItem(string itemName, int attempts = 3, int delayMS = 1000)
+         {
+             for (int i = 0; i < attempts; i++)
+             {
+                 bool found = Player.Inventory.Items.Any(it => it.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
 
-                if (found)
-                    return true;
+                 if (found)
+                     return true;
 
-                await Task.Delay(delayMS);
-            }
-            return false;
-        }
-        public async Task<bool> WaitForItemId(int itemId, int attempts = 3, int delayMS = 1000)
-        {
-            for (int i = 0; i < attempts; i++)
-            {
-                bool found = Player.Inventory.Items.Any(it => it.Id == itemId);
+                 await Task.Delay(delayMS);
+             }
+             return false;
+         }
+         public async Task<bool> WaitForItemId(int itemId, int attempts = 3, int delayMS = 1000)
+         {
+             for (int i = 0; i < attempts; i++)
+             {
+                 bool found = Player.Inventory.Items.Any(it => it.Id == itemId);
 
-                if (found)
-                    return true;
+                 if (found)
+                     return true;
 
-                await Task.Delay(delayMS);
-            }
-            return false;
-        }*/
+                 await Task.Delay(delayMS);
+             }
+             return false;
+         }*/
         #endregion
-        
-		public bool ContainsItem(string itemName, string quantity = "*")
+
+        public bool ContainsItem(string itemName, string quantity = "*")
         {
             InventoryItem item = Player.Inventory.GetItemByName(itemName);
             if (item == null)
@@ -73,13 +91,13 @@ namespace Grimoire.Game.Data
             }
             else if (int.TryParse(quantity, out int qty))
             {
-                if (item.Category != "Class" && qty > item.MaxStack)
+                if (ClientConfig.AutoCorrect && item.Category != "Class" && qty > item.MaxStack)
                     qty = item.MaxStack;
                 return item.Quantity >= qty;
             }
             return true;
         }
-		
+
         public bool ContainsItem(int id, int qty)
         {
             InventoryItem item = Items.FirstOrDefault((InventoryItem i) => i.Id == id);
@@ -94,7 +112,7 @@ namespace Grimoire.Game.Data
             return item.Quantity >= qty;
             //return Items.FirstOrDefault((InventoryItem it) => it.Id == id)?.Quantity >= qty;
         }
-		
+
         public int GetItemQty(string format)
         {//not yet used...
             format = format.Replace(".qty", "");
@@ -102,9 +120,13 @@ namespace Grimoire.Game.Data
                 (InventoryItem i) => i.Name.EqualsIgnoreCase(format)
                 )?.Quantity ?? 0;
         }
-		
-        public bool ContainsItem(InventoryItem item)
+
+        public bool ContainsItem(InventoryItem item, Dictionary<int, InventoryItem> cache = null)
         {
+            //Console.WriteLine($"checking for item [{item.Name}] on inv");
+            if (cache != null)
+                return cache.TryGetValue(item.Id, out var i) && i.Quantity >= item.Quantity;
+
             return Items.FirstOrDefault((InventoryItem target) => target.Id == item.Id)?.Quantity >= item.Quantity;
         }
 

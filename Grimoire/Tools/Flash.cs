@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Security;
@@ -459,6 +460,14 @@ namespace Grimoire.Tools
             //FlashCall?.Invoke(flash, name, args[0]);
         }
 
+		static async void delayedTask(int delay,bool refresh = false)
+		{
+			await Task.Delay(delay);
+			if (refresh)
+				World.refreshMonsters();
+			OptionsManager.SetProvokeMonsters();
+		}
+
         private static string ProcessPacketFromClient(string packet)
         {
             if (packet.Contains(":"))
@@ -468,6 +477,9 @@ namespace Grimoire.Tools
             switch (packet.Split('%')[3])
             {
                 case "moveToCell":
+                    
+                    if (OptionsManager.RespawnProvoke)
+                        delayedTask(80,true);
                     if (OptionsManager.WalkSpeed != 8)
                         OptionsManager.SetWalkSpeed();
                     break;
@@ -516,16 +528,6 @@ namespace Grimoire.Tools
                     break;
 
                 case "firstJoin":
-                    if (BotManager.Instance.chkEnableSettings.Checked)
-                    {
-                        Task.Run(async () =>
-                        {
-                            OptionsManager.Stop();
-                            await Task.Delay(5000);
-                            OptionsManager.Start();
-                        }
-                        );
-                    }
                     Player.initLogin();
                     break;
             }
@@ -639,11 +641,19 @@ namespace Grimoire.Tools
                         break;
 
                     case "moveToArea":
-                        AuraManager.Instance.Update();
+                        //data.areaName = $"{BotManager.Instance.tbMapSpoof.Text}";
+                        World.realmap = data.areaName.ToString();
+                        if (BotManager.Instance.chkMapSpoofer.Checked)
+                            World.spoofMap(data: data);
+                        
+                        //Console.WriteLine("is it saved ?? " + World.realmap);
+
+                        AuraManager.SelfAura.Update();
+                        AuraManager.resetMonsterAura();
                         break;
 						
 					case "clearAuras":
-						AuraManager.Instance.ClearAllAura();
+                        AuraManager.SelfAura.ClearAllAura();
 						break;
 
                     case "getDrop":
@@ -670,6 +680,28 @@ namespace Grimoire.Tools
                             }
                             else if (Player.isRejectingAllDrop)
                                 Call("RejectDrop", new string[2] { item.Name.ToLower(), item.Id.ToString() });
+                        }
+                        break;
+
+                    case "mtls":
+                        /*example packet: 
+                        //Respawned enemy
+    {"t":"xt","b":{"r":-1,"o":{"cmd":"mtls","id":21,"o":{"intState":1,"intHP":55480,"intMP":100}}}} 
+                        //Out from combat enemy
+    {"t":"xt","b":{"r":-1,"o":{"cmd":"mtls","id":21,"o":{"intState":1,"intAct":1,"intSG":0,"intHP":55480,"intMP":100}}}} 
+                            */
+                        int MonID = (int)data.id;
+                        JObject json = (JObject)data.o;
+                        int intSG = json["intSG"]?.Value<int>() ?? -1;
+                        if (json != null && intSG == -1 && OptionsManager.RespawnProvoke)
+                        {
+                            if (World.AvailableMonsters(false).Any(x => x.MonMapID == MonID))
+                            {
+								delayedTask(50);
+                                // OptionsManager.SetProvokeMonsters();
+                                // LogForm.Instance.AppendDebug($"Provoked id={MonID} on its respawn");
+                            }
+                            //Filter once more provoke after monster respawn
                         }
                         break;
 
@@ -712,7 +744,25 @@ namespace Grimoire.Tools
             }
             if (type == "str")
             {
-
+                /*
+                string act = data[0].ToString();
+                string strFrm = data[3].ToString();
+                //"dataObj":["exitArea","-1","86789","kuzyph"]
+                if (act.EqualsIgnoreCase("exitArea"))
+                {
+                    string mapname = Player.Map;
+                    if (BotManager.Instance.chkMapSpoofer.Checked)
+                        mapname = BotManager.Instance.tbMapSpoof.Text;
+                    World.UpdateAreaName(mapname, "00FFAA,FFAAAA");
+                }
+                else if (act.EqualsIgnoreCase("uotls") 
+                    && strFrm.ContainsIgnoreCase("Frame"))
+                {
+                    string mapname = Player.Map;
+                    if (BotManager.Instance.chkMapSpoofer.Checked)
+                        mapname = BotManager.Instance.tbMapSpoof.Text;
+                    World.UpdateAreaName(mapname, "00FFAA,AAFFAA");
+                }*/
             }
             return text;
         }

@@ -304,6 +304,7 @@ namespace Grimoire.UI
                 DisableAnimations = chkDisableAnims.Checked,
                 FollowCheck = chkFollowOnly.Checked,
                 FollowName = tbFollowPlayer2.Text,
+				respawnProvoke = chkRespawnProvoke.Checked,
                 AutoZone = cmbSpecials.SelectedItem != null ? cmbSpecials.SelectedItem.ToString() : string.Empty,
             };
         }
@@ -361,6 +362,7 @@ namespace Grimoire.UI
                 FollowCheck = chkFollowOnly.Checked,
                 FollowName = tbFollowPlayer2.Text,
                 optionDelay = (int)numOptionsTimer.Value,
+				respawnProvoke = chkRespawnProvoke.Checked,
                 AutoZone = cmbSpecials.SelectedItem != null ? cmbSpecials.SelectedItem.ToString() : string.Empty,
             };
         }
@@ -474,6 +476,7 @@ namespace Grimoire.UI
                 else
                     rtbInfo.Text = config.Description;
                 chkFollowOnly.Checked = config.FollowCheck;
+                chkRespawnProvoke.Checked = config.respawnProvoke;
 
                 numOptionsTimer.Value = config.optionDelay;
                 tbFollowPlayer2.Text = config.FollowName == null ? "Player" : config.FollowName;
@@ -3307,7 +3310,7 @@ namespace Grimoire.UI
                         Console.WriteLine("Counter Attack: active");
 
                         //This function will ensure auto exit Counter/Stop Atk
-                        await Task.Delay(7500);
+                        await Task.Delay(6000);
                         ActiveBotEngine.Configuration.SkipAttack = false;
                     });
                 }
@@ -3682,6 +3685,25 @@ namespace Grimoire.UI
             {
                 type = CmdTauntcycle.option.Stop
             }, (ModifierKeys & Keys.Control) == Keys.Control);
+        }
+
+        private void chkCorrection_MouseHover(object sender, EventArgs e)
+        {
+            ToolTip tooltip = new ToolTip();
+            tooltip.SetToolTip(this.chkCorrection, 
+                "Correcting item quantity if the input from\r\n" +
+                "cmd isInInventory exceeds the item's max quantity");
+        }
+
+        private void chkRespawnProvoke_CheckedChanged(object sender, EventArgs e)
+        {
+            BotData.BotState = BotData.State.Combat;
+        }
+
+        private void chkMapSpoofer_CheckedChanged(object sender, EventArgs e)
+        {
+            Console.WriteLine("Spoofer State : " + chkMapSpoofer.Checked);
+            World.spoofMap(revert:!chkMapSpoofer.Checked);
         }
     }
 }

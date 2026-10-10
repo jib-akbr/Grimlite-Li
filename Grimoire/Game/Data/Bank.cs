@@ -4,13 +4,27 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web.Caching;
 
 namespace Grimoire.Game.Data
 {
     public class Bank
     {
         public List<InventoryItem> Items => Flash.Call<List<InventoryItem>>("GetBankItems", new string[0]);
-
+        Dictionary<int, InventoryItem> _cache = new Dictionary<int, InventoryItem>();
+        public Dictionary<int, InventoryItem> Cache
+        {
+            get
+            {
+                var _items = Items;
+                //_cache = new Dictionary<int, InventoryItem>(_items.Count);
+                foreach (var item in _items)
+                {
+                    _cache[item.Id] = item;
+                }
+                return _cache;
+            }
+        }
         public InventoryItem GetItemByName(string name)
         {
             return Flash.Call<InventoryItem>("GetBankItemByName", name);
@@ -44,6 +58,15 @@ namespace Grimoire.Game.Data
         public bool ContainsItem(int id, int qty)
         {//ItemId & quantity
             return Items.FirstOrDefault((InventoryItem it) => it.Id == id)?.Quantity >= qty;
+        }
+
+        public bool ContainsItem(InventoryItem item, Dictionary<int,InventoryItem> cache = null)
+        {
+            //Console.WriteLine($"checking for item [{item.Name}] on bamk");
+            if (cache != null)
+                return cache.TryGetValue(item.Id, out var i) && i.Quantity >= item.Quantity;
+
+            return Items.FirstOrDefault((InventoryItem target) => target.Id == item.Id)?.Quantity >= item.Quantity;
         }
 
         public bool ContainsItem(string itemName, string quantity = "*")

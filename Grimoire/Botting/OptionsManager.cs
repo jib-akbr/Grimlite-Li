@@ -2,6 +2,7 @@ using Grimoire.Game;
 using Grimoire.Networking;
 using Grimoire.Networking.Handlers;
 using Grimoire.Tools;
+using Grimoire.UI;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -155,7 +156,7 @@ namespace Grimoire.Botting
 
         public static void SetInfiniteRange() => Flash.Call("SetInfiniteRange", empty);
 
-        private static void SetProvokeMonsters() => Flash.Call("SetProvokeMonsters", empty);
+        public static void SetProvokeMonsters() => Flash.Call("SetProvokeMonsters", empty);
 
         private static void SetEnemyMagnet() => Flash.Call("SetEnemyMagnet", empty);
 
@@ -171,7 +172,7 @@ namespace Grimoire.Botting
         {
             if (!IsRunning)
             {
-                ApplySettings();
+                _ = ApplySettings();
             }
         }
 
@@ -180,23 +181,28 @@ namespace Grimoire.Botting
             IsRunning = false;
         }
 
+        public static bool RespawnProvoke => IsRunning &&
+            BotManager.Instance.chkRespawnProvoke.Checked &&
+            BotData.notBusy && Player.IsAlive;
+
         private static async Task ApplySettings()
         {
             IsRunning = true;
             int timer = 0;
-			BotData.BotState = BotData.State.Combat;
+            BotData.BotState = BotData.State.Combat;
             while (IsRunning && Player.IsLoggedIn)
             {
                 /*if (!Player.IsLoggedIn)
                 {
                     return;
                 }*/ //Commented due to redundant
-                bool flagprovoke = ProvokeMonsters && BotData.isBusy && Player.IsAlive ;
-				if (flagprovoke)
+                bool flagprovoke = ProvokeMonsters && BotData.notBusy && Player.IsAlive
+                                   && !BotManager.Instance.chkRespawnProvoke.Checked;
+                if (flagprovoke)
                     SetProvokeMonsters();
                 await Task.Delay(millisecondsDelay: Timer);
                 timer += Timer;
-                if (!IsRunning || timer < 1000)
+                if (!IsRunning || timer < 2000)
                     continue;
                 timer = 0;
                 if (EnemyMagnet && Player.IsAlive)
@@ -220,10 +226,10 @@ namespace Grimoire.Botting
             get;
         } = new HandlerPlayers();
 
-        public static IJsonMessageHandler HandlerRange
-        {
-            get;
-        } = new HandlerSkills();
+        //public static IJsonMessageHandler HandlerRange
+        //{
+        //    get;
+        //} = new HandlerSkills();
 
         private static IXtMessageHandler HandlerAFK1
         {
@@ -234,7 +240,7 @@ namespace Grimoire.Botting
         {
             HandlerDisableAnimations = new HandlerAnimations();
             HandlerHidePlayers = new HandlerPlayers();
-            HandlerRange = new HandlerSkills();
+            //HandlerRange = new HandlerSkills();
             HandlerAFK1 = new HandlerAFK();
             WalkSpeed = 8;
         }

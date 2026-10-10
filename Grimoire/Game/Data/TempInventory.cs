@@ -1,5 +1,6 @@
 using Grimoire.Botting;
 using Grimoire.Tools;
+using Grimoire.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,9 +18,13 @@ namespace Grimoire.Game.Data
             {
                 return false;
             }
-            if (qty != "*")
+            // if (qty != "*")
+            // {
+			else if (int.TryParse(qty, out int iqty))
             {
-                return tempItem.Quantity >= int.Parse(qty);
+                if (ClientConfig.AutoCorrect && iqty > tempItem.MaxStack)
+                    iqty = tempItem.MaxStack;
+                return tempItem.Quantity >= iqty;
             }
             return true;
         }

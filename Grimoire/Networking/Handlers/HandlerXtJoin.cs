@@ -1,76 +1,88 @@
-﻿using Grimoire.UI;
+﻿using Grimoire.Game;
+using Grimoire.Tools;
+using Grimoire.UI;
 using System;
 
 namespace Grimoire.Networking.Handlers
 {
-	public class HandlerXtJoin : IXtMessageHandler
-	{
-		public string[] HandledCommands
-		{
-			get;
-		} = new string[1]
-		{
-			"server"
-		};
+    public class HandlerXtJoin : IXtMessageHandler
+    {
+        public string[] HandledCommands
+        {
+            get;
+        } = new string[1]
+        {
+            "server"
+        };
 
-		public void Handle(XtMessage message)
-		{
-			if (!message.RawContent.Contains("You joined "))
-				return;
-			if (BotManager.Instance.CustomName != null)
-				BotManager.Instance.CustomName = BotManager.Instance.CustomName;
-			if (BotManager.Instance.CustomGuild != null)
-				BotManager.Instance.CustomGuild = BotManager.Instance.CustomGuild;
-			//LogForm.Instance.AppendChat(string.Format("[{0:hh:mm:ss}] {1}", DateTime.Now, message.Arguments[4]));
-		}
-	}
+        public void Handle(XtMessage message)
+        {
+            if (!message.RawContent.Contains("You joined "))
+                return;
 
-	public class HandlerPrivateJoin : IXtMessageHandler
-	{
-		public string[] HandledCommands
-		{
-			get;
-		} = new string[1]
-		{
-			"tfer"
-		};
+            if (BotManager.Instance.CustomName != null)
+                BotManager.Instance.CustomName = BotManager.Instance.CustomName;
+            if (BotManager.Instance.CustomGuild != null)
+                BotManager.Instance.CustomGuild = BotManager.Instance.CustomGuild;
+            //if (BotManager.Instance.CustomRoom != null)
+            string notice = message.Arguments[4];
+            string mapname = notice.Substring(notice.IndexOf('"') + 1, notice.LastIndexOf('"') - notice.IndexOf('"') - 1);
+            if (!BotManager.Instance.chkMapSpoofer.Checked)
+                return;
+            mapname = BotManager.Instance.tbMapSpoof.Text;
+            //World.UpdateAreaName(mapname,"00FFAA,AAFFAA");
 
-		public string Room
-		{
-			get;
-			set;
-		} = "rand";
+            //LogForm.Instance.AppendChat(string.Format("[{0:hh:mm:ss}] {1}", DateTime.Now, message.Arguments[4]));
+        }
+    }
 
-		public void Handle(XtMessage message)
-		{
-			Random random = new Random();
-			int num = random.Next(1000, 99999);
+    public class HandlerPrivateJoin : IXtMessageHandler
+    {
+        public string[] HandledCommands
+        {
+            get;
+        } = new string[1]
+        {
+            "tfer"
+        };
 
-			string map = message.Arguments[7].ToString();
-			string room = Room;
-			string parts;
+        public string Room
+        {
+            get;
+            set;
+        } = "rand";
 
-			if (map.Contains("-") && !Room.StartsWith("f"))
-			{
-				parts = map;
-			} 
-			else
-			{
-				if (Room.StartsWith("f")) {
-					room = Room.Replace("f", "");
-					map = map.Split('-')[0];
-				}
-				if (int.TryParse(room, out int i))
-				{
-					parts = $"{map}-{i}";
-				} 
-				else
-				{
-					parts = $"{map}-{num}";
-				}
-			}
+        public void Handle(XtMessage message)
+        {
+            Random random = new Random();
+            int num = random.Next(1000, 99999);
 
-			message.Arguments[7] = parts.ToString();
-		}
-	}
+            string map = message.Arguments[7].ToString();
+            string room = Room;
+            string parts;
+
+            if (map.Contains("-") && !Room.StartsWith("f"))
+            {
+                parts = map;
+            }
+            else
+            {
+                if (Room.StartsWith("f"))
+                {
+                    room = Room.Replace("f", "");
+                    map = map.Split('-')[0];
+                }
+                if (int.TryParse(room, out int i))
+                {
+                    parts = $"{map}-{i}";
+                }
+                else
+                {
+                    parts = $"{map}-{num}";
+                }
+            }
+
+            message.Arguments[7] = parts.ToString();
+        }
+    }
 }

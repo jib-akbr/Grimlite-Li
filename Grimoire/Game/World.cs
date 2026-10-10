@@ -1,6 +1,7 @@
 using Grimoire.Botting;
 using Grimoire.Game.Data;
 using Grimoire.Tools;
+using Grimoire.UI;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,19 @@ namespace Grimoire.Game
 
         public static List<Monster> VisibleMonsters => Flash.Call<List<Monster>>("GetVisibleMonstersInCell", new string[0]);
 
-        public static List<Monster> AvailableMonsters => Flash.Call<List<Monster>>("GetMonstersInCell", Player.Cell);
+
+        private static List<Monster> _availableMonsters; //=> Flash.Call<List<Monster>>("GetMonstersInCell", Player.Cell);
+        public static void refreshMonsters()
+        {
+            _availableMonsters = Flash.Call<List<Monster>>("GetMonstersInCell", Player.Cell);
+        } //=> Flash.Call<List<Monster>>("GetMonstersInCell", Player.Cell);
+
+        public static List<Monster> AvailableMonsters(bool refresh = true)
+        {
+            if (refresh)
+                refreshMonsters();
+            return _availableMonsters;
+        }
 
         public static List<Monster> GetAllMonsters()
         {
@@ -63,7 +76,7 @@ namespace Grimoire.Game
         public static string GetMonsterNameHere()
         {
             return string.Join(" & ",
-                AvailableMonsters
+                AvailableMonsters()
                     .Select(m => m.Name)
                     .Where(n => !string.IsNullOrWhiteSpace(n))
                     .Distinct()
@@ -83,7 +96,7 @@ namespace Grimoire.Game
                     .Select(g => g.Key)
                     .ToList();
 
-            string[] tokens = monsterName
+            string[] filterList = monsterName
                 .Split('&')
                 .Select(t => t.Trim())
                 .Where(t => !string.IsNullOrEmpty(t))
@@ -91,18 +104,17 @@ namespace Grimoire.Game
 
             // 3. Filtering process
             List<Func<Monster, bool>> predicates = new List<Func<Monster, bool>>();
-            foreach (string token in tokens)
+            foreach (string monName in filterList)
             {
-                Match match = Regex.Match(token, @"^id['.:-](?<Id>\d+)$", RegexOptions.IgnoreCase);
+                Match match = Regex.Match(monName, @"^id['.:-](?<Id>\d+)$", RegexOptions.IgnoreCase);
                 if (match.Success && int.TryParse(match.Groups["Id"].Value, out int id))
                 {
                     predicates.Add(m => m.MonMapID == id);
                 }
                 else
                 {
-                    string name = token;
                     predicates.Add(m =>
-                        m.Name.EqualsIgnoreCase(name)
+                        m.Name.ContainsIgnoreCase(monName)
                     );
                 }
             }
@@ -230,6 +242,58 @@ namespace Grimoire.Game
                 }
             }
             return false;
+        }
+        public static string realmap;
+        public static void spoofMap(dynamic data = null, bool revert = false)
+        {
+            if (revert)
+            {
+                Flash.SetGameObject("world.strAreaName", realmap);
+                //realmap = "";
+                Flash.CallGameFunction2("updateAreaName", new string[0]);
+                return;
+            }
+            //_realmap = data != null ? data.areaName : Player.Map;
+            //Console.WriteLine("saved realmap name : " + realmap);
+            string spoof = BotManager.Instance.tbMapSpoof.Text;
+            Flash.SetGameObject("world.strAreaName", spoof);
+            if (data != null && data.strMapName == "house")
+                Flash.SetGameObject("world.objHouseData.unm", spoof);
+            Flash.CallGameFunction2("updateAreaName", new string[0]);
+        }
+        public static void UpdateAreaName(
+            string mapname,
+            string customHexColor = null,
+            string fullCustom = null)
+        {
+
+            string areaText;
+            int.TryParse(
+                Flash.GetGameObject("world.areaUsers.length"),
+                out int playerCount
+            );
+            //playerCount--;
+
+
+
+            // default Colour
+            string[] defCol = { "#FFFFFF", "#FFFF00" };
+            //1 Player(s) in Mapname-Number
+            string playerText = $"{playerCount} player{(playerCount > 1 ? "(s)" : "")}";
+            areaText =
+                $"<font color='#{defCol[0]}'>{playerText}</font> " + $"in " +
+                $"<font color='#{defCol[1]}'>{mapname}</font>";
+
+            string[] color = customHexColor.Split(',');
+            if (!string.IsNullOrEmpty(customHexColor))
+                areaText = areaText.Replace($"{defCol[0]}", color[0])
+                                   .Replace($"{defCol[1]}", color[1]);
+
+
+            Flash.SetGameObject(
+                "ui.mcInterface.areaList.title.t1.htmlText",
+                areaText
+            );
         }
 
         static World()

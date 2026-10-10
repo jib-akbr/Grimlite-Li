@@ -557,6 +557,7 @@ namespace Grimoire.UI
             this.chkMagnet = new DarkUI.Controls.DarkCheckBox();
             this.chkProvoke = new DarkUI.Controls.DarkCheckBox();
             this.chkInfiniteRange = new DarkUI.Controls.DarkCheckBox();
+            this.chkRespawnProvoke = new DarkUI.Controls.DarkCheckBox();
             this.grpLogin = new DarkUI.Controls.DarkGroupBox();
             this.chkAFK = new DarkUI.Controls.DarkCheckBox();
             this.cbServers = new DarkUI.Controls.DarkComboBox();
@@ -565,6 +566,7 @@ namespace Grimoire.UI
             this.numRelogDelay = new DarkUI.Controls.DarkNumericUpDown();
             this.label7 = new DarkUI.Controls.DarkLabel();
             this.tabOptions2 = new System.Windows.Forms.TabPage();
+            this.chkCorrection = new DarkUI.Controls.DarkCheckBox();
             this.darkGroupBox27 = new DarkUI.Controls.DarkGroupBox();
             this.tbLoadMap = new DarkUI.Controls.DarkTextBox();
             this.btnLoadMap = new DarkUI.Controls.DarkButton();
@@ -664,6 +666,9 @@ namespace Grimoire.UI
             this.toggleTabpagesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.commandColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.chkMapSpoofer = new DarkUI.Controls.DarkCheckBox();
+            this.darkGroupBox23 = new DarkUI.Controls.DarkGroupBox();
+            this.tbMapSpoof = new DarkUI.Controls.DarkTextBox();
             this.mainTabControl.SuspendLayout();
             this.tabCombat.SuspendLayout();
             this.darkGroupBox20.SuspendLayout();
@@ -760,6 +765,7 @@ namespace Grimoire.UI
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
             this.BotManagerMenuStrip.SuspendLayout();
+            this.darkGroupBox23.SuspendLayout();
             this.SuspendLayout();
             // 
             // lstCommands
@@ -3792,6 +3798,7 @@ namespace Grimoire.UI
             this.tabOptions.Controls.Add(this.chkMagnet);
             this.tabOptions.Controls.Add(this.chkProvoke);
             this.tabOptions.Controls.Add(this.chkInfiniteRange);
+            this.tabOptions.Controls.Add(this.chkRespawnProvoke);
             this.tabOptions.Controls.Add(this.grpLogin);
             this.tabOptions.ForeColor = System.Drawing.Color.Gainsboro;
             this.tabOptions.Location = new System.Drawing.Point(4, 26);
@@ -4185,6 +4192,18 @@ namespace Grimoire.UI
             this.chkInfiniteRange.Text = "Infinite attack range";
             this.chkInfiniteRange.CheckedChanged += new System.EventHandler(this.chkInfiniteRange_CheckedChanged);
             // 
+            // chkRespawnProvoke
+            // 
+            this.chkRespawnProvoke.AutoSize = true;
+            this.chkRespawnProvoke.Checked = false;
+            this.chkRespawnProvoke.CheckState = System.Windows.Forms.CheckState.Unchecked;
+            this.chkRespawnProvoke.Location = new System.Drawing.Point(169, 197);
+            this.chkRespawnProvoke.Name = "chkRespawnProvoke";
+            this.chkRespawnProvoke.Size = new System.Drawing.Size(114, 17);
+            this.chkRespawnProvoke.TabIndex = 164;
+            this.chkRespawnProvoke.Text = "Respawn Provoke";
+            this.chkRespawnProvoke.CheckedChanged += new System.EventHandler(this.chkRespawnProvoke_CheckedChanged);
+            // 
             // grpLogin
             // 
             this.grpLogin.Controls.Add(this.chkAFK);
@@ -4299,6 +4318,8 @@ namespace Grimoire.UI
             this.tabOptions2.Controls.Add(this.darkGroupBox16);
             this.tabOptions2.Controls.Add(this.btnSetSpawn2);
             this.tabOptions2.Controls.Add(this.chkGender);
+            this.tabOptions2.Controls.Add(this.chkCorrection);
+            this.tabOptions2.Controls.Add(this.darkGroupBox23);
             this.tabOptions2.Controls.Add(this.numSetFPS);
             this.tabOptions2.Controls.Add(this.btnSetFPS);
             this.tabOptions2.Controls.Add(this.btnSetLevelCmd);
@@ -4529,6 +4550,49 @@ namespace Grimoire.UI
             this.chkGender.TabIndex = 155;
             this.chkGender.Text = "Gender swap";
             this.chkGender.CheckedChanged += new System.EventHandler(this.chkGender_CheckedChanged);
+            // 
+            // chkCorrection
+            // 
+            this.chkCorrection.AutoSize = true;
+            this.chkCorrection.Checked = true;
+            this.chkCorrection.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkCorrection.Location = new System.Drawing.Point(12, 245);
+            this.chkCorrection.Name = "chkCorrection";
+            this.chkCorrection.Size = new System.Drawing.Size(127, 17);
+            this.chkCorrection.TabIndex = 177;
+            this.chkCorrection.Text = "Auto Correct Quantity";
+            this.chkCorrection.MouseHover += new System.EventHandler(this.chkCorrection_MouseHover);
+            // 
+            // darkGroupBox23
+            // 
+            this.darkGroupBox23.Controls.Add(this.tbMapSpoof);
+            this.darkGroupBox23.Controls.Add(this.chkMapSpoofer);
+            this.darkGroupBox23.Location = new System.Drawing.Point(196, 164);
+            this.darkGroupBox23.Name = "darkGroupBox23";
+            this.darkGroupBox23.Size = new System.Drawing.Size(124, 59);
+            this.darkGroupBox23.TabIndex = 177;
+            this.darkGroupBox23.TabStop = false;
+            this.darkGroupBox23.Text = "Map Spoofer";
+            // 
+            // tbMapSpoof
+            // 
+            this.tbMapSpoof.Location = new System.Drawing.Point(6, 16);
+            this.tbMapSpoof.Name = "tbMapSpoof";
+            this.tbMapSpoof.Size = new System.Drawing.Size(112, 20);
+            this.tbMapSpoof.TabIndex = 146;
+            this.tbMapSpoof.Text = "ThisIsCool";
+            // 
+            // chkMapSpoofer
+            // 
+            this.chkMapSpoofer.AutoSize = true;
+            this.chkMapSpoofer.Checked = false;
+            this.chkMapSpoofer.CheckState = System.Windows.Forms.CheckState.Unchecked;
+            this.chkMapSpoofer.Location = new System.Drawing.Point(6, 39);
+            this.chkMapSpoofer.Name = "chkMapSpoofer";
+            this.chkMapSpoofer.Size = new System.Drawing.Size(99, 17);
+            this.chkMapSpoofer.TabIndex = 178;
+            this.chkMapSpoofer.Text = "Enable Spoofer";
+            this.chkMapSpoofer.CheckedChanged += new System.EventHandler(this.chkMapSpoofer_CheckedChanged);
             // 
             // numSetFPS
             // 
@@ -5612,6 +5676,8 @@ namespace Grimoire.UI
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
             this.splitContainer2.ResumeLayout(false);
             this.BotManagerMenuStrip.ResumeLayout(false);
+            this.darkGroupBox23.ResumeLayout(false);
+            this.darkGroupBox23.PerformLayout();
             this.ResumeLayout(false);
 
 		}
@@ -5685,5 +5751,10 @@ namespace Grimoire.UI
         private DarkButton btnClearVarInt;
         private TableLayoutPanel tableLayoutPanel1;
         private TableLayoutPanel tableLayoutPanel2;
+        internal DarkCheckBox chkCorrection;
+        internal DarkCheckBox chkRespawnProvoke;
+        public DarkCheckBox chkMapSpoofer;
+        private DarkGroupBox darkGroupBox23;
+        public DarkTextBox tbMapSpoof;
     }
 }

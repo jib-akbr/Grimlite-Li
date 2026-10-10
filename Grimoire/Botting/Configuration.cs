@@ -159,6 +159,12 @@ namespace Grimoire.Botting
             get;
             set;
         } = 500;
+		
+		public bool respawnProvoke
+        {
+            get;
+            set;
+        }
 
         public bool EnemyMagnet
         {
