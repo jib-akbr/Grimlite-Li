@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Grimoire.Game;
 using Grimoire.Tools;
+using Grimoire.UI;
 
 namespace Grimoire.Botting.Commands.Map
 {
@@ -22,7 +23,7 @@ namespace Grimoire.Botting.Commands.Map
 		public async Task Execute(IBotEngine instance)
 		{
 			BotData.BotState = BotData.State.Move;
-			await instance.WaitUntil(() => World.IsActionAvailable(LockActions.Transfer), null, 15);
+			//await instance.WaitUntil(() => World.IsActionAvailable(LockActions.Transfer), null, 15);
 
 			_Cell = instance.ResolveVars(Cell);
 			_Pad  = instance.ResolveVars(Pad);
@@ -45,15 +46,16 @@ namespace Grimoire.Botting.Commands.Map
 					int num = random.Next(1000, 99999);
 					RoomNumber = num.ToString();
 				}
-                using (new pauseProvoke(instance.Configuration))
+                // using (new pauseProvoke(instance.Configuration))
+                // {
+                // }
+                // check for MapName, instead of Map 
+                holdProvoke(MapName);
+                while (_try > 0 && !MapName.EqualsIgnoreCase(Player.Map)) 
                 {
-					//check for MapName, instead of Map 
-					while (_try > 0 && !MapName.EqualsIgnoreCase(Player.Map)) 
-                    {
-						await this.TryJoin(instance, MapName, RoomNumber);
-						_try--;
-                    }
-				}
+					await this.TryJoin(instance, MapName, RoomNumber);
+					_try--;
+                }
 			}
 
 			if (_skipcell)
@@ -81,7 +83,7 @@ namespace Grimoire.Botting.Commands.Map
 
 		public async Task TryJoin(IBotEngine instance, string MapName, string RoomNumber)
 		{
-			await instance.WaitUntil(() => World.IsActionAvailable(LockActions.Transfer), null, 15);
+			//await instance.WaitUntil(() => World.IsActionAvailable(LockActions.Transfer), null, 15);
 			if (Player.CurrentState == Player.State.InCombat)
 			{
 				string[] safeCell = ClientConfig.GetValue(ClientConfig.C_SAFE_CELL).Split(',');
@@ -91,8 +93,8 @@ namespace Grimoire.Botting.Commands.Map
 			}
 			String join = RoomNumber.Length > 0 ? $"{MapName}-{RoomNumber}" : MapName;
 			Player.JoinMap(join, _Cell, _Pad);
-			await instance.WaitUntil(() => Player.Map.EqualsIgnoreCase(MapName), null, 5);
-			await instance.WaitUntil(() => !World.IsMapLoading, null, 40);
+			await instance.WaitUntil(() => Player.Map.EqualsIgnoreCase(MapName), () => Player.IsLoggedIn, 5);
+			await instance.WaitUntil(() => !World.IsMapLoading, () => Player.IsLoggedIn, 40);
 		}
 
 		public override string ToString()
@@ -114,5 +116,16 @@ namespace Grimoire.Botting.Commands.Map
 			_skipcell = true;
 			await Execute(instance);
 		}
-	}
+
+        private async void holdProvoke(string map)
+        {
+			bool temp = BotManager.Instance.chkProvoke.Checked;
+            if (temp)
+                BotManager.Instance.chkProvoke.Checked = false;
+			
+			await BotUtilities.WaitUntil(() => Player.Map.Equals(map) && !World.IsMapLoading,30);
+            await Task.Delay(1500);
+			BotManager.Instance.chkProvoke.Checked = temp;
+        }
+    }
 }

@@ -10,6 +10,10 @@ namespace Grimoire.Botting
 {
     public static class Extensions
     {
+        public static void OnClick(this ToolStripMenuItem item, Action action)
+        {
+            item.Click += (object s, EventArgs e) => action();
+        }
         public static bool EqualsIgnoreCase(this string a, string b)
         {
             return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);

@@ -10,7 +10,7 @@ namespace Grimoire.Botting.Commands.Combat
 		{
 			Player.CancelTarget();
 			Player.CancelTargetSelf();
-			await Task.Delay(500);
+			// await Task.Delay(10);
 			Player.CancelAutoAttack();
 			if (LeaveCombat)
 			{

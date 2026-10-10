@@ -94,7 +94,7 @@ namespace Grimoire.Game.Data
             itemName.EqualsIgnoreCase((string)item?.sName),
             shopItemID);
         }
-        public static int MaximumShopBuys(dynamic shopItem)
+        private static int MaximumShopBuys(dynamic shopItem)
         {
             if (shopItem == null)
                 return 0;

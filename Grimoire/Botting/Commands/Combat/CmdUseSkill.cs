@@ -18,6 +18,7 @@ namespace Grimoire.Botting.Commands.Combat
         public async Task Execute(IBotEngine instance)
         {
             string target = instance.IsVar(Monster) ? Configuration.Tempvariable[instance.GetVar(Monster)] : Monster;
+            BotData.BotState = BotData.State.Combat;
             if (instance.Configuration.SkipAttack)
             {
                 if (Player.HasTarget) 
@@ -26,18 +27,20 @@ namespace Grimoire.Botting.Commands.Combat
                     Player.ForceUseSkill(Index);
                 return;
             }
-            FindTarget(target);
-            if (!Force)
+            try
             {
-                if (!Player.HasTarget) return;
-            }
-            if (Wait)
-            {
-                await Task.Delay(Player.SkillAvailable(Index));
                 FindTarget(target);
+				if (!Force && !Player.HasTarget)
+					return;
+				if (Wait)
+				{
+					await Task.Delay(Player.SkillAvailable(Index));
+					FindTarget(target);
+				}
+				if (isCSH()) Player.ForceUseSkill(Index);
+				else Player.UseSkill(Index);
             }
-            if (isCSH()) Player.ForceUseSkill(Index);
-            else Player.UseSkill(Index);
+            finally { }
         }
 
         private bool isCSH()

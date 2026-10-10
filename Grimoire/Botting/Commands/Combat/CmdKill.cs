@@ -100,7 +100,7 @@ namespace Grimoire.Botting.Commands.Combat
             }
 
 
-            while (!_token.IsCancellationRequested && !onPause && Player.HasTarget && Player.GetTargetHealth() > 0)
+            while (!_token.IsCancellationRequested && !onPause && Player.IsLoggedIn && Player.HasTarget && Player.GetTargetHealth() > 0)
             {
                 switch (this.Monster.ToLower())
                 {
@@ -161,7 +161,7 @@ namespace Grimoire.Botting.Commands.Combat
                 if (!Player.IsAlive)
                     return;
 
-                if (!s.hasaura())
+                if (!s.hasaura() && !s.waitCd)
                 {
                     Index = (Index < Count) ? Index + 1 : ClassIndex;
                     continue;

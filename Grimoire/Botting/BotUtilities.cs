@@ -83,23 +83,24 @@ namespace Grimoire.Botting
             foreach (var q in instance.Configuration.Quests)
                 AddUnique(q.Id);
             // list.AddRange(instance.Configuration.Quests.Select((Quest q) => q.Id));
+            async void batchQuest() 
+            {
+                instance.paused = true;
+                await Task.Delay(100);
+                const int batchSize = 30; //max GetQuest
+                for (int i = 0; i < list.Count; i += batchSize)
+                {
+                    int take = Math.Min(batchSize, list.Count - i);
+                    var batch = list.GetRange(i, take);
+                    Player.Quests.GetQuests(batch);
+                    await Task.Delay(600);
+                }
+                await WaitUntil(() => Player.Quests.HasQuest(list[list.Count - 1]), interval: 100);
+                instance.paused = false;
+            };
             if (list.Count > 0)
             {
-                Task.Run(async () =>
-                {
-                    instance.paused = true;
-                    await Task.Delay(100);
-                    const int batchSize = 30; //max GetQuest
-                    for (int i = 0; i < list.Count; i += batchSize)
-                    {
-                        int take = Math.Min(batchSize, list.Count - i);
-                        var batch = list.GetRange(i, take);
-                        Player.Quests.GetQuests(batch);
-                        await Task.Delay(600);
-                    }
-                    await WaitUntil(() => Player.Quests.HasQuest(list[list.Count - 1]), interval: 100);
-                    instance.paused = false;
-                });
+                batchQuest();
             }
         }
 

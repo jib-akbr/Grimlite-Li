@@ -1,5 +1,6 @@
 using Grimoire.Networking;
 using Grimoire.Tools;
+using Grimoire.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,9 +18,11 @@ namespace Grimoire.Game.Data
 
             //LogForm.Instance.devDebug("[Quest Tree Refreshed]");
             int oldCount = _questCache?.Count ?? 0;
-            _questCache = Flash.Call<List<Quest>>("GetQuestTree", Array.Empty<string>())
-                ?? new List<Quest>(); ;
-            _questById = _questCache.ToDictionary(q => q.Id);
+            _questCache = Flash.Call<List<Quest>>("GetQuestTree", Array.Empty<string>()) ?? new List<Quest>();
+            _questById = _questCache
+                         .Where(q => q.Id > 0)
+                         .GroupBy(q => q.Id)
+                         .ToDictionary(g => g.Key, g => g.First());
 
             if (oldCount != _questCache.Count || force)
                 _dirty = false;
@@ -36,7 +39,6 @@ namespace Grimoire.Game.Data
             }
         }
         public void QuestTreeRefresh() => RefreshCache(true);
-
 
         public List<Quest> AcceptedQuests => QuestTree.Where((Quest q) => q.IsInProgress).ToList();
 
@@ -125,7 +127,7 @@ namespace Grimoire.Game.Data
             RefreshCache();
             _questById.TryGetValue(id, out var q);
             //LogForm.Instance.devDebug($"Quest {q.Id} = {q.Name}");
-            
+
             return q;
         }
     }

@@ -44,12 +44,12 @@ namespace Grimoire.Botting.Commands.Quest
             if (ReAccept)
             {
                 // await Task.Delay(1500);
-				await instance.WaitUntil(() => !(Quest.IsInProgress && Quest.CanComplete),interval:400,timeout:10);
+				await instance.WaitUntil(() => !Quest.IsInProgress && !Quest.CanComplete,interval:400,timeout:5);
                 Quest.GhostAccept();
             }
 			else
 			{
-				int delay = instance.Configuration.BotDelay <= 800 ? 800-instance.Configuration.BotDelay : 0;
+				int delay = instance.Configuration.BotDelay <= 1000 ? 1100-instance.Configuration.BotDelay : 0;
 				await Task.Delay(delay);
 			}
         }

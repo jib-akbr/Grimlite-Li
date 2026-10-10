@@ -67,7 +67,7 @@ namespace Grimoire.Botting
             try
             {
                 // kalau input hanya angka atau ekspresi matematis
-                if (Regex.IsMatch(input, @"^[0-9\+\-\*\/\.\(\)\s]+$"))
+                if (Regex.IsMatch(input, @"^[0-9+\-*\/%.()\s]+$"))
                 {
                     var dt = new DataTable();
                     var result = dt.Compute(input, "");
@@ -280,9 +280,6 @@ namespace Grimoire.Botting
                 if (Configuration.RestIfHp)
                     await RestHealth();
 
-                if (_ctsBot.IsCancellationRequested)
-                    return;
-
                 if (Configuration.RestIfMp)
                     await RestMana();
 
@@ -357,7 +354,7 @@ namespace Grimoire.Botting
                             break;
                         }
                     }
-                    await Task.Delay(500, token);
+                    await Task.Delay(questDelay, token);
                     if (quest != null)
                     {
                         BotData.State TempState = BotData.BotState;
