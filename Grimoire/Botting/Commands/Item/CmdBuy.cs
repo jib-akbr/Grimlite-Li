@@ -85,4 +85,44 @@ namespace Grimoire.Botting.Commands.Item
             return text;
         }
     }
+
+    // Compat shim for bots saved by Grimlite Rev (shop id as string/var).
+    public class CmdBuy2 : IBotCommand
+    {
+        public string ShopId
+        {
+            get;
+            set;
+        }
+
+        public string ItemName
+        {
+            get;
+            set;
+        }
+
+        public async Task Execute(IBotEngine instance)
+        {
+            BotData.BotState = BotData.State.Transaction;
+            string itemName = instance.ResolveVars(ItemName);
+            int shopId = int.Parse(instance.ResolveVars(ShopId));
+            await instance.WaitUntil(() =>
+                World.IsActionAvailable(LockActions.BuyItem) &&
+                World.IsActionAvailable(LockActions.LoadShop), timeout: 3);
+            await Player.ExitCombat(2000);
+            Shop.Load(shopId);
+            await instance.WaitUntil(() => Shop.IsShopLoaded, interval: 500);
+            InventoryItem i = Player.Inventory.Items.FirstOrDefault((InventoryItem item) => item.Name.EqualsIgnoreCase(itemName));
+            Shop.BuyItemQty(name: itemName, qty: 1);
+            if (i != null)
+                await instance.WaitUntil(() => Player.Inventory.Items.FirstOrDefault((InventoryItem it) => it.Name.EqualsIgnoreCase(itemName)).Quantity != i.Quantity, timeout: 2);
+            else
+                await instance.WaitUntil(() => Player.Inventory.Items.FirstOrDefault((InventoryItem it) => it.Name.EqualsIgnoreCase(itemName)) != null, timeout: 2);
+        }
+
+        public override string ToString()
+        {
+            return $"Buy item: {ItemName}";
+        }
+    }
 }

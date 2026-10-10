@@ -60,4 +60,55 @@ namespace Grimoire.Botting.Commands.Quest
             return $"Complete quest [{quant}x]: {(Quest.ItemId != null && Quest.ItemId != "0" ? $"{Quest.Id}^{Quest.ItemId}" : Quest.Id.ToString())} {(InBlank ? "[InBlank]" : "")}";
         }
     }
+
+    // Compat shim for bots saved by Grimlite Rev (quest/item ids as strings/vars).
+    public class CmdCompleteQuest2 : IBotCommand
+    {
+        public string QuestID
+        {
+            get;
+            set;
+        }
+
+        public string ItemID
+        {
+            get;
+            set;
+        }
+
+        public async Task Execute(IBotEngine instance)
+        {
+            int quest = int.Parse(instance.ResolveVars(QuestID));
+            string item = ItemID != null ? instance.ResolveVars(ItemID) : null;
+            if (!Player.Quests.CanComplete(quest))
+            {
+                return;
+            }
+            await instance.WaitUntil(() => World.IsActionAvailable(LockActions.TryQuestComplete));
+            BotData.BotState = BotData.State.Quest;
+            if (!Player.Quests.HasQuest(quest))
+            {
+                Player.Quests.Load(quest);
+                await instance.WaitUntil(() => Player.Quests.HasQuest(quest), timeout: 3);
+            }
+            if (instance.Configuration.ExitCombatBeforeQuest || Player.CurrentState == Player.State.InCombat)
+            {
+                if (Player.CurrentState == Player.State.InCombat)
+                {
+                    Player.MoveToCell(Player.Cell, Player.Pad);
+                    await Task.Delay(2000);
+                }
+            }
+            if (!string.IsNullOrEmpty(item) && item != "0")
+                Player.Quests.Complete(quest.ToString(), item);
+            else
+                Player.Quests.Complete(quest);
+            await instance.WaitUntil(() => !Player.Quests.IsInProgress(quest));
+        }
+
+        public override string ToString()
+        {
+            return $"Complete quest: {((ItemID != null && ItemID != "0") ? $"{QuestID}, {ItemID}" : QuestID)}";
+        }
+    }
 }

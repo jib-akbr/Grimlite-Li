@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Grimoire.Game;
 using Grimoire.UI;
 using Grimoire.Game.Data;
@@ -32,6 +33,28 @@ namespace Grimoire.Botting.Commands.Misc
         public override string ToString()
         {
             return "Stop bot";
+        }
+    }
+
+    // Compat shim for bots saved by Grimlite Rev.
+    public class CmdStopBotWithMessage : IBotCommand
+    {
+        public string Message
+        {
+            get;
+            set;
+        }
+
+        public Task Execute(IBotEngine instance)
+        {
+            instance.Stop();
+            MessageBox.Show(instance.ResolveVars(Message), "Bot has stopped!");
+            return Task.FromResult<object>(null);
+        }
+
+        public override string ToString()
+        {
+            return "Stop bot with message";
         }
     }
 }

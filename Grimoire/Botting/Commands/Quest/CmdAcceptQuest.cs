@@ -68,4 +68,33 @@ namespace Grimoire.Botting.Commands.Quest
             return (ghostAccept ? $"Ghost Accept: " : $"Accept Quest: ")+Quest.Id;
         }
     }
+
+    // Compat shim for bots saved by Grimlite Rev (quest id as string/var).
+    public class CmdAcceptQuest2 : IBotCommand
+    {
+        public string QuestID
+        {
+            get;
+            set;
+        }
+
+        public async Task Execute(IBotEngine instance)
+        {
+            int quest = int.Parse(instance.ResolveVars(QuestID));
+            BotData.BotState = BotData.State.Quest;
+            if (!Player.Quests.HasQuest(quest))
+            {
+                Player.Quests.Load(quest);
+                await instance.WaitUntil(() => Player.Quests.HasQuest(quest), timeout: 3);
+            }
+            await instance.WaitUntil(() => World.IsActionAvailable(LockActions.AcceptQuest));
+            Player.Quests.Accept(quest);
+            await instance.WaitUntil(() => Player.Quests.IsInProgress(quest));
+        }
+
+        public override string ToString()
+        {
+            return $"Accept quest: {QuestID}";
+        }
+    }
 }
