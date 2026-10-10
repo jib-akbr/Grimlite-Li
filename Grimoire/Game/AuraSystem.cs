@@ -1,6 +1,9 @@
-﻿using Grimoire.UI;
+﻿using Grimoire.Botting;
+using Grimoire.UI;
+using Grimoire.Utils;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace Grimoire.Game
@@ -44,13 +47,27 @@ namespace Grimoire.Game
     }
     public class AuraManager
     {
-        public static AuraManager Instance { get; } = new AuraManager();
+        public static AuraManager SelfAura { get; } = new AuraManager();
+        private static readonly Dictionary<int, AuraManager> _enemyAuras =
+        new Dictionary<int, AuraManager>();
 
-        private readonly Dictionary<string, PlayerAura> auras = new 
-		Dictionary<string, PlayerAura>(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, PlayerAura> auras = new
+        Dictionary<string, PlayerAura>(StringComparer.OrdinalIgnoreCase);
 
         private AuraManager() { }
-
+        public static AuraManager EnemyAura(int monsterId)
+        {
+            if (!_enemyAuras.TryGetValue(monsterId, out AuraManager manager))
+            {
+                manager = new AuraManager();
+                _enemyAuras[monsterId] = manager;
+            }
+            return manager;
+        }
+        public static void resetMonsterAura()
+        {
+            _enemyAuras.Clear();
+        }
         /*void debug(string msg, PlayerAura aura = null)
         {
             if (aura != null)
@@ -104,10 +121,24 @@ namespace Grimoire.Game
                 : 0;
         }
 
-		public void ClearAllAura()
-		{
-			auras.Clear();
-		}
+        public void ClearAllAura(bool forceClean = false)
+        {
+            Dictionary<string, PlayerAura> addback = new Dictionary<string, PlayerAura>(StringComparer.OrdinalIgnoreCase);
+            if (forceClean)
+            {
+                auras = addback;
+                return;
+            }
+
+            foreach (PlayerAura aura in auras.Values)
+            {
+                if (TE.Any(filter => aura.Name.ContainsIgnoreCase(filter)))
+                    addback.Add(aura.Name, aura);
+            }
+
+            auras = addback;
+        }
+        private string[] TE = { "Fate", "Sage", "Body", "Might", "Elixir" };
 
         public void Update()
         {

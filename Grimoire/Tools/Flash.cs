@@ -551,11 +551,19 @@ namespace Grimoire.Tools
                 {
                     string cmd = (string)action["cmd"];
                     string tInf = (string)action["tInf"];
-                    if (cmd == "aura-" && action["aura"]?["nam"] != null && tInf == $"p:{Player.UserID}")
+                    if (cmd == "aura-" && action["aura"]?["nam"] != null)
                     {
                         string name = (string)(action["aura"]?["nam"]);
-                        AuraManager.Instance.RemoveAura(name);
+                        if (tInf == $"p:{Player.UserID}")
+                        {
+                            AuraManager.SelfAura.RemoveAura(name);
                         //LogForm.Instance.devDebug($"[AuraManager] -{name}");
+                    }
+                        else if (tInf.StartsWith("m:"))
+                        {
+                            int.TryParse(tInf.Replace("m:", ""), out int targetId);
+                            AuraManager.EnemyAura(targetId).RemoveAura(name);
+                        }
                     }
 
                     JArray arr_auras = (JArray)action["auras"];
@@ -564,16 +572,29 @@ namespace Grimoire.Tools
                     foreach (JObject aura in arr_auras)
                     {
                         string name = (string)aura["nam"];
-
-                        if (cmd == "aura+" && tInf == $"p:{Player.UserID}")
+                        if (cmd == "aura+")
                         {
                             double value = aura["val"]?.Value<double>() ?? 1;
                             int duration = (int)aura["dur"];
 
+                            if (tInf == $"p:{Player.UserID}")
+                            {
+								// if (value < 0)
+									// value = 1;
                             if ((bool)aura["isNew"] || value != 1)
-                                 AuraManager.Instance.ApplyAura(name, value, duration);
-                            else AuraManager.Instance.AuraIncrement(name);
+                                    AuraManager.SelfAura.ApplyAura(name, value, duration);
+                                else AuraManager.SelfAura.AuraIncrement(name);
                             //LogForm.Instance.devDebug($"[AuraManager] +{name} {duration}s " + (value!=1 ? value.ToString() : "+1"));
+                        }
+                            else if (tInf.StartsWith("m:"))
+                            {
+                                int.TryParse(tInf.Replace("m:", ""), out int targetId);
+
+                                if ((bool)aura["isNew"] || value != 1)
+                                    AuraManager.EnemyAura(targetId).ApplyAura(name, value, duration);
+                                else
+                                    AuraManager.EnemyAura(targetId).AuraIncrement(name);
+                            }
                         }
                         
 
@@ -732,8 +753,16 @@ namespace Grimoire.Tools
                             OptionsManager.SetInfiniteRange();
                         break;
 
-                    /*case "retrieveUserData":
+                    /* 
+                    case "retrieveUserData":
 					case "retrieveUserDatas":
+                        string mapname = Player.Map;
+                        if (BotManager.Instance.chkMapSpoofer.Checked)
+                            mapname = BotManager.Instance.tbMapSpoof.Text;
+                        World.UpdateAreaName(mapname, "00FFAA,AAFFAA");
+                        break;
+
+                    case "uotls":
 						if (OptionsManager.HidePlayers)
 							OptionsManager.DestroyPlayers();
 						break;*/

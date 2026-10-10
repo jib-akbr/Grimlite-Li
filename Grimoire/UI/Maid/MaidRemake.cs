@@ -32,8 +32,8 @@ namespace Grimoire.UI.Maid
 
         public bool isPlayerInMyRoom => IsPlayerInMap(targetUsername);
 
-        public bool shouldFollow => !(isPlayerInMyRoom && isPlayerInMyCell);
         //Avoiding unwanted stuck
+        public bool shouldFollow => !(isPlayerInMyRoom && isPlayerInMyCell);
         public int skillDelay => (int)MaidRemake.Instance.numSkillDelay.Value;
 
         LowLevelKeyboardHook kbh = new LowLevelKeyboardHook();
@@ -115,6 +115,7 @@ namespace Grimoire.UI.Maid
         {
             resetSpecials();
             bool toggle = cbEnablePlugin.Checked;
+            // OptionsManager.SetSkipCutscenes();
             OptionsManager.SetLagKiller(toggle);
             if (toggle)
             {
@@ -147,7 +148,9 @@ namespace Grimoire.UI.Maid
 
                 if (!cbUnfollow.Checked && Player.IsLoggedIn && !World.IsMapLoading && shouldFollow)//isPlayerInMyRoom && !isPlayerInMyCell)
                 {
-                    // await gotoTarget(targetUsername);
+					if (!isPlayerInMyRoom)
+						await gotoTarget(targetUsername);
+					// await BotUtilities.WaitUntil(() => !shouldFollow,interval:400);
                     Player.GoToPlayer(targetUsername);
                 }
 
@@ -168,8 +171,8 @@ namespace Grimoire.UI.Maid
                 {
                     equipEnrage();
                 }
-                if (skillproperties[5]?["sArg1"]?.ToString() != "")
-                    useSkill("5", true);
+                //if (skillproperties[5]?["sArg1"]?.ToString() != "")
+                //    useSkill("5", true);
                 OptionsManager.SetInfiniteRange();
 
                 while (cbEnablePlugin.Checked)
@@ -315,20 +318,22 @@ namespace Grimoire.UI.Maid
                             while (cbEnablePlugin.Checked && Player.IsLoggedIn && World.IsMapLoading)
                                 await Task.Delay(500);
 
-                            // wait 2 second before try to goto or join to different map (when locked map handler is enabled)
-                            for (int i = 0; i < 8 && cbEnablePlugin.Checked && cbHandleLockedMap.Checked && Player.IsLoggedIn && !World.IsMapLoading; i++)
-                                await Task.Delay(250);
+                            // wait 3 second before try to goto or join to different map (when locked map handler is enabled)
+                            for (int i = 0; i < 6 && cbEnablePlugin.Checked && cbHandleLockedMap.Checked && Player.IsLoggedIn && !World.IsMapLoading; i++)
+                                await Task.Delay(500);
 
                             // goto target current cell when in the same room
-                            while (!cbUnfollow.Checked & cbEnablePlugin.Checked && Player.IsLoggedIn && shouldFollow) //isPlayerInMyRoom && !isPlayerInMyCell)
+                            while (!cbUnfollow.Checked & cbEnablePlugin.Checked && Player.IsLoggedIn && /*shouldFollow)*/ isPlayerInMyRoom && !isPlayerInMyCell)
                             {
-                                //Player.GoToPlayer(targetUsername);
-                                await gotoTarget(targetUsername);
+                                await Player.ExitCombat(500, true);
+                                Player.GoToPlayer(targetUsername);
+                                // await gotoTarget(targetUsername);
                                 // debug("Attempt to chase");
                                 // if (cbEnablePlugin.Checked && Player.IsLoggedIn && shouldFollow) //isPlayerInMyRoom && !isPlayerInMyCell)
-                                await Task.Delay(750);
+                                await Task.Delay(500);
                                 // else break;
                             }
+                            BotData.BotState = BotData.State.Combat;
                         }
 
                         await Task.Delay(skillDelay);
@@ -346,9 +351,9 @@ namespace Grimoire.UI.Maid
             int cd = Player.SkillAvailable(index);
             await Task.Delay(Math.Min(cd, 1500));
             useSkill(index, true);
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 20; i++)
             {
-                await Task.Delay(100); //Ensure its going to cooldown
+                await Task.Delay(50); //Ensure its going to cooldown
                 if (Player.SkillAvailable(index) > 0)
                     return;
             }
@@ -367,12 +372,15 @@ namespace Grimoire.UI.Maid
         private void equipEnrage()
         {
             InventoryItem item = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => i.Name.Equals("Scroll of Enrage") && i.IsEquippable);
-            Player.EquipPotion(item.Id, item.Description, item.File, item.Name);
-            _ = Task.Run(async () =>
+            if (!item.IsEquipped)
             {
-                await Task.Delay(1000);
-                useSkill("5", true);
-            });
+                Player.EquipPotion(item.Id, item.Description, item.File, item.Name);
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(1000);
+                    useSkill("5", true);
+                });
+            }
         }
 
         private void taunt()
@@ -473,16 +481,35 @@ namespace Grimoire.UI.Maid
             string preset = selectedPreset;
             if (isUsingCSH() && preset == "CSH")
             {
-                if (Player.GetAuras(true, "Rounds Empty") == 1 || Player.Mana < 15)
+                if (Player.GetAuras(true, "Temporal Rift") >= 4)
                 {
-                    await waitSkill("4");
                     await waitSkill("1");
+                    await BotUtilities.WaitUntil(() => Player.GetAuras(true, "Gunslinger Stance") >= 1, 10, 10);
+                    debug("Entering AA Spam");
+                    do
+                    {
+                        if (!Player.HasTarget)
+                        {
+                            if (cbAttackPriority.Checked)
+                                doPriorityAttack();
+                            else
+                                Player.AttackMonster("*");
+                        }
+                        useSkill("0");
+                        await Task.Delay(30);
+                    } while (Player.GetAuras(true, "Gunslinger Stance") >= 1
+                        || Player.GetAuras(true, "Bang") <= 3);
+                    debug("Spam Ends");
                     /*useSkill("4");
                     await Task.Delay(Player.SkillAvailable("1"));
                     await Task.Delay(100);
                     useSkill("1");
                     await Task.Delay(200);*/
                 }
+                //else
+                //{
+                //    LogForm.Instance.devDebug($"Temporal rift stacks : {Player.GetAuras(true, "Temporal Rift")}");
+                //}
             }
             else if (Player.EquippedClass == "ARCANA INVOKER" &&
             preset == "AI")
@@ -503,6 +530,16 @@ namespace Grimoire.UI.Maid
                 {
                     LogForm.Instance.devDebug("Attempting to enable Corporeal & Arcane Sigil");
                     await waitSkill("2");
+                    await waitSkill("4");
+                    await Task.Delay(350);
+                }
+            }
+			else if (Player.EquippedClass == "ARCHPALADIN")
+            {
+                int Seal = AuraManager.EnemyAura(Player.CurrentTargetId)
+									  .GetRemainingTime("Righteous Seal");
+                if (Seal < 600 && Seal > 0)
+                {
                     await waitSkill("4");
                     await Task.Delay(350);
                 }
@@ -716,7 +753,7 @@ namespace Grimoire.UI.Maid
                                             await Task.Delay(1500);
                                             counterAttack = true;
                                             cbStopAttack.Checked = true;
-                                            await Task.Delay(7500);
+                                            await Task.Delay(6000);
                                             //This function will auto exit Counter/Stop Atk
                                             counterAttack = false;
                                             cbStopAttack.Checked = false;
@@ -731,10 +768,10 @@ namespace Grimoire.UI.Maid
                         JArray actions = (JArray)jsonMessage.DataObject?["a"];
                         if (actions != null)
                         {
-                            /*if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
+                            if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
                                 cbStopAttack.Checked = true;
                             else if (Player.Map == "ascendedeclipse") //changed to avoid force uncheck
-                                cbStopAttack.Checked = false;*/
+                                cbStopAttack.Checked = false;
                             foreach (JObject action in actions)
                             {
                                 JObject aura = (JObject)action["aura"];
@@ -779,7 +816,7 @@ namespace Grimoire.UI.Maid
 
         private void debug(string text)
         {
-            LogForm.Instance.AppendDebug($"[Maid] {text}");
+            LogForm.Instance.AppendDebug($"[Maid] {text}",doAnyway:true);
         }
 
         private async Task waitForFirstJoin()
@@ -811,7 +848,7 @@ namespace Grimoire.UI.Maid
                 if (monsterList[i].StartsWith("id", StringComparison.OrdinalIgnoreCase) && monsterList[i].Length > 3)
                     monsterId = monsterList[i].Substring(3);
 
-                if (currentTarget.EqualsIgnoreCase(monsterList[i]) || 
+                if (currentTarget.ContainsIgnoreCase(monsterList[i]) ||
                     (monsterId != null && monsterId == idTarget))
                     return; //Made special for CSH non autoattack cases
 
@@ -854,7 +891,7 @@ namespace Grimoire.UI.Maid
                 await BotUtilities.WaitUntil(() => Player.Map != currentmap && !World.IsMapLoading, interval: 500);
                 // await BotUtilities.WaitUntil(() => World.IsMapLoading,interval:200);
             }
-            Player.GoToPlayer(targetUsername);
+            // Player.GoToPlayer(targetUsername);
         }
 
         /* UI state */
@@ -1237,8 +1274,11 @@ namespace Grimoire.UI.Maid
             ClassPreset.cbClear();
             switch (selectedPreset)
             {
-                case "LR":
-                    ClassPreset.LR();
+                case "EC":
+                    ClassPreset.EC();
+                    break;
+                case "DOT":
+                    ClassPreset.DOT();
                     break;
                 case "LC":
                     ClassPreset.LC();
@@ -1271,10 +1311,10 @@ namespace Grimoire.UI.Maid
                     ClassPreset.AM();
                     break;
                 case "CSH":
-                    ClassPreset.CSH();
+                    ClassPreset.CSH_Gunslinger();
                     break;
                 case "CSH v2":
-                    ClassPreset.CSHGunslinger();
+                    ClassPreset.CSHNormal();
                     break;
             }
             ClassPreset.cbSet();

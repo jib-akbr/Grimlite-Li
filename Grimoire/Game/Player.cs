@@ -3,9 +3,11 @@ using Grimoire.Botting.Commands.Map;
 using Grimoire.Game.Data;
 using Grimoire.Tools;
 using Grimoire.UI;
+using Grimoire.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -25,6 +27,17 @@ namespace Grimoire.Game
             _cachedUserID = 0;
             Quests.QuestTreeRefresh();
             DropUi.instance.clearDrop();
+			AuraManager.SelfAura.ClearAllAura(true);
+			if (BotManager.Instance.chkEnableSettings.Checked)
+            {
+                Task.Run(async () =>
+                {
+                    OptionsManager.Stop();
+                    await Task.Delay(5000);
+                    OptionsManager.Start();
+                }
+                );
+            }
         }
 
         //public static int UserID => Flash.Call<int>("UserID", new object[0]);
@@ -110,7 +123,7 @@ namespace Grimoire.Game
             {
                 if (!IsLoggedIn)
                     return "";
-                string usr = Flash.Call<string>("GetUsername", new string[0]);
+                string usr = Flash.Call<string>("GetUsername", new string[0]) ?? "blank";
                 if (usr == "null" && usernamecheck)
                 {
                     MessageBox.Show(
@@ -145,6 +158,7 @@ namespace Grimoire.Game
                 return _equippedClass;
             }
         }
+        
         private static string _equippedClass;
         private static int _checkguard;
 
@@ -176,7 +190,10 @@ namespace Grimoire.Game
             if (State.InCombat == CurrentState || force)
             {
                 await Task.Delay(100);
-                refreshCell();
+                if (World.Cells.Contains("Cut1") && force)
+                    MoveToCell("Cut1", "Left");
+                else 
+                    refreshCell();
                 await Task.Delay(delay);
             }
         }
@@ -220,6 +237,7 @@ namespace Grimoire.Game
         /// Gets gold int.
         /// </summary>
         public static int Gold => Flash.Call<int>("Gold", new string[0]);
+        public static int CurrentTargetId => int.Parse(Flash.GetGameObject("world.myAvatar.target.objData.MonMapID"));
         public static int Coins => int.Parse(Flash.GetGameObject("world.myAvatar.objData.intCoins"));
 
         /// <summary>
@@ -402,7 +420,8 @@ namespace Grimoire.Game
         /// <param name="auraName"></param>
         public static int GetAuras(bool isSelf, string auraName)
         {
-            if (isSelf) return (int)AuraManager.Instance.GetValue(auraName);
+            if (isSelf && !auraName.ContainsIgnoreCase("locked"))
+                return (int)AuraManager.SelfAura.GetValue(auraName);
 
             return Flash.Call<int>("GetAurasValue", isSelf.ToString(), auraName);
         }
@@ -410,11 +429,11 @@ namespace Grimoire.Game
         {
             if (isSelf)
             {
-                return (int)AuraManager.Instance.GetRemainingTime(auraName);
+                return (int)AuraManager.SelfAura.GetRemainingTime(auraName);
             }
 
             string[] aura = (Flash.Call<string>("AuraDuration", isSelf.ToString(), auraName).Split('/'));
-            if (aura.Length < 2) 
+            if (aura.Length < 2)
                 return 0;
             int.TryParse(aura[1], out int runTime);
             runTime /= 1000;

@@ -537,5 +537,12 @@
       "Description1": "Animation message",
       "Description2": "Skill to use"
     },
+    {
+      "$type": "Grimoire.Botting.Commands.Misc.Statements.CmdTargetAuraDuration, Grimoire",
+      "Tag": "Aura",
+      "Text": "Monster (ID) Aura duration is less than",
+      "Description1": "Aura Name",
+      "Description2": "Duration remaining (in ms)"
+    }
   ]
 }

@@ -189,6 +189,7 @@
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraLessThan.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerInMyCellGreaterThan.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerInMyCellLessThan.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdTargetAuraDuration.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdTargetAuraEquals.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdTargetAuraGreaterThan.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdTargetAuraLessThan.cs" />
