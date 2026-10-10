@@ -225,10 +225,11 @@
             // 
             this.cmbPreset.FormattingEnabled = true;
             this.cmbPreset.Items.AddRange(new object[] {
-            "LR",
+            "EC",
             "LC",
             "LOO",
             "SC",
+            "DOT",
             "AP",
             "AI",
             "AM",
