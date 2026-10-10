@@ -152,6 +152,8 @@ namespace Grimoire.UI.Maid
                 if (!cbUnfollow.Checked)
                     Proxy.Instance.RegisterHandler(CJHandler);
 
+                ResetFollowWatcher();
+
                 if (cbCopyWalk.Checked)
                     Proxy.Instance.RegisterHandler(CopyWalkHandler);
 
@@ -627,6 +629,7 @@ namespace Grimoire.UI.Maid
         #region Tauntcycle
         private Task tauntTask = null;
         private CancellationTokenSource cts;
+        private CancellationTokenSource followCts;
         private void ResetToken(bool createNew)
         {
             if (cts != null)
@@ -941,17 +944,54 @@ namespace Grimoire.UI.Maid
                 if (cp != null && !string.Equals(Player.Cell ?? "", cp.Value.cell, StringComparison.OrdinalIgnoreCase))
                 {
                     if (Player.CurrentState == Player.State.InCombat)
-                        await Player.ExitCombat(500, true);
+                        await Player.ExitCombat(300, true);
                     Player.MoveToCell(cp.Value.cell, cp.Value.pad);
-                    await Task.Delay(800);
+                    await Task.Delay(400);
                     return;
                 }
             }
             catch { }
             if (Player.CurrentState == Player.State.InCombat)
-                await Player.ExitCombat(500, true);
+                await Player.ExitCombat(300, true);
             try { Player.GoToPlayer(target); } catch { }
-            await Task.Delay(500);
+            await Task.Delay(250);
+        }
+
+        private void ResetFollowWatcher()
+        {
+            try { followCts?.Cancel(); followCts?.Dispose(); } catch { }
+            followCts = new CancellationTokenSource();
+            var token = followCts.Token;
+            _ = followWatcher(token);
+        }
+
+        // Fast cell follower: polls every ~300ms on top of the packet handler,
+        // so Maid jumps within a moment of the leader arriving (no wait for combat loop).
+        private async Task followWatcher(CancellationToken token)
+        {
+            try
+            {
+                while (!token.IsCancellationRequested && cbEnablePlugin.Checked)
+                {
+                    try
+                    {
+                        if (!cbUnfollow.Checked && !onPause && Player.IsLoggedIn && !World.IsMapLoading && isPlayerInMyRoom && !isPlayerInMyCell)
+                        {
+                            var cp = GetTargetCellPad(targetUsername);
+                            if (cp != null && !string.Equals(Player.Cell ?? "", cp.Value.cell, StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (Player.CurrentState == Player.State.InCombat)
+                                    await Player.ExitCombat(300, true);
+                                if (!token.IsCancellationRequested && cbEnablePlugin.Checked)
+                                    Player.MoveToCell(cp.Value.cell, cp.Value.pad);
+                            }
+                        }
+                    }
+                    catch { }
+                    await Task.Delay(300);
+                }
+            }
+            catch { }
         }
 
         /* UI state */
@@ -986,6 +1026,7 @@ namespace Grimoire.UI.Maid
 
         public void stopMaid()
         {
+            try { followCts?.Cancel(); followCts?.Dispose(); followCts = null; } catch { }
             Proxy.Instance.UnregisterHandler(RedMsgHandler);
             Proxy.Instance.UnregisterHandler(CJHandler);
             Proxy.Instance.UnregisterHandler(JoinMapHandler);
