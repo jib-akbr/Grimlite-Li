@@ -155,7 +155,7 @@ namespace Grimoire.Game
                     _equippedClass = Flash.Call<string>("Class", new string[0]);
                     _checkguard = now;
                 }
-                return _equippedClass;
+                return _equippedClass ?? string.Empty;
             }
         }
         
