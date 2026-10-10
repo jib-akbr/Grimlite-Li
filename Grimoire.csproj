@@ -276,6 +276,8 @@
     <Compile Include="Grimoire\Botting\Commands\Item\CmdLoad.cs" />
     <Compile Include="Grimoire\Botting\Commands\Item\CmdLoadTravel.cs" />
     <Compile Include="Grimoire\Botting\Commands\Item\CmdMapItem.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Item\CmdPacketlist.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Item\CmdQuestlist.cs" />
     <Compile Include="Grimoire\Botting\Commands\Item\CmdSell.cs" />
     <Compile Include="Grimoire\Botting\Commands\Item\CmdWhitelist.cs" />
     <Compile Include="Grimoire\Botting\Commands\Map\CmdJoin.cs" />

@@ -86,8 +86,48 @@ namespace Grimoire.Botting.Commands.Misc
 
         public override string ToString()
         {
-            string text = ForClient || Client ? "To client" : "To server";
-            return $"{text} [{SpamTimes}x]: {Packet}";
+            return (Client ? "Send packet to client: " : "Send packet to server: ") + Packet;
         }
     }
+
+    // Compat shim for bots saved by Grimlite Rev (configurable post-send delay).
+    public class CmdPacket2 : RegularExpression, IBotCommand
+    {
+        public string Packet
+        {
+            get;
+            set;
+        }
+
+        public int Delay
+        {
+            get;
+            set;
+        } = 1500;
+
+        public bool Client
+        {
+            get;
+            set;
+        } = false;
+
+        public async Task Execute(IBotEngine instance)
+        {
+            string text = instance.IsVar(Packet) ? Configuration.Tempvariable[instance.GetVar(Packet)] : Packet;
+            text = text.Replace("{ROOM_ID}", World.RoomId.ToString()).Replace("{ROOM_NUMBER}", World.RoomNumber.ToString()).Replace("PLAYERNAME", Player.Username).Replace("{GETMAP}", Player.Map);
+            while (text.Contains("--"))
+            {
+                text = new Regex("-{1,}", RegexOptions.IgnoreCase).Replace(text, (Match m) => "-");
+            }
+            text = new Regex("(1e)[0-9]{1,}", RegexOptions.IgnoreCase).Replace(text, (Match m) => new Random().Next(1001, 99999).ToString());
+            await (Client ? Proxy.Instance.SendToClient(text) : Proxy.Instance.SendToServer(text));
+            await Task.Delay(Delay);
+        }
+
+        public override string ToString()
+        {
+            return (Client ? "Send packet to client: " : "Send packet to server: ") + Packet;
+        }
+    }
+
 }
