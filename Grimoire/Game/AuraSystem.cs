@@ -68,7 +68,7 @@ namespace Grimoire.Game
         {
             _enemyAuras.Clear();
         }
-        /*void debug(string msg, PlayerAura aura = null)
+       /*void debug(string msg, PlayerAura aura = null)
         {
             if (aura != null)
                 LogForm.Instance.devDebug($"[AuraRefreshed] {msg} {aura.Name} (val : {aura.Value})");

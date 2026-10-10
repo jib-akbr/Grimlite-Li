@@ -19,6 +19,7 @@ using Grimoire.Game.Data;
 using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
+using System.Windows.Media.Animation;
 
 namespace Grimoire.UI.Maid
 {
@@ -160,14 +161,14 @@ namespace Grimoire.UI.Maid
 
                 if (!cbUnfollow.Checked && Player.IsLoggedIn && !World.IsMapLoading && shouldFollow)//isPlayerInMyRoom && !isPlayerInMyCell)
                 {
-					if (!isPlayerInMyRoom)
-					{
-						await gotoTarget(targetUsername);
-						if (isPlayerInMyRoom && !isPlayerInMyCell)
-							await chaseTargetCell(targetUsername);
-					}
-					else
-						await chaseTargetCell(targetUsername);
+                    if (!isPlayerInMyRoom)
+                    {
+                        await gotoTarget(targetUsername);
+                        if (isPlayerInMyRoom && !isPlayerInMyCell)
+                            await chaseTargetCell(targetUsername);
+                    }
+                    else
+                        await chaseTargetCell(targetUsername);
                 }
 
                 if (cbAttackPriority.Checked)
@@ -553,10 +554,10 @@ namespace Grimoire.UI.Maid
                     await Task.Delay(350);
                 }
             }
-			else if (Player.EquippedClass == "ARCHPALADIN")
+            else if (Player.EquippedClass == "ARCHPALADIN")
             {
                 int Seal = AuraManager.EnemyAura(Player.CurrentTargetId)
-									  .GetRemainingTime("Righteous Seal");
+                                      .GetRemainingTime("Righteous Seal");
                 if (Seal < 600 && Seal > 0)
                 {
                     await waitSkill("4");
@@ -584,7 +585,42 @@ namespace Grimoire.UI.Maid
                     ResetToken(false);
                 }
             }
+            /*else if (Player.Map == "ascendedeclipse")
+            {
+                //(selectedMode.Contains("P1") && 
+                if (tauntTask != null)
+                    return;
+                if (Player.Cell == "r2")
+                {
+                    if (Player.GetAuras(true, "Sun's Warmth") == 0)
+                        tauntTask = delayedTask("Knight");
+                    else if (Player.GetAuras(true, "Moonlight Gaze") == 0)
+                        tauntTask = delayedTask("Haze");
+                }
+                else if (Player.Cell == "r1")
+                {
+                    if (Player.GetAuras(true, "Ruptured by the Light") == 0)
+                        tauntTask = delayedTask("Suffocated");
+                    else
+                        tauntTask = delayedTask("Fairy");
+                }
+                async Task delayedTask(string target = "*", int delay = 5000)
+                {
+                    if (World.IsMonsterAvailable(target))
+                    {
+                        debug($"Delayed {delay}ms taunt on {target}");
+                        await Task.Delay(delay);
+                        locktarget = true;
+                        Player.AttackMonster(target);
+                        await waitSkill("5");
+                    }
+                    locktarget = false;
+                    ResetToken(true);
+                }
+            }*/
+
         }
+
         private void CheckCrystalHealthBalance()
         {
             var monsters = World.GetAllMonsters();
@@ -789,8 +825,11 @@ namespace Grimoire.UI.Maid
                         {
                             if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
                                 cbStopAttack.Checked = true;
-                            else if (Player.Map == "ascendedeclipse") //changed to avoid force uncheck
+                            else if (Player.Map == "ascendedeclipse" || Player.Map == "midnightsun") //changed to avoid force uncheck
+                            {
                                 cbStopAttack.Checked = false;
+                            }
+
                             foreach (JObject action in actions)
                             {
                                 JObject aura = (JObject)action["aura"];
@@ -835,7 +874,7 @@ namespace Grimoire.UI.Maid
 
         private void debug(string text)
         {
-            LogForm.Instance.AppendDebug($"[Maid] {text}",doAnyway:true);
+            LogForm.Instance.AppendDebug($"[Maid] {text}", doAnyway: true);
         }
 
         private async Task waitForFirstJoin()
@@ -1499,6 +1538,8 @@ namespace Grimoire.UI.Maid
         private void ApplyConfig(MaidConfig config, string fileName)
         {
             gbConfig.Text = $"Config : {fileName}";
+            if (config.UltraBossExtra.HasValue)
+                cmbUltraBoss.SelectedIndex = config.UltraBossExtra.Value;
             if (!string.IsNullOrEmpty(config.LockedZoneHandlerMaps))
                 LockedMapForm.Instance.tbLockedMapAlternative.Text = config.LockedZoneHandlerMaps;
             if (!string.IsNullOrEmpty(config.WhitelistMapMaps))
@@ -1518,8 +1559,6 @@ namespace Grimoire.UI.Maid
 
             if (config.SkillDelay.HasValue)
                 numSkillDelay.Value = config.SkillDelay.Value;
-            if (config.UltraBossExtra.HasValue)
-                cmbUltraBoss.SelectedIndex = config.UltraBossExtra.Value;
             if (config.RelogDelay.HasValue)
                 numRelogDelay.Value = config.RelogDelay.Value;
             if (config.SafeSkillHP.HasValue)

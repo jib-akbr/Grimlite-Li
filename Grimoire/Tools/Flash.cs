@@ -388,13 +388,13 @@ namespace Grimoire.Tools
                     break;
                 case "openWebsite":
                     if (args != null && args.Length > 0)
-					{
-						Process.Start(new ProcessStartInfo
-						{
-							FileName = (string)args[0],
-							UseShellExecute = true
-						});
-					}
+                    {
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = (string)args[0],
+                            UseShellExecute = true
+                        });
+                    }
                     break;
 
                 case "connection":
@@ -469,14 +469,14 @@ namespace Grimoire.Tools
 
             //FlashCall?.Invoke(flash, name, args[0]);
         }
-		
-		static async void delayedTask(int delay,bool refresh = false)
-		{
-			await Task.Delay(delay);
-			if (refresh)
-				World.refreshMonsters();
-			OptionsManager.SetProvokeMonsters();
-		}
+
+        static async void delayedTask(int delay, bool refresh = false)
+        {
+            await Task.Delay(delay);
+            if (refresh)
+                World.refreshMonsters();
+            OptionsManager.SetProvokeMonsters();
+        }
 
         private static string ProcessPacketFromClient(string packet)
         {
@@ -487,9 +487,9 @@ namespace Grimoire.Tools
             switch (packet.Split('%')[3])
             {
                 case "moveToCell":
-                    
+
                     if (OptionsManager.RespawnProvoke)
-                        delayedTask(80,true);
+                        delayedTask(80, true);
                     if (OptionsManager.WalkSpeed != 8)
                         OptionsManager.SetWalkSpeed();
                     break;
@@ -555,10 +555,15 @@ namespace Grimoire.Tools
             JObject ptext = JObject.Parse(packet);
             JObject bigObject = (JObject)ptext["b"]["o"];
             JArray actions = (JArray)bigObject["a"];
+            //LogForm.Instance.devDebug($"Raw server packet : {packet}");
+            //LogForm.Instance.devDebug($"Ptext : {ptext}");
             if (actions != null)
             {
+                //LogForm.Instance.devDebug($"Actions count : {actions.Count}");
+                int i = 0;
                 foreach (JObject action in actions.Cast<JObject>())
                 {
+                    i++;
                     string cmd = (string)action["cmd"];
                     string tInf = (string)action["tInf"];
                     if (cmd == "aura-" && action["aura"]?["nam"] != null)
@@ -576,41 +581,55 @@ namespace Grimoire.Tools
                         }
                     }
 
+
+                    //LogForm.Instance.devDebug($"Action {i}/{actions.Count} : {action}");
                     JArray arr_auras = (JArray)action["auras"];
                     if (arr_auras == null)
                         continue;
+                    //LogForm.Instance.devDebug($"cmd : {cmd} for ({tInf}) aura count : {arr_auras.Count}");
                     foreach (JObject aura in arr_auras)
                     {
                         string name = (string)aura["nam"];
                         if (cmd == "aura+")
                         {
-                            double value = aura["val"]?.Value<double>() ?? 1;
+                            double value = aura["val"]?.Value<double>() ?? aura["stk"]?.Value<double>() ?? 1;
                             int duration = (int)aura["dur"];
+                            bool isNew = aura["isNew"]?.Value<bool>() ?? false;
 
+                            //LogForm.Instance.devDebug($"[AuraManager] catched aura {name} {duration}s {value}x");
                             if (tInf == $"p:{Player.UserID}")
                             {
-								// if (value < 0)
-									// value = 1;
-                                if ((bool)aura["isNew"] || value != 1)
+                                // if (value < 0)
+                                // value = 1;
+                                if (isNew || value != 1)
+                                {
+                                    //LogForm.Instance.devDebug($"[AuraManager] {name} ({value}) {duration}s added");
                                     AuraManager.SelfAura.ApplyAura(name, value, duration);
-                                else AuraManager.SelfAura.AuraIncrement(name);
-                                //LogForm.Instance.devDebug($"[AuraManager] +{name} {duration}s " + (value!=1 ? value.ToString() : "+1"));
+                                }
+                                else
+                                {
+                                    //LogForm.Instance.devDebug($"[AuraManager] {name} +1");
+                                    AuraManager.SelfAura.AuraIncrement(name);
+                                }
                             }
                             else if (tInf.StartsWith("m:"))
                             {
                                 int.TryParse(tInf.Replace("m:", ""), out int targetId);
 
-                                if ((bool)aura["isNew"] || value != 1)
+                                if (isNew || value != 1)
                                     AuraManager.EnemyAura(targetId).ApplyAura(name, value, duration);
                                 else
                                     AuraManager.EnemyAura(targetId).AuraIncrement(name);
+
                             }
+                            //else LogForm.Instance.devDebug($"[AuraManager] FUKING NOT WORKING?!?!");
                         }
 
 
                         string msg = (string)(aura?["msgOn"]);
                         if (string.IsNullOrEmpty(msg))
                             continue;
+                        LogForm.Instance.devDebug($"[AuraMSG] catched '{msg}'");
                         Configuration.LastAuraMessages.Add(msg);
                         Configuration.AnimationTriggered = true;
                     }
@@ -676,7 +695,7 @@ namespace Grimoire.Tools
                         World.realmap = data.areaName.ToString();
                         if (BotManager.Instance.chkMapSpoofer.Checked)
                             World.spoofMap(data: data);
-                        
+
                         //Console.WriteLine("is it saved ?? " + World.realmap);
 
                         AuraManager.SelfAura.Update();
@@ -728,7 +747,7 @@ namespace Grimoire.Tools
                         {
                             if (World.AvailableMonsters(false).Any(x => x.MonMapID == MonID))
                             {
-								delayedTask(50);
+                                delayedTask(50);
                                 // OptionsManager.SetProvokeMonsters();
                                 // LogForm.Instance.AppendDebug($"Provoked id={MonID} on its respawn");
                             }
