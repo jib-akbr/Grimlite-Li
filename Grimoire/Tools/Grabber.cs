@@ -11,6 +11,7 @@ using Grimoire.Botting;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Collections;
+using Grimoire.Botting.Commands.Item;
 
 namespace Grimoire.Tools
 {
@@ -81,7 +82,13 @@ namespace Grimoire.Tools
             {
                 foreach (Quest quest in list)
                 {
-                    TreeNode treeNode = tree.Nodes.Add($"{quest.Id} - {quest.Name}");
+                    if (quest.Id == 0)
+                        continue;
+                    TreeNode treeNode;
+					if (orderBy == OrderBy.Id)
+                        treeNode = tree.Nodes.Add($"{quest.Id} - {quest.Name}");
+                    else
+						treeNode = tree.Nodes.Add($"{quest.Name} - {quest.Id}");
                     // treeNode.Nodes.Add($"ID: {item.Id}");
                     // List<InventoryItem> requiredItems = item.RequiredItems;
                     if (quest.ISlot > 0)
@@ -103,7 +110,7 @@ namespace Grimoire.Tools
                             treeNode3.Nodes.Add($"Description: {Shorten(req.Description, 32)}");
                         }
                     }
-                    treeNode.ContextMenuStrip = MenuQuest(quest.Id, quest.RequiredItems);
+                    treeNode.ContextMenuStrip = MenuQuest((int)quest.Id, quest.RequiredItems);
                     //List<InventoryItem> requiredItems = new List<InventoryItem>();
 
                     List<InventoryItem> rewards = quest.Rewards;
@@ -143,31 +150,31 @@ namespace Grimoire.Tools
             List<ShopInfo> list = World.LoadedShops?.OrderBy((ShopInfo s) => s.Name).ToList();
             if (list != null && list.Count > 0)
             {
-                foreach (ShopInfo item in list)
+                foreach (ShopInfo shop in list)
                 {
-                    TreeNode treeNode = tree.Nodes.Add(item.Name);
-                    treeNode.ContextMenuStrip = Wiki(item);
-                    treeNode.Nodes.Add($"ID: {item.Id}");
-                    treeNode.Nodes.Add($"Location: {item.Location}");
-                    List<InventoryItem> items = item.Items;
+                    TreeNode treeNode = tree.Nodes.Add(shop.Name);
+                    treeNode.ContextMenuStrip = Wiki(shop);
+                    treeNode.Nodes.Add($"ID: {shop.Id}");
+                    treeNode.Nodes.Add($"Location: {shop.Location}");
+                    List<InventoryItem> items = shop.Items;
                     if (items != null && items.Count > 0)
                     {
                         TreeNode treeNode2 = treeNode.Nodes.Add("Items");
-                        foreach (InventoryItem item2 in item.Items)
+                        foreach (InventoryItem shopItem in shop.Items)
                         {
-                            TreeNode treeNode3 = treeNode2.Nodes.Add(item2.Name + (item2.Quantity > 1 ? " x" + item2.Quantity : ""));
-                            treeNode3.ContextMenuStrip = Wiki(item2);
-                            treeNode3.Nodes.Add($"Shop item ID: {item2.ShopItemId}");
-                            treeNode3.Nodes.Add($"ID: {item2.Id}");
-                            treeNode3.Nodes.Add(string.Format("Cost: {0} {1}", item2.Cost, item2.IsAcItem ? "AC" : "Gold"));
-                            treeNode3.Nodes.Add($"Category: {item2.Category}");
-                            treeNode3.Nodes.Add($"Level: {item2.Level}");
-                            treeNode3.Nodes.Add($"Description: {Shorten(item2.Description, 32)}");
-                            treeNode3.Nodes.Add($"Stack: {item2.Quantity}/{item2.MaxStack}");
-                            if (item2.IsEquippableNonItem || item2.IsWeapon)
+                            TreeNode treeNode3 = treeNode2.Nodes.Add(shopItem.Name + (shopItem.Quantity > 1 ? " x" + shopItem.Quantity : ""));
+                            treeNode3.ContextMenuStrip = Wiki(shopItem, shop);
+                            treeNode3.Nodes.Add($"Shop item ID: {shopItem.ShopItemId}");
+                            treeNode3.Nodes.Add($"ID: {shopItem.Id}");
+                            treeNode3.Nodes.Add(string.Format("Cost: {0} {1}", shopItem.Cost, shopItem.IsAcItem ? "AC" : "Gold"));
+                            treeNode3.Nodes.Add($"Category: {shopItem.Category}");
+                            treeNode3.Nodes.Add($"Level: {shopItem.Level}");
+                            treeNode3.Nodes.Add($"Description: {Shorten(shopItem.Description, 32)}");
+                            treeNode3.Nodes.Add($"Stack: {shopItem.Quantity}/{shopItem.MaxStack}");
+                            if (shopItem.IsEquippableNonItem || shopItem.IsWeapon)
                             {
-                                treeNode3.Nodes.Add($"sFile: {item2.File}");
-                                treeNode3.Nodes.Add($"sLink: {item2.Link}");
+                                treeNode3.Nodes.Add($"sFile: {shopItem.File}");
+                                treeNode3.Nodes.Add($"sLink: {shopItem.Link}");
                             }
                         }
                     }
@@ -189,13 +196,24 @@ namespace Grimoire.Tools
                     list = list.OrderBy((Quest q) => q.Id).ToList();
                     break;
             }
-            if (list != null && list.Count > 0)
+            //if (list != null && list.Count > 0)
+            //{
+            foreach (Quest quest in list)
             {
-                foreach (Quest item in list)
-                {
-                    tree.Nodes.Add($"{item.Id} - {item.Name}").ContextMenuStrip = MenuQuest(item.Id, item.RequiredItems);
-                }
+                if (quest.Id == 0)
+                    continue;
+                string desc;
+                if (orderBy == OrderBy.Id)
+					desc = $"{quest.Id} - {quest.Name}";
+                else
+                    desc = $"{quest.Name} - {quest.Id}";
+                tree.Nodes.Add(desc).ContextMenuStrip = MenuQuest((int)quest.Id, quest.RequiredItems);
             }
+            //}
+            //else
+            //{
+            //    LogForm.Instance.devDebug("WTF is going on, why it fails to load??");
+            //}
         }
 
         public static void GrabInventoryItems(TreeView tree)
@@ -215,7 +233,7 @@ namespace Grimoire.Tools
             {
                 foreach (InventoryItem item in list)
                 {
-                    TreeNode treeNode = tree.Nodes.Add(item.Name);
+                    TreeNode treeNode = tree.Nodes.Add($"{item.Name} ({item.Id})");
                     treeNode.ContextMenuStrip = Wiki(item);
                     treeNode.Nodes.Add($"ID: {item.Id}");
                     treeNode.Nodes.Add($"Char item id: {item.CharItemId}");
@@ -250,7 +268,7 @@ namespace Grimoire.Tools
             {
                 foreach (TempItem item in list)
                 {
-                    TreeNode treeNode = tree.Nodes.Add(item.Name);
+                    TreeNode treeNode = tree.Nodes.Add($"{item.Name} [{item.Quantity}/{item.MaxStack}]");
                     treeNode.ContextMenuStrip = Wiki(item.Name);
                     treeNode.Nodes.Add($"ID: {item.Id}");
                     treeNode.Nodes.Add($"Quantity: {item.Quantity}/{item.MaxStack}");
@@ -263,7 +281,7 @@ namespace Grimoire.Tools
             List<Monster> list = null;
             try
             {
-                list = (from x in World.AvailableMonsters?.GroupBy((Monster m) => m.MonMapID)
+                list = (from x in World.AvailableMonsters()?.GroupBy((Monster m) => m.MonMapID)
                         select x.First()).ToList();
                 switch (Loaders.order)
                 {
@@ -376,10 +394,7 @@ namespace Grimoire.Tools
             {
                 Text = "Search on Wiki"
             };
-            ToolStripMenuItem toolStripMenuItem2 = new ToolStripMenuItem
-            {
-                Text = "Load Shop"
-            };
+
             toolStripMenuItem.Click += delegate (object S, EventArgs E)
             {
                 //System.Diagnostics.Process.Start
@@ -389,6 +404,10 @@ namespace Grimoire.Tools
             {
                 //System.Diagnostics.Process.Start
                 Search("https://aqwwiki.wikidot.com/search:site/q/" + item.Name.Replace(" ", "+"));
+            };
+            ToolStripMenuItem toolStripMenuItem2 = new ToolStripMenuItem
+            {
+                Text = "Load Shop"
             };
             toolStripMenuItem2.Click += delegate (object S, EventArgs E)
             {
@@ -400,7 +419,7 @@ namespace Grimoire.Tools
             return contextMenuStrip;
         }
 
-        private static ContextMenuStrip Wiki(InventoryItem Item)
+        private static ContextMenuStrip Wiki(InventoryItem Item, ShopInfo shop = null)
         {
             ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
             ToolStripMenuItem toolStripMenuItem = new ToolStripMenuItem
@@ -451,9 +470,40 @@ namespace Grimoire.Tools
             contextMenuStrip.Items.Add(toolStripMenuItem1);
             if (Item.IsWeapon || Item.IsEquippableNonItem)
                 contextMenuStrip.Items.Add(toolStripMenuItem2);
+            if (shop != null)
+            {
+                ToolStripMenuItem toolCmdBuy = new ToolStripMenuItem
+                {
+                    Text = "Add buy command"
+                };
+                ToolStripMenuItem toolBuyNow = new ToolStripMenuItem
+                {
+                    Text = "Buy This Item"
+                };
+                int buyQty = Item.Quantity; //ctrlpressed ? -1 : Item.Quantity;
+                
+                toolCmdBuy.OnClick(() =>
+                    BotManager.Instance.AddCommand(cmd:
+                        new CmdBuy
+                        {
+                            ShopId = shop.Id,
+                            ItemId = Item.Id,
+                            ItemName = Item.Name,
+                            ShopItemId = Item.ShopItemId,
+                            Qty = buyQty,
+                        }, true)
+                );
+                toolBuyNow.OnClick(() => Shop.BuyItemQty(Item.Id, Item.ShopItemId, buyQty));
+                
+                if (Item.IsAcItem && Item.Cost > 0)
+                    toolBuyNow.Text = "Buy This Item (warning costing ACs)";
+                
+                contextMenuStrip.Items.Add(toolBuyNow);
+                contextMenuStrip.Items.Add(toolCmdBuy);
+            }
             return contextMenuStrip;
         }
-
+        
         private static ContextMenuStrip MenuQuest(int QuestID, List<InventoryItem> Items = null)
         {
             ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
@@ -483,7 +533,7 @@ namespace Grimoire.Tools
             };
             toolStripMenuItem2.Click += delegate (object S, EventArgs E)
             {
-                Player.Quests.Complete(QuestID);
+                Player.Quests.Quest(QuestID).Complete(autoSelect:true);
             };
             toolStripMenuItem3.Click += delegate (object S, EventArgs E)
             {

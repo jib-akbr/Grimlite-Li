@@ -386,6 +386,16 @@ namespace Grimoire.Tools
                     if (ClientConfig.GetValue(ClientConfig.C_LOG_DEBUG_SWF) == "true")
                         LogForm.Instance.AppendDebug($"SWFDebug: {args[0]}");
                     break;
+                case "openWebsite":
+                    if (args != null && args.Length > 0)
+					{
+						Process.Start(new ProcessStartInfo
+						{
+							FileName = (string)args[0],
+							UseShellExecute = true
+						});
+					}
+                    break;
 
                 case "connection":
                     switch (args[0].ToString())
@@ -459,7 +469,7 @@ namespace Grimoire.Tools
 
             //FlashCall?.Invoke(flash, name, args[0]);
         }
-
+		
 		static async void delayedTask(int delay,bool refresh = false)
 		{
 			await Task.Delay(delay);
@@ -543,7 +553,7 @@ namespace Grimoire.Tools
             //case "aura+":
             // dynamic ptext = JsonConvert.DeserializeObject<dynamic>(packet);
             JObject ptext = JObject.Parse(packet);
-			JObject bigObject = (JObject)ptext["b"]["o"];
+            JObject bigObject = (JObject)ptext["b"]["o"];
             JArray actions = (JArray)bigObject["a"];
             if (actions != null)
             {
@@ -557,8 +567,8 @@ namespace Grimoire.Tools
                         if (tInf == $"p:{Player.UserID}")
                         {
                             AuraManager.SelfAura.RemoveAura(name);
-                        //LogForm.Instance.devDebug($"[AuraManager] -{name}");
-                    }
+                            //LogForm.Instance.devDebug($"[AuraManager] -{name}");
+                        }
                         else if (tInf.StartsWith("m:"))
                         {
                             int.TryParse(tInf.Replace("m:", ""), out int targetId);
@@ -581,11 +591,11 @@ namespace Grimoire.Tools
                             {
 								// if (value < 0)
 									// value = 1;
-                            if ((bool)aura["isNew"] || value != 1)
+                                if ((bool)aura["isNew"] || value != 1)
                                     AuraManager.SelfAura.ApplyAura(name, value, duration);
                                 else AuraManager.SelfAura.AuraIncrement(name);
-                            //LogForm.Instance.devDebug($"[AuraManager] +{name} {duration}s " + (value!=1 ? value.ToString() : "+1"));
-                        }
+                                //LogForm.Instance.devDebug($"[AuraManager] +{name} {duration}s " + (value!=1 ? value.ToString() : "+1"));
+                            }
                             else if (tInf.StartsWith("m:"))
                             {
                                 int.TryParse(tInf.Replace("m:", ""), out int targetId);
@@ -596,7 +606,7 @@ namespace Grimoire.Tools
                                     AuraManager.EnemyAura(targetId).AuraIncrement(name);
                             }
                         }
-                        
+
 
                         string msg = (string)(aura?["msgOn"]);
                         if (string.IsNullOrEmpty(msg))
@@ -672,10 +682,10 @@ namespace Grimoire.Tools
                         AuraManager.SelfAura.Update();
                         AuraManager.resetMonsterAura();
                         break;
-						
-					case "clearAuras":
+
+                    case "clearAuras":
                         AuraManager.SelfAura.ClearAllAura();
-						break;
+                        break;
 
                     case "getDrop":
                         if (Convert.ToInt32(data.bSuccess) == 1)
@@ -755,7 +765,7 @@ namespace Grimoire.Tools
 
                     /* 
                     case "retrieveUserData":
-					case "retrieveUserDatas":
+                    case "retrieveUserDatas":
                         string mapname = Player.Map;
                         if (BotManager.Instance.chkMapSpoofer.Checked)
                             mapname = BotManager.Instance.tbMapSpoof.Text;
@@ -763,9 +773,9 @@ namespace Grimoire.Tools
                         break;
 
                     case "uotls":
-						if (OptionsManager.HidePlayers)
-							OptionsManager.DestroyPlayers();
-						break;*/
+                        if (OptionsManager.HidePlayers)
+                            OptionsManager.DestroyPlayers();
+                        break;*/
 
                     default:
                         return text;

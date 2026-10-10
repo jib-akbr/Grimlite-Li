@@ -14,6 +14,12 @@ namespace Grimoire.Botting.Commands.Misc.Statements
             Text = "Set Temporary Variable";
         }
 
+		public bool skipScan
+		{
+			get;
+			set;
+		} = false;
+		
         public Task Execute(IBotEngine instance)
         {
             //var list = Player.Inventory.Items;
@@ -47,7 +53,12 @@ namespace Grimoire.Botting.Commands.Misc.Statements
                     break;
             }
             string RealString = Value2;
-            if (RealString.Contains("["))
+			if (RealString.ContainsIgnoreCase(".qty"))
+            {
+				RealString.Replace(".qty","");
+				RealString = Player.Inventory.Items.FirstOrDefault(i => Value2.EqualsIgnoreCase(i.Name))?.Quantity.ToString() ?? "0";
+            }
+			else if (RealString.Contains("[") && !skipScan)
             {
                 RealVar = instance.ResolveVars(Value2);
                 RealString = RealVar;

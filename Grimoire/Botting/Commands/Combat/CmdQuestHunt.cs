@@ -192,10 +192,11 @@ namespace Grimoire.Botting.Commands.Combat
 
             int qty = int.Parse(sqty);
 
-            for (int i = -1; i < qty; i++) //extra 1 attempt for getting map anticipating failure
+            for (int i = -4; i < qty; i++) //extra 4 attempt for getting map anticipating failure
             {
                 await Proxy.Instance.SendToServer($"%xt%zm%getMapItem%1%{mapitemid}%");
-                await Task.Delay(600);
+                await Task.Delay(1100); 
+				//increased delay 600 >> 1100 due to server limit rate
 
                 if (!Player.recentMapItem.TryGetValue(mapitemid, out string itemName))
                     continue;

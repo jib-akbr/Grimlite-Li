@@ -40,7 +40,7 @@ namespace Grimoire.Game
             set;
         } = State.Others;
 
-        public static bool isBusy => BotState != State.Rest && 
+        public static bool notBusy => BotState != State.Rest && 
            BotState != State.Move && BotState != State.Transaction;
 
         public static string BotSkill
