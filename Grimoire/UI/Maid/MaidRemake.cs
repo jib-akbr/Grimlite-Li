@@ -28,7 +28,18 @@ namespace Grimoire.UI.Maid
 
         public string targetUsername => MaidRemake.Instance.cmbGotoUsername.Text.ToLower();
 
-        public bool isPlayerInMyCell => bool.Parse(Flash.Call<string>("GetCellPlayers", new string[] { targetUsername }) ?? "False");
+        public bool isPlayerInMyCell
+        {
+            get
+            {
+                try
+                {
+                    string res = Flash.Call<string>("GetCellPlayers", new string[] { targetUsername });
+                    return bool.TryParse(res, out bool v) && v;
+                }
+                catch { return false; }
+            }
+        }
 
         public bool isPlayerInMyRoom => IsPlayerInMap(targetUsername);
 
@@ -148,8 +159,8 @@ namespace Grimoire.UI.Maid
 
                 if (!cbUnfollow.Checked && Player.IsLoggedIn && !World.IsMapLoading && shouldFollow)//isPlayerInMyRoom && !isPlayerInMyCell)
                 {
-					if (!isPlayerInMyRoom)
-						await gotoTarget(targetUsername);
+                    if (!isPlayerInMyRoom)
+                        await gotoTarget(targetUsername);
 					// await BotUtilities.WaitUntil(() => !shouldFollow,interval:400);
                     Player.GoToPlayer(targetUsername);
                 }
@@ -372,7 +383,7 @@ namespace Grimoire.UI.Maid
         private void equipEnrage()
         {
             InventoryItem item = Player.Inventory.Items.FirstOrDefault((InventoryItem i) => i.Name.Equals("Scroll of Enrage") && i.IsEquippable);
-            if (!item.IsEquipped)
+            if (item != null && !item.IsEquipped)
             {
                 Player.EquipPotion(item.Id, item.Description, item.File, item.Name);
                 _ = Task.Run(async () =>
@@ -437,7 +448,7 @@ namespace Grimoire.UI.Maid
 
         private bool isUsingCSH()
         {
-            return Player.EquippedClass.Contains("CHRONO SHADOW");
+            return (Player.EquippedClass ?? "").Contains("CHRONO SHADOW");
         }
 
         private string msgTemp;
@@ -534,10 +545,10 @@ namespace Grimoire.UI.Maid
                     await Task.Delay(350);
                 }
             }
-			else if (Player.EquippedClass == "ARCHPALADIN")
+            else if (Player.EquippedClass == "ARCHPALADIN")
             {
                 int Seal = AuraManager.EnemyAura(Player.CurrentTargetId)
-									  .GetRemainingTime("Righteous Seal");
+                                      .GetRemainingTime("Righteous Seal");
                 if (Seal < 600 && Seal > 0)
                 {
                     await waitSkill("4");
@@ -565,7 +576,42 @@ namespace Grimoire.UI.Maid
                     ResetToken(false);
                 }
             }
+            /*else if (Player.Map == "ascendedeclipse")
+            {
+                //(selectedMode.Contains("P1") && 
+                if (tauntTask != null)
+                    return;
+                if (Player.Cell == "r2")
+                {
+                    if (Player.GetAuras(true, "Sun's Warmth") == 0)
+                        tauntTask = delayedTask("Knight");
+                    else if (Player.GetAuras(true, "Moonlight Gaze") == 0)
+                        tauntTask = delayedTask("Haze");
+                }
+                else if (Player.Cell == "r1")
+                {
+                    if (Player.GetAuras(true, "Ruptured by the Light") == 0)
+                        tauntTask = delayedTask("Suffocated");
+                    else
+                        tauntTask = delayedTask("Fairy");
+                }
+                async Task delayedTask(string target = "*", int delay = 5000)
+                {
+                    if (World.IsMonsterAvailable(target))
+                    {
+                        debug($"Delayed {delay}ms taunt on {target}");
+                        await Task.Delay(delay);
+                        locktarget = true;
+                        Player.AttackMonster(target);
+                        await waitSkill("5");
+                    }
+                    locktarget = false;
+                    ResetToken(true);
+                }
+            }*/
+
         }
+
         private void CheckCrystalHealthBalance()
         {
             var monsters = World.GetAllMonsters();
@@ -770,8 +816,11 @@ namespace Grimoire.UI.Maid
                         {
                             if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
                                 cbStopAttack.Checked = true;
-                            else if (Player.Map == "ascendedeclipse") //changed to avoid force uncheck
+                            else if (Player.Map == "ascendedeclipse" || Player.Map == "midnightsun") //changed to avoid force uncheck
+                            {
                                 cbStopAttack.Checked = false;
+                            }
+
                             foreach (JObject action in actions)
                             {
                                 JObject aura = (JObject)action["aura"];
@@ -864,13 +913,13 @@ namespace Grimoire.UI.Maid
 
         private bool IsPlayerInMap(string targetUsername)
         {
-            var players = World.PlayersInMap;
+                var players = World.PlayersInMap;
 
-            foreach (string player in players)
-            {
+                foreach (string player in players)
+                {
                 if (player.ToLower() == targetUsername)
-                    return true;
-            }
+                        return true;
+                }
             return false;
         }
 
@@ -883,13 +932,13 @@ namespace Grimoire.UI.Maid
         private async Task gotoTarget(string targetUsername)
         {
             BotData.BotState = BotData.State.Move;
-            await Player.ExitCombat(1500, true);
+            if (Player.CurrentState == Player.State.InCombat)
+                await Player.ExitCombat(1500, true);
             if (!isPlayerInMyRoom)
             {
                 string currentmap = Player.Map;
                 await Proxy.Instance.SendToServer($"%xt%zm%cmd%1%goto%{targetUsername}%");
                 await BotUtilities.WaitUntil(() => Player.Map != currentmap && !World.IsMapLoading, interval: 500);
-                // await BotUtilities.WaitUntil(() => World.IsMapLoading,interval:200);
             }
             // Player.GoToPlayer(targetUsername);
         }
@@ -1439,6 +1488,8 @@ namespace Grimoire.UI.Maid
         private void ApplyConfig(MaidConfig config, string fileName)
         {
             gbConfig.Text = $"Config : {fileName}";
+            if (config.UltraBossExtra.HasValue)
+                cmbUltraBoss.SelectedIndex = config.UltraBossExtra.Value;
             if (!string.IsNullOrEmpty(config.LockedZoneHandlerMaps))
                 LockedMapForm.Instance.tbLockedMapAlternative.Text = config.LockedZoneHandlerMaps;
             if (!string.IsNullOrEmpty(config.WhitelistMapMaps))
@@ -1458,8 +1509,6 @@ namespace Grimoire.UI.Maid
 
             if (config.SkillDelay.HasValue)
                 numSkillDelay.Value = config.SkillDelay.Value;
-            if (config.UltraBossExtra.HasValue)
-                cmbUltraBoss.SelectedIndex = config.UltraBossExtra.Value;
             if (config.RelogDelay.HasValue)
                 numRelogDelay.Value = config.RelogDelay.Value;
             if (config.SafeSkillHP.HasValue)

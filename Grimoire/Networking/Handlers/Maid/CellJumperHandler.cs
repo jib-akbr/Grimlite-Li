@@ -10,7 +10,7 @@ namespace Grimoire.Networking.Handlers.Maid
     {
         public string[] HandledCommands { get; } = { "uotls" };
 
-        public string targetUsername => UI.Maid.MaidRemake.Instance.cmbGotoUsername.Text.ToLower();
+        public string targetUsername => (UI.Maid.MaidRemake.Instance.cmbGotoUsername.Text ?? "").Trim().ToLower();
 
         private List<string> maps => WhitelistMapForm.Instance.getAlternativeMap;
 
@@ -33,7 +33,7 @@ namespace Grimoire.Networking.Handlers.Maid
                 UI.Maid.MaidRemake.Instance.resetSpecials();
 
                 // current Username
-                string currUsername = message.Arguments[4].ToLower();
+                string currUsername = (message.Arguments[4] ?? "").ToString().Trim().ToLower();
 
                 if (currUsername == targetUsername && !World.IsMapLoading)
                 {
@@ -42,10 +42,12 @@ namespace Grimoire.Networking.Handlers.Maid
                     string pad = null;
                     foreach (string m in movement.Split(','))
                     {
-                        if (m.Split(':')[0] == "strFrame")
-                            cell = m.Split(':')[1];
-                        if (m.Split(':')[0] == "strPad")
-                            pad = m.Split(':')[1];
+                        string[] kv = m.Split(':');
+                        if (kv.Length < 2) continue;
+                        if (kv[0] == "strFrame")
+                            cell = kv[1];
+                        if (kv[0] == "strPad")
+                            pad = kv[1];
                     }
                     if (cell != null && pad != null)
                     {
