@@ -26,7 +26,7 @@ namespace Grimoire.UI.Maid
     {
         public static MaidRemake Instance { get; } = new MaidRemake();
 
-        public string targetUsername => (MaidRemake.Instance.cmbGotoUsername.Text ?? "").Trim().ToLower();
+        public string targetUsername => MaidRemake.Instance.cmbGotoUsername.Text.ToLower();
 
         public bool isPlayerInMyCell
         {
@@ -133,11 +133,10 @@ namespace Grimoire.UI.Maid
                 startUI();
 
                 int gotoTry = 0;
-                var skillproperties = Flash.Instance.GetGameObject<List<JObject>>("world.actions.active") ?? new List<JObject>();
+                string equippedclass = Player.EquippedClass.ToLower();
+                var skillproperties = Flash.Instance.GetGameObject<List<JObject>>("world.actions.active");
 
-                string[] skillList = (tbSkillList.Text ?? "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                if (skillList.Length == 0)
-                    skillList = new[] { "1", "2", "3", "4" };
+                string[] skillList = tbSkillList.Text.Split(',');
                 int skillIndex = 0;
 
                 if (cbHandleLockedMap.Checked && AlternativeMap.Count() > 0)
@@ -152,8 +151,6 @@ namespace Grimoire.UI.Maid
                 if (!cbUnfollow.Checked)
                     Proxy.Instance.RegisterHandler(CJHandler);
 
-                ResetFollowWatcher();
-
                 if (cbCopyWalk.Checked)
                     Proxy.Instance.RegisterHandler(CopyWalkHandler);
 
@@ -162,14 +159,10 @@ namespace Grimoire.UI.Maid
 
                 if (!cbUnfollow.Checked && Player.IsLoggedIn && !World.IsMapLoading && shouldFollow)//isPlayerInMyRoom && !isPlayerInMyCell)
                 {
-					if (!isPlayerInMyRoom)
-					{
-						await gotoTarget(targetUsername);
-						if (isPlayerInMyRoom && !isPlayerInMyCell)
-							await chaseTargetCell(targetUsername);
-					}
-					else
-						await chaseTargetCell(targetUsername);
+                    if (!isPlayerInMyRoom)
+                        await gotoTarget(targetUsername);
+					// await BotUtilities.WaitUntil(() => !shouldFollow,interval:400);
+                    Player.GoToPlayer(targetUsername);
                 }
 
                 if (cbAttackPriority.Checked)
@@ -204,12 +197,6 @@ namespace Grimoire.UI.Maid
                         // plugin disabled
                         if (!cbEnablePlugin.Checked)
                             return;
-
-                        if (cbEnablePlugin.Checked && !cbUnfollow.Checked && !onPause && Player.IsLoggedIn && !World.IsMapLoading && isPlayerInMyRoom && !isPlayerInMyCell)
-                        {
-                            await chaseTargetCell(targetUsername);
-                            continue;
-                        }
 
                         // starting the plugin
                         if ((isPlayerInMyRoom || cbUnfollow.Checked) && Player.IsLoggedIn && !World.IsMapLoading && !onPause)
@@ -268,9 +255,7 @@ namespace Grimoire.UI.Maid
                                 Player.AttackMonster("*");
 
                             //keep using buff when no enemy target & checking waitskill
-                            string selfskill = null;
-                            if (int.TryParse(skillList[skillIndex], out int skillIdx) && skillIdx >= 0 && skillIdx < skillproperties.Count)
-                                selfskill = skillproperties[skillIdx]?["tgt"]?.ToString();
+                            string selfskill = skillproperties[int.Parse(skillList[skillIndex])]?["tgt"]?.ToString();
                             //debug($"{selfskill}");
                             if (cbWaitSkill.Checked && selfskill != "h") //H or F [H - monster/hostile, F - Friendly/self]
                             {
@@ -349,10 +334,15 @@ namespace Grimoire.UI.Maid
                                 await Task.Delay(500);
 
                             // goto target current cell when in the same room
-                            // Actively chase leader cell (works even when leader is idle and sends no uotls packet)
-                            while (!cbUnfollow.Checked && cbEnablePlugin.Checked && Player.IsLoggedIn && /*shouldFollow)*/ isPlayerInMyRoom && !isPlayerInMyCell)
+                            while (!cbUnfollow.Checked & cbEnablePlugin.Checked && Player.IsLoggedIn && /*shouldFollow)*/ isPlayerInMyRoom && !isPlayerInMyCell)
                             {
-                                await chaseTargetCell(targetUsername);
+                                await Player.ExitCombat(500, true);
+                                Player.GoToPlayer(targetUsername);
+                                // await gotoTarget(targetUsername);
+                                // debug("Attempt to chase");
+                                // if (cbEnablePlugin.Checked && Player.IsLoggedIn && shouldFollow) //isPlayerInMyRoom && !isPlayerInMyCell)
+                                await Task.Delay(500);
+                                // else break;
                             }
                             BotData.BotState = BotData.State.Combat;
                         }
@@ -555,10 +545,10 @@ namespace Grimoire.UI.Maid
                     await Task.Delay(350);
                 }
             }
-			else if (Player.EquippedClass == "ARCHPALADIN")
+            else if (Player.EquippedClass == "ARCHPALADIN")
             {
                 int Seal = AuraManager.EnemyAura(Player.CurrentTargetId)
-									  .GetRemainingTime("Righteous Seal");
+                                      .GetRemainingTime("Righteous Seal");
                 if (Seal < 600 && Seal > 0)
                 {
                     await waitSkill("4");
@@ -586,7 +576,42 @@ namespace Grimoire.UI.Maid
                     ResetToken(false);
                 }
             }
+            /*else if (Player.Map == "ascendedeclipse")
+            {
+                //(selectedMode.Contains("P1") && 
+                if (tauntTask != null)
+                    return;
+                if (Player.Cell == "r2")
+                {
+                    if (Player.GetAuras(true, "Sun's Warmth") == 0)
+                        tauntTask = delayedTask("Knight");
+                    else if (Player.GetAuras(true, "Moonlight Gaze") == 0)
+                        tauntTask = delayedTask("Haze");
+                }
+                else if (Player.Cell == "r1")
+                {
+                    if (Player.GetAuras(true, "Ruptured by the Light") == 0)
+                        tauntTask = delayedTask("Suffocated");
+                    else
+                        tauntTask = delayedTask("Fairy");
+                }
+                async Task delayedTask(string target = "*", int delay = 5000)
+                {
+                    if (World.IsMonsterAvailable(target))
+                    {
+                        debug($"Delayed {delay}ms taunt on {target}");
+                        await Task.Delay(delay);
+                        locktarget = true;
+                        Player.AttackMonster(target);
+                        await waitSkill("5");
+                    }
+                    locktarget = false;
+                    ResetToken(true);
+                }
+            }*/
+
         }
+
         private void CheckCrystalHealthBalance()
         {
             var monsters = World.GetAllMonsters();
@@ -629,7 +654,6 @@ namespace Grimoire.UI.Maid
         #region Tauntcycle
         private Task tauntTask = null;
         private CancellationTokenSource cts;
-        private CancellationTokenSource followCts;
         private void ResetToken(bool createNew)
         {
             if (cts != null)
@@ -792,8 +816,11 @@ namespace Grimoire.UI.Maid
                         {
                             if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
                                 cbStopAttack.Checked = true;
-                            else if (Player.Map == "ascendedeclipse") //changed to avoid force uncheck
+                            else if (Player.Map == "ascendedeclipse" || Player.Map == "midnightsun") //changed to avoid force uncheck
+                            {
                                 cbStopAttack.Checked = false;
+                            }
+
                             foreach (JObject action in actions)
                             {
                                 JObject aura = (JObject)action["aura"];
@@ -870,7 +897,7 @@ namespace Grimoire.UI.Maid
                 if (monsterList[i].StartsWith("id", StringComparison.OrdinalIgnoreCase) && monsterList[i].Length > 3)
                     monsterId = monsterList[i].Substring(3);
 
-                if ((currentTarget?.ContainsIgnoreCase(monsterList[i]) ?? false) ||
+                if (currentTarget.ContainsIgnoreCase(monsterList[i]) ||
                     (monsterId != null && monsterId == idTarget))
                     return; //Made special for CSH non autoattack cases
 
@@ -886,20 +913,13 @@ namespace Grimoire.UI.Maid
 
         private bool IsPlayerInMap(string targetUsername)
         {
-            try
-            {
                 var players = World.PlayersInMap;
-                if (players == null) return false;
-                string t = (targetUsername ?? "").Trim().ToLower();
-                if (string.IsNullOrEmpty(t)) return false;
 
                 foreach (string player in players)
                 {
-                    if ((player ?? "").Trim().ToLower() == t)
+                if (player.ToLower() == targetUsername)
                         return true;
                 }
-            }
-            catch { }
             return false;
         }
 
@@ -921,77 +941,6 @@ namespace Grimoire.UI.Maid
                 await BotUtilities.WaitUntil(() => Player.Map != currentmap && !World.IsMapLoading, interval: 500);
             }
             // Player.GoToPlayer(targetUsername);
-        }
-
-        private (string cell, string pad)? GetTargetCellPad(string target)
-        {
-            try
-            {
-                World.RefreshDictionary();
-                var info = World.Players?.FirstOrDefault(p => (p.Name ?? "").Trim().ToLower() == (target ?? "").Trim().ToLower());
-                if (info != null && !string.IsNullOrWhiteSpace(info.Cell))
-                    return (info.Cell, string.IsNullOrWhiteSpace(info.Pad) ? "Spawn" : info.Pad);
-            }
-            catch { }
-            return null;
-        }
-
-        private async Task chaseTargetCell(string target)
-        {
-            try
-            {
-                var cp = GetTargetCellPad(target);
-                if (cp != null && !string.Equals(Player.Cell ?? "", cp.Value.cell, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (Player.CurrentState == Player.State.InCombat)
-                        await Player.ExitCombat(300, true);
-                    Player.MoveToCell(cp.Value.cell, cp.Value.pad);
-                    await Task.Delay(400);
-                    return;
-                }
-            }
-            catch { }
-            if (Player.CurrentState == Player.State.InCombat)
-                await Player.ExitCombat(300, true);
-            try { Player.GoToPlayer(target); } catch { }
-            await Task.Delay(250);
-        }
-
-        private void ResetFollowWatcher()
-        {
-            try { followCts?.Cancel(); followCts?.Dispose(); } catch { }
-            followCts = new CancellationTokenSource();
-            var token = followCts.Token;
-            _ = followWatcher(token);
-        }
-
-        // Fast cell follower: polls every ~300ms on top of the packet handler,
-        // so Maid jumps within a moment of the leader arriving (no wait for combat loop).
-        private async Task followWatcher(CancellationToken token)
-        {
-            try
-            {
-                while (!token.IsCancellationRequested && cbEnablePlugin.Checked)
-                {
-                    try
-                    {
-                        if (!cbUnfollow.Checked && !onPause && Player.IsLoggedIn && !World.IsMapLoading && isPlayerInMyRoom && !isPlayerInMyCell)
-                        {
-                            var cp = GetTargetCellPad(targetUsername);
-                            if (cp != null && !string.Equals(Player.Cell ?? "", cp.Value.cell, StringComparison.OrdinalIgnoreCase))
-                            {
-                                if (Player.CurrentState == Player.State.InCombat)
-                                    await Player.ExitCombat(300, true);
-                                if (!token.IsCancellationRequested && cbEnablePlugin.Checked)
-                                    Player.MoveToCell(cp.Value.cell, cp.Value.pad);
-                            }
-                        }
-                    }
-                    catch { }
-                    await Task.Delay(300);
-                }
-            }
-            catch { }
         }
 
         /* UI state */
@@ -1026,7 +975,6 @@ namespace Grimoire.UI.Maid
 
         public void stopMaid()
         {
-            try { followCts?.Cancel(); followCts?.Dispose(); followCts = null; } catch { }
             Proxy.Instance.UnregisterHandler(RedMsgHandler);
             Proxy.Instance.UnregisterHandler(CJHandler);
             Proxy.Instance.UnregisterHandler(JoinMapHandler);
@@ -1540,6 +1488,8 @@ namespace Grimoire.UI.Maid
         private void ApplyConfig(MaidConfig config, string fileName)
         {
             gbConfig.Text = $"Config : {fileName}";
+            if (config.UltraBossExtra.HasValue)
+                cmbUltraBoss.SelectedIndex = config.UltraBossExtra.Value;
             if (!string.IsNullOrEmpty(config.LockedZoneHandlerMaps))
                 LockedMapForm.Instance.tbLockedMapAlternative.Text = config.LockedZoneHandlerMaps;
             if (!string.IsNullOrEmpty(config.WhitelistMapMaps))
@@ -1559,8 +1509,6 @@ namespace Grimoire.UI.Maid
 
             if (config.SkillDelay.HasValue)
                 numSkillDelay.Value = config.SkillDelay.Value;
-            if (config.UltraBossExtra.HasValue)
-                cmbUltraBoss.SelectedIndex = config.UltraBossExtra.Value;
             if (config.RelogDelay.HasValue)
                 numRelogDelay.Value = config.RelogDelay.Value;
             if (config.SafeSkillHP.HasValue)
