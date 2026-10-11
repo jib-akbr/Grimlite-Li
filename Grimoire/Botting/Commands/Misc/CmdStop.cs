@@ -48,7 +48,8 @@ namespace Grimoire.Botting.Commands.Misc
         public Task Execute(IBotEngine instance)
         {
             instance.Stop();
-            MessageBox.Show(instance.ResolveVars(Message), "Bot has stopped!");
+            var msg = instance.ResolveVars(Message); //if resolve directly to string Message, it will rewrite itself
+            MessageBox.Show(msg, "Bot has stopped!");
             return Task.FromResult<object>(null);
         }
 
