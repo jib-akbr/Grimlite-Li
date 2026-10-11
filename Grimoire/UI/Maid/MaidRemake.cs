@@ -748,6 +748,43 @@ namespace Grimoire.UI.Maid
 
         private bool counterAttack = false;
 
+        // Only the latest counter-attack auto-exit may clear the stop.
+        private int _counterGen;
+        // True when the stop was engaged by automation (counter/heat), so
+        // auto-clear paths may release it. A manual toggle clears this and
+        // takes ownership (auto paths will not steal it back).
+        private bool _autoStop;
+        private bool _settingStopProgrammatically;
+
+        /// <summary>
+        /// Thread-safe stop-attack toggle. Flash callbacks and Task pool
+        /// threads must not touch the checkbox directly (cross-thread
+        /// InvalidOperationException leaves the stop stuck ON forever).
+        /// </summary>
+        private void SetStopAttack(bool value, bool auto)
+        {
+            try
+            {
+                if (InvokeRequired)
+                {
+                    Invoke((Action)(() => SetStopAttack(value, auto)));
+                    return;
+                }
+                _settingStopProgrammatically = true;
+                try
+                {
+                    if (cbStopAttack.Checked != value)
+                        cbStopAttack.Checked = value;
+                    _autoStop = auto;
+                }
+                finally
+                {
+                    _settingStopProgrammatically = false;
+                }
+            }
+            catch { }
+        }
+
         private void AntiCounterHandler(string function, params object[] args)
         {
             if (function != "packetFromServer") return;
@@ -773,12 +810,22 @@ namespace Grimoire.UI.Maid
                                         Task.Run(async () =>
                                         {
                                             await Task.Delay(1500);
+                                            int gen = System.Threading.Interlocked.Increment(ref _counterGen);
                                             counterAttack = true;
-                                            cbStopAttack.Checked = true;
+                                            SetStopAttack(true, auto: true);
+                                            debug("Counter Attack: active, stop ON (auto)");
                                             await Task.Delay(6000);
-                                            //This function will auto exit Counter/Stop Atk
-                                            counterAttack = false;
-                                            cbStopAttack.Checked = false;
+                                            // Only the latest counter may auto-exit, and
+                                            // never steal a stop the user engaged manually.
+                                            if (gen == _counterGen)
+                                            {
+                                                counterAttack = false;
+                                                if (_autoStop)
+                                                {
+                                                    SetStopAttack(false, auto: false);
+                                                    debug("Counter Attack: faded (timer), stop OFF");
+                                                }
+                                            }
                                         });
                                     }
                                 }
@@ -791,17 +838,30 @@ namespace Grimoire.UI.Maid
                         if (actions != null)
                         {
                             if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
-                                cbStopAttack.Checked = true;
-                            else if (Player.Map == "ascendedeclipse") //changed to avoid force uncheck
-                                cbStopAttack.Checked = false;
+                            {
+                                SetStopAttack(true, auto: true);
+                            }
+                            else if (_autoStop && !counterAttack)
+                            {
+                                // Auto-engaged stop with no remaining reason:
+                                // release on any map (previously eclipse-only,
+                                // which left other maps stuck stopped).
+                                SetStopAttack(false, auto: false);
+                            }
                             foreach (JObject action in actions)
                             {
                                 JObject aura = (JObject)action["aura"];
                                 if (aura?["nam"]?.ToString() == "Counter Attack" && action.GetValue("cmd")?.ToString() == "aura--")
                                 {
                                     counterAttack = false;
-                                    cbStopAttack.Checked = false;
-                                    //debug("Counter Attack: fades");
+                                    // Cancel any pending auto-exit and only
+                                    // release a stop that automation engaged.
+                                    System.Threading.Interlocked.Increment(ref _counterGen);
+                                    if (_autoStop)
+                                    {
+                                        SetStopAttack(false, auto: false);
+                                        debug("Counter Attack: fades (aura), stop OFF");
+                                    }
                                     break;
                                 } //Commented Old Counter handling
                                 JArray auras = (JArray)action["auras"];
@@ -1188,6 +1248,9 @@ namespace Grimoire.UI.Maid
         private void cbStopAttack_CheckedChanged(object sender, EventArgs e)
         {
             // if (cbEnableGlobalHotkey.Checked == false) return;
+            // A manual (un)check takes ownership: automation may not clear it.
+            if (!_settingStopProgrammatically)
+                _autoStop = false;
             if (cbStopAttack.Checked)
             {
                 lbStopAttackBg.BackColor = System.Drawing.Color.DeepPink;
