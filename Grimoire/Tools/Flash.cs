@@ -464,7 +464,7 @@ namespace Grimoire.Tools
                 case "pext":
                     args[0] = ProcessPext((string)args[0]);
                     FlashCall?.Invoke(flash, name, args[0]);
-                    ForwardPextPackets((string)args[0]);
+                    //ForwardPextPackets((string)args[0]);
                     break;
             }
 
