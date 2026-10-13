@@ -619,7 +619,7 @@ namespace Grimoire.Tools
                         if (tInf == $"p:{Player.UserID}")
                         {
                             AuraManager.SelfAura.RemoveAura(name);
-                            LogForm.Instance.devDebug($"[AuraManager] -{name}");
+                            //LogForm.Instance.devDebug($"[AuraManager] -{name}");
                         }
                         else if (tInf.StartsWith("m:"))
                         {

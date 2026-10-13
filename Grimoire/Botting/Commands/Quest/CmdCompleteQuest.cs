@@ -36,24 +36,24 @@ namespace Grimoire.Botting.Commands.Quest
             if (CompleteTry <= -1)
                 max = true;
 
-            Quest.Complete(CompleteTry,max);
-			
+            Quest.Complete(CompleteTry, max);
+
             //await instance.WaitUntil(() => !Player.Quests.IsInProgress(Quest.Id));
             instance.Configuration.ProvokeMonsters = provokeMons;
 
             if (ReAccept)
             {
                 // await Task.Delay(1500);
-				await instance.WaitUntil(() => !Quest.IsInProgress && !Quest.CanComplete,interval:400,timeout:5);
+                await instance.WaitUntil(() => !Quest.IsInProgress && !Quest.CanComplete, interval: 400, timeout: 5);
                 Quest.GhostAccept();
             }
-			else
-			{
-				int delay = instance.Configuration.BotDelay <= 1000 ? 1100-instance.Configuration.BotDelay : 0;
-				await Task.Delay(delay);
-			}
+            else
+            {
+                int delay = instance.Configuration.BotDelay <= 1000 ? 1100 - instance.Configuration.BotDelay : 0;
+                await Task.Delay(delay);
+            }
         }
-        
+
         public override string ToString()
         {
             string quant = this.CompleteTry <= -1 ? "Ma" : CompleteTry.ToString();

@@ -816,7 +816,7 @@ namespace Grimoire.UI.Maid
                         {
                             if (Player.GetAuras(true, "Sun's Heat") > 0 || counterAttack)
                                 cbStopAttack.Checked = true;
-                            else if (Player.Map == "ascendedeclipse" || Player.Map == "midnightsun") //changed to avoid force uncheck
+                            else if (Player.Map == "ascendeclipse" || Player.Map == "midnightsun") //changed to avoid force uncheck
                             {
                                 cbStopAttack.Checked = false;
                             }
