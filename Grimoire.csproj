@@ -182,6 +182,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdCancelTarget.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Combat\CmdRevCompat.cs" />
     <Compile Include="Grimoire\Botting\Commands\Combat\CmdQuestHunt.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdTauntcycle.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdPlayerAuraEquals.cs" />
@@ -276,6 +277,9 @@
     <Compile Include="Grimoire\Botting\Commands\Item\CmdLoad.cs" />
     <Compile Include="Grimoire\Botting\Commands\Item\CmdLoadTravel.cs" />
     <Compile Include="Grimoire\Botting\Commands\Item\CmdMapItem.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Item\CmdPacketlist.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Item\CmdQuestlist.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Item\CmdRevCompat.cs" />
     <Compile Include="Grimoire\Botting\Commands\Item\CmdSell.cs" />
     <Compile Include="Grimoire\Botting\Commands\Item\CmdWhitelist.cs" />
     <Compile Include="Grimoire\Botting\Commands\Map\CmdJoin.cs" />
@@ -288,6 +292,7 @@
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdBankList.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdBeep.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdBlank.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Misc\CmdRevCompat.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdBotDelay.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdChange.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\CmdClearTemp.cs" />
@@ -385,6 +390,7 @@
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdTargetHealthGreaterThan.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdTargetHealthLessThan.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdUpdateVar.cs" />
+    <Compile Include="Grimoire\Botting\Commands\Misc\Statements\CmdRevCompat.cs" />
     <Compile Include="Grimoire\Botting\Commands\Misc\Statements\StatementCommand.cs" />
     <Compile Include="Grimoire\Botting\Commands\Quest\CmdAcceptQuest.cs" />
     <Compile Include="Grimoire\Botting\Commands\Quest\CmdCompleteQuest.cs" />

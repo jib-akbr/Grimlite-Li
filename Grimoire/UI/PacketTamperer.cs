@@ -50,11 +50,14 @@ namespace Grimoire.UI
             {
                 //Proxy.Instance.ReceivedFromServer += ReceivedFromServer;
                 Flash.FlashCall2 += FlashUtil_FlashCallServer;
+                // Combat traffic arrives via pext in the current client.
+                Flash.FlashCall += FlashUtil_FlashCallServerPext;
             }
             else
             {
                 //Proxy.Instance.ReceivedFromServer -= ReceivedFromServer;
                 Flash.FlashCall2 -= FlashUtil_FlashCallServer;
+                Flash.FlashCall -= FlashUtil_FlashCallServerPext;
             }
         }
 
@@ -83,6 +86,24 @@ namespace Grimoire.UI
 					this.txtSend.Invoke(new Action(delegate ()
                     {
                         this.Append("From server: " + packet);
+                    }));
+                }
+            }
+        }
+
+        private void FlashUtil_FlashCallServerPext(AxShockwaveFlashObjects.AxShockwaveFlash flash, string function, params object[] args)
+        {
+            // Combat traffic arrives via pext in the current client.
+            if (function == "pext")
+            {
+                string packet = args[0].ToString();
+                if (packet.IndexOf(tbFilter.Text, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    if (packet.Length > 2000)
+                        packet = packet.Substring(0, 2000) + "...[truncated]";
+                    this.txtSend.Invoke(new Action(delegate ()
+                    {
+                        this.Append("From server (pext): " + packet);
                     }));
                 }
             }

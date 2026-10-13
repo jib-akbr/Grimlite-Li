@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Grimoire.Game;
 using Grimoire.Tools;
@@ -128,4 +129,58 @@ namespace Grimoire.Botting.Commands.Map
 			BotManager.Instance.chkProvoke.Checked = temp;
         }
     }
+
+	// Compat shim for bots saved by Grimlite Rev (CmdJoin2: Map + Room split).
+	public class CmdJoin2 : IBotCommand
+	{
+		public string Map { get; set; }
+
+		public string Room { get; set; }
+
+		public string Cell { get; set; }
+
+		public string Pad { get; set; }
+
+		public async Task Execute(IBotEngine instance)
+		{
+			BotData.BotState = BotData.State.Move;
+			string map = instance.ResolveVars(Map);
+			string room = instance.ResolveVars(Room);
+			string cell = instance.ResolveVars(Cell);
+			string pad = instance.ResolveVars(Pad);
+			if (cell == "Blank")
+				cell = "Wait";
+			if (string.IsNullOrEmpty(room))
+				room = "1e99";
+			if (!map.EqualsIgnoreCase(Player.Map))
+			{
+				if (Player.CurrentState == Player.State.InCombat)
+				{
+					Player.MoveToCell(Player.Cell, Player.Pad);
+					await Task.Delay(2000);
+				}
+				room = new Regex("(1e)[0-9]{1,}", RegexOptions.IgnoreCase).Replace(room, m => new Random().Next(1001, 99999).ToString());
+				Player.JoinMap($"{map}-{room}", cell, pad);
+				await instance.WaitUntil(() => Player.Map.EqualsIgnoreCase(map), () => Player.IsLoggedIn, 5);
+				await instance.WaitUntil(() => !World.IsMapLoading, () => Player.IsLoggedIn, 10);
+			}
+			if (map.EqualsIgnoreCase(Player.Map))
+			{
+				if (!Player.Cell.EqualsIgnoreCase(cell))
+				{
+					Player.MoveToCell(cell, pad);
+					await Task.Delay(500);
+				}
+				World.SetSpawnPoint();
+				BotData.BotMap = map;
+				BotData.BotCell = cell;
+				BotData.BotPad = pad;
+			}
+		}
+
+		public override string ToString()
+		{
+			return $"Join: {Map}, {Room}, {Cell}, {Pad}";
+		}
+	}
 }

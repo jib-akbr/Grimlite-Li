@@ -80,6 +80,18 @@ namespace Grimoire.UI
                     txtPackets.AppendText(packet + Environment.NewLine);
                 });
             }
+            else if (function == "pext")
+            {
+                // Combat and most server traffic arrives via pext in the
+                // current client — show it so the logger isn't blank.
+                string packet = args[0].ToString();
+                if (packet.Length > 2000)
+                    packet = packet.Substring(0, 2000) + $"...[truncated {args[0].ToString().Length - 2000} chars]";
+                txtPackets.Invoke((Action)delegate
+                {
+                    txtPackets.AppendText("pext: " + packet + Environment.NewLine);
+                });
+            }
         }
 
         private void PacketCaptured(Networking.Message msg)

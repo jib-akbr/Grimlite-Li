@@ -464,6 +464,7 @@ namespace Grimoire.Tools
                 case "pext":
                     args[0] = ProcessPext((string)args[0]);
                     FlashCall?.Invoke(flash, name, args[0]);
+                    ForwardPextPackets((string)args[0]);
                     break;
             }
 
@@ -476,6 +477,52 @@ namespace Grimoire.Tools
             if (refresh)
                 World.refreshMonsters();
             OptionsManager.SetProvokeMonsters();
+        }
+
+        /// <summary>
+        /// The current game client delivers combat ("ct") and zone ("event")
+        /// traffic via pext ExternalInterface calls instead of
+        /// packetFromServer socket events. Re-wrap those payloads as
+        /// {"b":{"o":...}} and feed them to the proxy + FlashCall2 pipeline
+        /// so IJsonMessageHandler "ct"/"event" handlers (SpecialAnims,
+        /// Gramiel/Speaker taunts, auto-zone handlers, ...) and the packet
+        /// tools keep working.
+        /// </summary>
+        private static void ForwardPextPackets(string packet)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(packet))
+                    return;
+                // Cheap prefilter: only combat / zone packets carry these keys.
+                if (packet.IndexOf("anims", StringComparison.Ordinal) < 0 &&
+                    packet.IndexOf("sara", StringComparison.Ordinal) < 0 &&
+                    packet.IndexOf("zoneSet", StringComparison.Ordinal) < 0)
+                    return;
+
+                JObject root = JObject.Parse(packet);
+                JToken paramsToken = root["params"];
+                if (paramsToken == null)
+                    return;
+                string type = paramsToken["type"]?.ToString();
+                if (!string.Equals(type, "json", StringComparison.OrdinalIgnoreCase))
+                    return;
+                if (!(paramsToken["dataObj"] is JObject dataObj))
+                    return;
+                string cmd = dataObj["cmd"]?.ToString();
+                bool isCombat = cmd == "ct";
+                bool isZoneEvent = cmd == "event" && dataObj["args"] != null;
+                if (!isCombat && !isZoneEvent)
+                    return;
+
+                string wrapped = "{\"b\":{\"o\":" + dataObj.ToString(Newtonsoft.Json.Formatting.None) + "}}";
+                try { Proxy.Instance.OnServerMessage(wrapped); } catch { }
+                try { FlashCall2?.Invoke("packetFromServer", wrapped); } catch { }
+            }
+            catch
+            {
+                // Never break the flash callback thread.
+            }
         }
 
         private static string ProcessPacketFromClient(string packet)
@@ -572,7 +619,7 @@ namespace Grimoire.Tools
                         if (tInf == $"p:{Player.UserID}")
                         {
                             AuraManager.SelfAura.RemoveAura(name);
-                            LogForm.Instance.devDebug($"[AuraManager] -{name}");
+                            //LogForm.Instance.devDebug($"[AuraManager] -{name}");
                         }
                         else if (tInf.StartsWith("m:"))
                         {

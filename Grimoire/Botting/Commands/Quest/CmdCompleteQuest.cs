@@ -36,28 +36,88 @@ namespace Grimoire.Botting.Commands.Quest
             if (CompleteTry <= -1)
                 max = true;
 
-            Quest.Complete(CompleteTry,max);
-			
+            Quest.Complete(CompleteTry, max);
+
             //await instance.WaitUntil(() => !Player.Quests.IsInProgress(Quest.Id));
             instance.Configuration.ProvokeMonsters = provokeMons;
 
             if (ReAccept)
             {
                 // await Task.Delay(1500);
-				await instance.WaitUntil(() => !Quest.IsInProgress && !Quest.CanComplete,interval:400,timeout:5);
+                await instance.WaitUntil(() => !Quest.IsInProgress && !Quest.CanComplete, interval: 400, timeout: 5);
                 Quest.GhostAccept();
             }
-			else
-			{
-				int delay = instance.Configuration.BotDelay <= 1000 ? 1100-instance.Configuration.BotDelay : 0;
-				await Task.Delay(delay);
-			}
+            else
+            {
+                int delay = instance.Configuration.BotDelay <= 1000 ? 1100 - instance.Configuration.BotDelay : 0;
+                await Task.Delay(delay);
+            }
         }
-        
+
         public override string ToString()
         {
             string quant = this.CompleteTry <= -1 ? "Ma" : CompleteTry.ToString();
             return $"Complete quest [{quant}x]: {(Quest.ItemId != null && Quest.ItemId != "0" ? $"{Quest.Id}^{Quest.ItemId}" : Quest.Id.ToString())} {(InBlank ? "[InBlank]" : "")}";
+        }
+    }
+
+    // Compat shim for bots saved by Grimlite Rev (quest/item ids as strings/vars).
+    public class CmdCompleteQuest2 : IBotCommand
+    {
+        public string QuestID
+        {
+            get;
+            set;
+        }
+
+        public string ItemID
+        {
+            get;
+            set;
+        } = null;
+        public int completeCount
+        {
+            get;
+            set;
+        } = -1;
+
+        public async Task Execute(IBotEngine instance)
+        {
+            int quest = int.Parse(instance.ResolveVars(QuestID));
+            string item = ItemID != null ? instance.ResolveVars(ItemID) : null;
+            if (!Player.Quests.CanComplete(quest))
+                return;
+
+            await instance.WaitUntil(() => World.IsActionAvailable(LockActions.TryQuestComplete));
+            BotData.BotState = BotData.State.Quest;
+            if (!Player.Quests.HasQuest(quest))
+            {
+                Player.Quests.Load(quest);
+                await instance.WaitUntil(() => Player.Quests.HasQuest(quest), timeout: 3);
+            }
+            if (instance.Configuration.ExitCombatBeforeQuest || Player.CurrentState == Player.State.InCombat)
+            {
+                if (Player.CurrentState == Player.State.InCombat)
+                {
+                    Player.MoveToCell(Player.Cell, Player.Pad);
+                    await Task.Delay(2000);
+                }
+            }
+            if (!string.IsNullOrEmpty(item) && item != "0")
+                Player.Quests.Complete(quest.ToString(), item);
+            else if (completeCount != -1 && completeCount > 1)
+                Player.Quests.Quest(quest).Complete(completeCount);
+            else
+                Player.Quests.Complete(quest);
+            await instance.WaitUntil(() => !Player.Quests.IsInProgress(quest));
+        }
+
+        public override string ToString()
+        {
+            string qty = completeCount < 0 ? "Max" : completeCount.ToString();
+            
+            return $"Complete quest: {QuestID}" + (ItemID != null ? $", {ItemID} x{qty}" : $" x{qty}");
+            //return $"Complete quest: {((ItemID != null && ItemID != "0") ? $"{QuestID}, {ItemID}" : QuestID)}";
         }
     }
 }
