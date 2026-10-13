@@ -299,7 +299,7 @@ namespace Grimoire.UI.Maid
                                 else
                                 {   // normal skill spamming
                                     // Previously Player.UseSkill(skillList[skillIndex]); 
-                                    useSkill(skillList[skillIndex]);
+                                    useSkill(skillList[skillIndex]);    
                                 }
                             }
 
@@ -925,8 +925,17 @@ namespace Grimoire.UI.Maid
 
         private bool isHealthUnder(int percentage)
         {
-            int healthBoundary = Player.HealthMax * percentage / 100;
-            return Player.Health <= healthBoundary ? true : false;
+            foreach (string player in World.PlayersInMap)
+            {
+                if (World.GetPlayerHealthPercentage(player) < percentage)
+                {
+                    return true;
+                }
+            }
+            return false;
+
+            //int healthBoundary = Player.HealthMax * percentage / 100;
+            //return Player.Health <= healthBoundary ? true : false;
         }
 
         private async Task gotoTarget(string targetUsername)
