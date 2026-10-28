@@ -94,7 +94,7 @@ namespace Grimoire.UI
         private void FlashUtil_FlashCallServerPext(AxShockwaveFlashObjects.AxShockwaveFlash flash, string function, params object[] args)
         {
             // Combat traffic arrives via pext in the current client.
-            if (function == "pext")
+            if (function == "pext" && chkFromClient.Checked)
             {
                 string packet = args[0].ToString();
                 if (packet.IndexOf(tbFilter.Text, StringComparison.OrdinalIgnoreCase) >= 0)

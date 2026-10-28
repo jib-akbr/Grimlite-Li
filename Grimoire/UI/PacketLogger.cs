@@ -80,7 +80,7 @@ namespace Grimoire.UI
                     txtPackets.AppendText(packet + Environment.NewLine);
                 });
             }
-            else if (function == "pext")
+            /*else if (function == "pext")
             {
                 // Combat and most server traffic arrives via pext in the
                 // current client — show it so the logger isn't blank.
@@ -91,7 +91,7 @@ namespace Grimoire.UI
                 {
                     txtPackets.AppendText("pext: " + packet + Environment.NewLine);
                 });
-            }
+            }*/
         }
 
         private void PacketCaptured(Networking.Message msg)
