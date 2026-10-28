@@ -639,8 +639,11 @@ namespace Grimoire.Tools
                         string name = (string)aura["nam"];
                         if (cmd == "aura+")
                         {
+                            //Somehow AE made the aura value
+                            //uses stk and val at the same time
                             double value = aura["val"]?.Value<double>() ?? aura["stk"]?.Value<double>() ?? 1;
-                            int duration = (int)aura["dur"];
+                            // int duration = (int)aura["dur"];
+                            double duration = aura["dur"]?.Value<double>() ?? 0;
                             bool isNew = aura["isNew"]?.Value<bool>() ?? false;
 
                             //LogForm.Instance.devDebug($"[AuraManager] catched aura {name} {duration}s {value}x");

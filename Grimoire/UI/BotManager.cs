@@ -3310,7 +3310,7 @@ namespace Grimoire.UI
                         Console.WriteLine("Counter Attack: active");
 
                         //This function will ensure auto exit Counter/Stop Atk
-                        await Task.Delay(6000);
+                        await Task.Delay(6300);
                         ActiveBotEngine.Configuration.SkipAttack = false;
                     });
                 }

@@ -202,7 +202,7 @@ namespace Grimoire.Botting
                     SetProvokeMonsters();
                 await Task.Delay(millisecondsDelay: Timer);
                 timer += Timer;
-                if (!IsRunning || timer < 2000)
+                if (!IsRunning || timer < 1000)
                     continue;
                 timer = 0;
                 if (EnemyMagnet && Player.IsAlive)

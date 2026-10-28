@@ -12,25 +12,25 @@ namespace Grimoire.Game
     {
         public string Name { get; private set; }
         public double Value { get; set; }
-        public int Duration { get; private set; }
+        public double Duration { get; private set; }
         public int ExpireTime { get; private set; }
-        public PlayerAura(string name, double value, int duration)
+        public PlayerAura(string name, double value, double duration)
         {
             Name = name;
             Value = value;
             Duration = duration;
             Refresh(value, duration);
         }
-        public void Refresh(double value, int duration)
+        public void Refresh(double value, double duration)
         {
             Value = value;
             Duration = duration;
-            ExpireTime = Environment.TickCount + duration * 1000;
+            ExpireTime = (int)(Environment.TickCount + duration * 1000);
         }
-        public void Refresh(int duration)
+        public void Refresh(double duration)
         {
             Duration = duration;
-            ExpireTime = Environment.TickCount + duration * 1000;
+            ExpireTime = (int)(Environment.TickCount + duration * 1000);
         }
 
         public bool IsExpired()
@@ -76,7 +76,7 @@ namespace Grimoire.Game
                 LogForm.Instance.devDebug($"[AuraAdded] {msg} {aura.Name}");
         }*/
 
-        public void ApplyAura(string name, double value, int duration)
+        public void ApplyAura(string name, double value, double duration)
         {
             if (auras.TryGetValue(name, out PlayerAura aura))
                 aura.Refresh(value, duration);

@@ -17,7 +17,11 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 
         public Task Execute(IBotEngine instance)
         {
-			if (World.VisibleMonsters.Count >= int.Parse((instance.IsVar(Value1)  ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1)))
+            //if (World.VisibleMonsters.Count >= int.Parse((instance.IsVar(Value1)  ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1)))
+            
+            int? count = World.VisibleMonsters?.Count ?? null;
+            int.TryParse(instance.ResolveVars(Value1), out var target);
+            if (count == null || count >= target)
             {
                 instance.Index++;
             }

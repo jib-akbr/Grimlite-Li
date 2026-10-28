@@ -364,18 +364,19 @@ namespace Grimoire.Botting
                         quest.Complete();
                         await Task.Delay(questDelay, token);
 
-                        if (quest.CanComplete)
+                        if (BotManager.Instance.chkReloginCompleteQuest.Checked && quest.CanComplete)
                         {
                             int f = qFailures[quest.Id];
                             if (f >= 5)
                             {
                                 Player.Logout();
-                                LogForm.Instance.AppendDebug($"[{DateTime.Now:HH:mm:ss}] Failed to complete quest [{quest.Id}] {f} times.");
+                                LogForm.Instance.AppendScript($"[{DateTime.Now:HH:mm:ss}] Failed to complete quest [{quest.Id}] {f} times.");
                             }
                             else
                             {
                                 f++;
                                 qFailures[quest.Id] = f;
+                                LogForm.Instance.AppendScript($"[{DateTime.Now:HH:mm:ss}] Fail Turn in [{quest.Id}] : {f}.");
                                 Console.WriteLine($"qFailures[{quest.Id}] : {f}");
                             }
                         }

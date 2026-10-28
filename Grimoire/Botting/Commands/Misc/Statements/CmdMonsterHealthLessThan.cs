@@ -13,11 +13,12 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 
         public Task Execute(IBotEngine instance)
         {
-            string Monster = instance.IsVar(Value1) ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1;
-            string Health = instance.IsVar(Value2) ? Configuration.Tempvariable[instance.GetVar(Value2)] : Value2;
+            string Monster = instance.ResolveVars(Value1);
+            string Health = instance.ResolveVars(Value2)    ;
 
             int.TryParse(Health, out int i);
-            if (World.GetMonsterHealth(Monster) > i)
+            int? monhp = World.GetMonsterHealth(Monster);
+            if (monhp.HasValue && monhp > i)
             {
                 instance.Index++;
             }

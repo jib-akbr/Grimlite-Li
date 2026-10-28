@@ -13,7 +13,8 @@ namespace Grimoire.Botting.Commands.Misc.Statements
 
         public Task Execute(IBotEngine instance)
         {
-            if (!World.IsMonsterAvailable((instance.IsVar(Value1)  ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1)))
+            if (!World.IsMonsterAvailable(instance.ResolveVars(Value1)))
+            //if (!World.IsMonsterAvailable((instance.IsVar(Value1)  ? Configuration.Tempvariable[instance.GetVar(Value1)] : Value1)))
             {
                 instance.Index++;
             }
