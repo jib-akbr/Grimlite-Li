@@ -1168,7 +1168,7 @@ namespace Grimoire.UI
             this.Text = "Grimlite Li";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Root_FormClosing);
             this.Load += new System.EventHandler(this.Root_Load);
-            this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Root_KeyPress);
+            this.Shown += new System.EventHandler(this.Root_Shown);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -1475,9 +1475,10 @@ namespace Grimoire.UI
             ShowForm(botManager);
         }
 
-        private void Root_KeyPress(object sender, KeyPressEventArgs e)
+        private async void Root_Shown(object sender, EventArgs e)
         {
-
+            Program.CheckForFlashPlayer();
+            await Program.CheckForLatestBuild();
         }
 
         private void dPSMeterToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1497,12 +1498,16 @@ namespace Grimoire.UI
 
         private void btnBank_Click_1(object sender, EventArgs e)
         {
+            if (!Player.IsLoggedIn)
+                return;
+
             Player.Bank.Show();
         }
 
         private void cbCells_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (!Player.IsLoggedIn) return;
+            if (!Player.IsLoggedIn) 
+                return;
             string cell = (string)this.cbCells.SelectedItem;
             if (cell != null)
             {
@@ -1610,10 +1615,11 @@ namespace Grimoire.UI
                 if (BotData.BotState == BotData.State.Combat)
                 {
                     await Task.Delay(150);
-                    if (!Player.HasTarget) 
+                    if (!Player.HasTarget) {
 						Player.AttackMonster("*");
-                    if (!Player.HasTarget) 
 						continue;
+					}
+                    // if (!Player.HasTarget) 
                     await SpecialClassCombo();
                     if (listSkill.Count > 0)
                     {

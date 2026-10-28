@@ -6,13 +6,18 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Windows.Forms;
+using DarkUI.Forms;
+using Microsoft.Win32;
+using System.Threading.Tasks;
+using System.Net.Http;
+using System.Diagnostics;
 
 namespace Grimoire
 {
 	internal static class Program
 	{
-		public static readonly string Version = "Li 1.9.4a";
-		public static readonly string ReleaseDate = "13-10-2026";
+		public static readonly string Version = "1.9.4b";
+		public static readonly string ReleaseDate = "28-10-2026";
 		public static string PluginsPath { get; private set; }
 		public static Tools.Plugins.PluginManager PluginsManager { get; private set; }
 
@@ -40,7 +45,7 @@ namespace Grimoire
 					"Grimlite Li",
 					MessageBoxButtons.OK,
 					MessageBoxIcon.Error);
-			}
+			}	
 		}
 
 		private static void TryCreateDirectory(string dir)
@@ -94,5 +99,70 @@ namespace Grimoire
 			port = randPort;
 			return true;
 		}
+		
+		/*
+		Below are copied code from Ganku's GrimRev 
+		version checking
+		*/
+		public static async Task CheckForLatestBuild()
+        {
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+            bool isOutdated = false;
+
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    client.DefaultRequestHeaders.Add("user-agent", "Mozilla/5.0 (Windows; U; MSIE 9.0; Windows NT 9.0; en-US)");
+
+                    var result = await client.GetStringAsync("https://github.com/jib-akbr/Grimlite-Li/releases/latest");
+                    isOutdated = !result.Contains($"v{Version.Substring(0,5)}");
+                }
+            }
+            catch
+            {
+                return;
+            }
+
+            if (!isOutdated)
+            {
+                return;
+            }
+            
+            DialogResult dialogResult = DarkMessageBox.Show(new Form 
+			{ TopMost = true, StartPosition = FormStartPosition.CenterScreen }, 
+				"A new update for Grimlite Li has been released! \n" +
+				"Would you like to download the latest version?", 
+				$"New update is available!", 
+				MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+            
+            if (dialogResult == DialogResult.Yes)
+            {
+                Process.Start("https://github.com/jib-akbr/Grimlite-Li/releases/latest");
+            }
+        }
+
+        public static void CheckForFlashPlayer()
+        {
+            string flashVer = string.Empty;
+            RegistryKey subKey = Registry.ClassesRoot.OpenSubKey(@"ShockwaveFlash.ShockwaveFlash\CurVer");
+            
+            if (subKey != null)
+            {
+                flashVer = subKey.GetValue(null).ToString();
+            }
+            else
+            {
+                DarkMessageBox.Show(
+					new Form 
+					{ 
+						TopMost = true, 
+						StartPosition = FormStartPosition.CenterScreen 
+					}, 
+					"You have to install the Adobe Flash Player plugin (for ActiveX) in order for the game screen to load.", 
+					$"Failed loading the game!", 
+					MessageBoxIcon.Error);
+            }
+        }
 	}
 }

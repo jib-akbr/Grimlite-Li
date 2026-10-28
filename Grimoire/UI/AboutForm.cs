@@ -14,7 +14,7 @@ namespace Grimoire.UI
 		public AboutForm()
 		{
 			InitializeComponent();
-			this.lblVersion.Text = $"Version {Program.Version} ({Program.ReleaseDate})";
+			this.lblVersion.Text = $"Version Li {Program.Version} ({Program.ReleaseDate})";
 		}
 
 		private void AboutForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -38,12 +38,12 @@ namespace Grimoire.UI
 
         private void pictureBox1_Click(object sender, EventArgs e)
         {
-            //Process.Start("https://github.com/jib-akbr/Grimlite-Li");
-        }
+            Process.Start("https://github.com/jib-akbr/Grimlite-Li");
+		}
 
         private void pbDropbox_Click(object sender, EventArgs e)
 		{
-			Process.Start("https://www.dropbox.com/sh/zdmgaqrrxt4bc1x/AAB_kKx1eV9wWrfox7VGoNXWa?dl=0");
+			//Process.Start("https://www.dropbox.com/sh/zdmgaqrrxt4bc1x/AAB_kKx1eV9wWrfox7VGoNXWa?dl=0");
 		}
 
 		private void lblDropbox_Click(object sender, EventArgs e)
