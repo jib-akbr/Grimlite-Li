@@ -237,6 +237,7 @@
             "SSOT",
             "NCM",
             "TK",
+			"KA",
             "CSH",
             "CSH v2"});
             this.cmbPreset.Location = new System.Drawing.Point(82, 102);

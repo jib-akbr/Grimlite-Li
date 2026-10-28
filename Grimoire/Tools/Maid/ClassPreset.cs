@@ -113,6 +113,23 @@ namespace Grimoire.Tools.Maid
             // additional settings
             UI.Maid.MaidRemake.Instance.cbWaitSkill.Checked = true;
         }
+		
+        public static void KA()
+        {
+            // skill list
+            UI.Maid.MaidRemake.Instance.tbSkillList.Text = "1,2,4";
+
+            // heal skill
+            UI.Maid.MaidRemake.Instance.tbHealSkill.Text = String.Empty;
+            UI.Maid.MaidRemake.Instance.numHealthPercent.Value = 80;
+            heal = false;
+
+            // buff skill
+            UI.Maid.MaidRemake.Instance.tbBuffSkill.Text = "5";
+
+            // additional settings
+            UI.Maid.MaidRemake.Instance.cbWaitSkill.Checked = true;
+        }
 
         public static void SC()
         {

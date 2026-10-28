@@ -549,12 +549,18 @@ namespace Grimoire.UI.Maid
             {
                 int Seal = AuraManager.EnemyAura(Player.CurrentTargetId)
                                       .GetRemainingTime("Righteous Seal");
-                if (Seal < 600 && Seal > 0)
+                if (Seal < 800 && Seal > 0)
                 {
                     await waitSkill("4");
                     await Task.Delay(350);
                 }
             }
+			else if (preset == "KA" || Player.EquippedClass == "KATHOOL ADEPT"){
+				int feed = Player.GetAuras(true, "Feeding");
+				int bottomFeed = Player.GetAuras(true, "Bottom Feeder");
+                if (feed > 9 || (bottomFeed == 0 && feed == 0))
+                    await waitSkill("3");
+			}
 
             // ultra gramiel
             if (Player.Map == "ultragramiel")
@@ -799,7 +805,7 @@ namespace Grimoire.UI.Maid
                                             await Task.Delay(1500);
                                             counterAttack = true;
                                             cbStopAttack.Checked = true;
-                                            await Task.Delay(6000);
+                                            await Task.Delay(6300);
                                             //This function will auto exit Counter/Stop Atk
                                             counterAttack = false;
                                             cbStopAttack.Checked = false;
@@ -1370,6 +1376,9 @@ namespace Grimoire.UI.Maid
                     break;
                 case "CSH":
                     ClassPreset.CSH_Gunslinger();
+                    break;
+                case "KA":
+                    ClassPreset.KA();
                     break;
                 case "CSH v2":
                     ClassPreset.CSHNormal();
